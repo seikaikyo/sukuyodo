@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sukuyodo-db
+    environment:
+      POSTGRES_DB: sukuyodo
+      POSTGRES_USER: sukuyodo
+      POSTGRES_PASSWORD: 200821
+    ports:
+      - "5433:5432"
+    volumes:
+      - sukuyodo_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sukuyodo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  sukuyodo_data:

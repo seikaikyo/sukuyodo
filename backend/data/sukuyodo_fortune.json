@@ -1,0 +1,178 @@
+{
+  "weekday_elements": {
+    "0": {"name": "日曜日", "reading": "にちようび", "element": "日", "planet": "太陽"},
+    "1": {"name": "月曜日", "reading": "げつようび", "element": "月", "planet": "月亮"},
+    "2": {"name": "火曜日", "reading": "かようび", "element": "火", "planet": "火星"},
+    "3": {"name": "水曜日", "reading": "すいようび", "element": "水", "planet": "水星"},
+    "4": {"name": "木曜日", "reading": "もくようび", "element": "木", "planet": "木星"},
+    "5": {"name": "金曜日", "reading": "きんようび", "element": "金", "planet": "金星"},
+    "6": {"name": "土曜日", "reading": "どようび", "element": "土", "planet": "土星"}
+  },
+  "element_relations": {
+    "same": {"bonus": 20, "description": "同元素共鳴，能量相互增強，是發揮本命特質的有利時機"},
+    "generating": {"bonus": 10, "description": "相生關係，能量順暢流動，適合穩步推進計畫中的事項"},
+    "neutral": {"bonus": 0, "description": "能量平穩，適合處理日常事務，維持現有節奏即可"},
+    "weakening": {"bonus": -5, "description": "相洩關係，能量消耗較快，建議控制工作量並適度休息"},
+    "conflicting": {"bonus": -10, "description": "相剋關係，能量受阻，重大決定宜延後，以觀察為主"}
+  },
+  "generating_pairs": [
+    ["木", "火"],
+    ["火", "土"],
+    ["土", "金"],
+    ["金", "水"],
+    ["水", "木"]
+  ],
+  "conflicting_pairs": [
+    ["木", "土"],
+    ["土", "水"],
+    ["水", "火"],
+    ["火", "金"],
+    ["金", "木"]
+  ],
+  "weakening_pairs": [
+    ["木", "水"],
+    ["水", "金"],
+    ["金", "土"],
+    ["土", "火"],
+    ["火", "木"]
+  ],
+  "special_elements": {
+    "日": {"generates": ["火"], "weakens": [], "conflicts": [], "note": "太陽為至陽之體，能生助火性，同時對木性有溫養之功"},
+    "月": {"generates": ["水"], "weakens": [], "conflicts": [], "note": "月亮為至陰之體，能生助水性，對木性亦有潤澤滋養之效"}
+  },
+  "fortune_categories": {
+    "career": {
+      "name": "事業運",
+      "reading": "しごとうん",
+      "icon": "briefcase",
+      "favorable_elements": ["木", "火", "日"],
+      "description": "工作表現、學業進展、專業技能發展等職涯相關運勢"
+    },
+    "love": {
+      "name": "感情運",
+      "reading": "れんあいうん",
+      "icon": "heart",
+      "favorable_elements": ["月", "水", "金"],
+      "description": "戀愛關係、人際往來、家庭相處等情感面向運勢"
+    },
+    "health": {
+      "name": "健康運",
+      "reading": "けんこううん",
+      "icon": "activity",
+      "favorable_elements": ["木", "土", "水"],
+      "description": "身體狀況、精神狀態、生活作息等健康相關運勢"
+    },
+    "wealth": {
+      "name": "財運",
+      "reading": "ざいうん",
+      "icon": "dollar-sign",
+      "favorable_elements": ["金", "土", "日"],
+      "description": "金錢收支、投資理財、資產累積等財務相關運勢"
+    }
+  },
+  "lucky_items": {
+    "directions": {
+      "木": {"direction": "東", "reading": "ひがし"},
+      "火": {"direction": "南", "reading": "みなみ"},
+      "土": {"direction": "中央", "reading": "ちゅうおう"},
+      "金": {"direction": "西", "reading": "にし"},
+      "水": {"direction": "北", "reading": "きた"},
+      "日": {"direction": "東南", "reading": "とうなん"},
+      "月": {"direction": "西北", "reading": "せいほく"}
+    },
+    "colors": {
+      "木": {"color": "綠色", "reading": "みどりいろ", "hex": "#4A9B5A"},
+      "火": {"color": "紅色", "reading": "あかいろ", "hex": "#E85D4C"},
+      "土": {"color": "黃色", "reading": "きいろ", "hex": "#C4A052"},
+      "金": {"color": "白色", "reading": "しろいろ", "hex": "#F5F5F5"},
+      "水": {"color": "黑色", "reading": "くろいろ", "hex": "#2D3436"},
+      "日": {"color": "橙色", "reading": "オレンジいろ", "hex": "#E89B3C"},
+      "月": {"color": "銀色", "reading": "ぎんいろ", "hex": "#C0C0C0"}
+    },
+    "numbers": {
+      "木": [3, 8],
+      "火": [2, 7],
+      "土": [5, 10],
+      "金": [4, 9],
+      "水": [1, 6],
+      "日": [1, 6],
+      "月": [2, 7]
+    }
+  },
+  "daily_advice": {
+    "excellent": [
+      "今日運勢處於高峰期，適合展開新計畫或推進重要事項。建議把握上午時段處理需要決斷力的工作。",
+      "本命宿與今日天象形成良好共鳴，是採取積極行動的有利時機。可主動爭取機會或提出想法。",
+      "貴人運強勁，人際互動中容易獲得支持和協助。適合進行需要合作的事務或拓展人脈。"
+    ],
+    "good": [
+      "整體運勢穩定向好，按原定計畫執行會有良好進展。適合處理需要專注的工作或學習。",
+      "今日能量充沛，適合安排重要會議或處理關鍵事務。保持積極但穩健的態度為佳。",
+      "運勢走向正面，持續努力會看到成果。可以適度挑戰新任務，但不宜過度冒進。"
+    ],
+    "neutral": [
+      "今日運勢平穩，適合處理例行事務和日常工作。維持現有節奏，不需刻意求變。",
+      "能量處於平衡狀態，宜守不宜攻。適合整理資料、規劃未來，為後續行動做準備。",
+      "運勢無明顯起伏，是適合休養生息的一天。可利用時間充實自己，等待更好的時機。"
+    ],
+    "caution": [
+      "今日運勢需多加留意，建議在做決定前多方考量。避免衝動行事，以穩健為原則。",
+      "能量較為低沉，不宜強出頭或主動爭取。低調處理事務，多聽少說為宜。",
+      "人際互動中需格外謹慎，避免因言語不當而產生誤會。遇到分歧時，以和為貴。"
+    ],
+    "challenging": [
+      "今日運勢處於低谷期，重大決定建議延後處理。專注於已確定的事項，避免開展新計畫。",
+      "能量與今日天象有所牴觸，需注意身體狀況和安全。不宜過度操勞，適時休息為宜。",
+      "運勢暫時受阻，但這是調整和反思的好時機。耐心等待，低潮期終會過去。"
+    ]
+  },
+  "monthly_themes": {
+    "1": {"theme": "新年開局", "focus": "規劃", "element_boost": "木"},
+    "2": {"theme": "穩固根基", "focus": "執行", "element_boost": "水"},
+    "3": {"theme": "春意漸濃", "focus": "人際", "element_boost": "木"},
+    "4": {"theme": "蓄勢待發", "focus": "學習", "element_boost": "火"},
+    "5": {"theme": "積極進取", "focus": "事業", "element_boost": "火"},
+    "6": {"theme": "調適節奏", "focus": "健康", "element_boost": "土"},
+    "7": {"theme": "熱情高峰", "focus": "社交", "element_boost": "火"},
+    "8": {"theme": "收穫累積", "focus": "財運", "element_boost": "金"},
+    "9": {"theme": "深耕專業", "focus": "技能", "element_boost": "金"},
+    "10": {"theme": "穩定發展", "focus": "家庭", "element_boost": "土"},
+    "11": {"theme": "沉澱內省", "focus": "反思", "element_boost": "水"},
+    "12": {"theme": "年終收尾", "focus": "總結", "element_boost": "水"}
+  },
+  "yearly_zodiac": {
+    "子": {"name": "鼠", "reading": "ねずみ", "element": "水", "mansion_range": [9, 10, 11]},
+    "丑": {"name": "牛", "reading": "うし", "element": "土", "mansion_range": [12, 13, 14]},
+    "寅": {"name": "虎", "reading": "とら", "element": "木", "mansion_range": [15, 16, 17]},
+    "卯": {"name": "兔", "reading": "うさぎ", "element": "木", "mansion_range": [18, 19, 20]},
+    "辰": {"name": "龍", "reading": "たつ", "element": "土", "mansion_range": [21, 22, 23]},
+    "巳": {"name": "蛇", "reading": "へび", "element": "火", "mansion_range": [24, 25, 26]},
+    "午": {"name": "馬", "reading": "うま", "element": "火", "mansion_range": [0, 1, 2]},
+    "未": {"name": "羊", "reading": "ひつじ", "element": "土", "mansion_range": [3, 4, 5]},
+    "申": {"name": "猴", "reading": "さる", "element": "金", "mansion_range": [6, 7, 8]},
+    "酉": {"name": "雞", "reading": "とり", "element": "金", "mansion_range": [9, 10, 11]},
+    "戌": {"name": "狗", "reading": "いぬ", "element": "土", "mansion_range": [12, 13, 14]},
+    "亥": {"name": "豬", "reading": "いのしし", "element": "水", "mansion_range": [15, 16, 17]}
+  },
+  "heavenly_stems": {
+    "甲": {"reading": "きのえ", "element": "木", "yin_yang": "陽"},
+    "乙": {"reading": "きのと", "element": "木", "yin_yang": "陰"},
+    "丙": {"reading": "ひのえ", "element": "火", "yin_yang": "陽"},
+    "丁": {"reading": "ひのと", "element": "火", "yin_yang": "陰"},
+    "戊": {"reading": "つちのえ", "element": "土", "yin_yang": "陽"},
+    "己": {"reading": "つちのと", "element": "土", "yin_yang": "陰"},
+    "庚": {"reading": "かのえ", "element": "金", "yin_yang": "陽"},
+    "辛": {"reading": "かのと", "element": "金", "yin_yang": "陰"},
+    "壬": {"reading": "みずのえ", "element": "水", "yin_yang": "陽"},
+    "癸": {"reading": "みずのと", "element": "水", "yin_yang": "陰"}
+  },
+  "year_cycle": [
+    {"year": 2024, "stem": "甲", "branch": "辰"},
+    {"year": 2025, "stem": "乙", "branch": "巳"},
+    {"year": 2026, "stem": "丙", "branch": "午"},
+    {"year": 2027, "stem": "丁", "branch": "未"},
+    {"year": 2028, "stem": "戊", "branch": "申"},
+    {"year": 2029, "stem": "己", "branch": "酉"},
+    {"year": 2030, "stem": "庚", "branch": "戌"}
+  ]
+}
