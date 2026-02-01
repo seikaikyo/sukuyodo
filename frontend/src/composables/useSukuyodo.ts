@@ -409,6 +409,11 @@ export function useSukuyodo() {
   const yearlyFortune = ref<YearlyFortune | null>(null)
   const fortuneLoading = ref(false)
 
+  // Monthly Week Expansion
+  const expandedMonthlyWeek = ref<number | null>(null)
+  const weekDetailCache = ref<Map<string, WeeklyFortune>>(new Map())
+  const weekDetailLoading = ref(false)
+
   // Compatibility
   const compatFinder = ref<CompatibilityFinderResult | null>(null)
   const finderLoading = ref(false)
@@ -614,6 +619,67 @@ export function useSukuyodo() {
     } finally {
       fortuneLoading.value = false
     }
+  }
+
+  // 計算 ISO 週數
+  function getISOWeek(d: Date): number {
+    const dt = new Date(d.valueOf())
+    const dayNum = (d.getDay() + 6) % 7  // Monday = 0
+    dt.setDate(dt.getDate() - dayNum + 3)  // Thursday
+    const firstThursday = dt.valueOf()
+    dt.setMonth(0, 1)
+    if (dt.getDay() !== 4) {
+      dt.setMonth(0, 1 + ((4 - dt.getDay()) + 7) % 7)
+    }
+    return 1 + Math.ceil((firstThursday - dt.valueOf()) / 604800000)
+  }
+
+  // 本週週次
+  const currentWeekNumber = computed(() => getISOWeek(new Date()))
+
+  // 載入特定週的詳細運勢
+  async function fetchWeekDetail(year: number, week: number): Promise<WeeklyFortune | null> {
+    if (!birthDate.value) return null
+
+    const cacheKey = `${year}-${week}-${birthDate.value}`
+    if (weekDetailCache.value.has(cacheKey)) {
+      return weekDetailCache.value.get(cacheKey)!
+    }
+
+    weekDetailLoading.value = true
+    try {
+      const res = await fetch(getApiUrl(`/fortune/weekly/${year}/${week}?birth_date=${birthDate.value}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          weekDetailCache.value.set(cacheKey, data.data)
+          return data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch week detail')
+    } finally {
+      weekDetailLoading.value = false
+    }
+    return null
+  }
+
+  // 切換月運勢中的週次展開
+  async function toggleMonthlyWeek(week: number) {
+    if (expandedMonthlyWeek.value === week) {
+      expandedMonthlyWeek.value = null
+    } else {
+      expandedMonthlyWeek.value = week
+      if (monthlyFortune.value) {
+        await fetchWeekDetail(monthlyFortune.value.year, week)
+      }
+    }
+  }
+
+  // 取得快取的週詳細資料
+  function getWeekDetail(year: number, week: number): WeeklyFortune | null {
+    const cacheKey = `${year}-${week}-${birthDate.value}`
+    return weekDetailCache.value.get(cacheKey) || null
   }
 
   async function fetchMonthlyFortune() {
@@ -941,6 +1007,9 @@ export function useSukuyodo() {
     monthlyFortune,
     yearlyFortune,
     fortuneLoading,
+    expandedMonthlyWeek,
+    weekDetailLoading,
+    currentWeekNumber,
 
     // Compatibility
     compatFinder,
@@ -994,6 +1063,8 @@ export function useSukuyodo() {
     toggleRelation,
     toggleLunarDate,
     quickSelect,
+    toggleMonthlyWeek,
+    getWeekDetail,
 
     // Init
     init

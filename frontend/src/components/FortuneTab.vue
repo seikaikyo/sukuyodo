@@ -7,10 +7,15 @@ const props = defineProps<{
   weeklyFortune: WeeklyFortune | null
   monthlyFortune: MonthlyFortune | null
   yearlyFortune: YearlyFortune | null
+  expandedMonthlyWeek: number | null
+  weekDetailLoading: boolean
+  currentWeekNumber: number
+  getWeekDetail: (year: number, week: number) => WeeklyFortune | null
 }>()
 
 const emit = defineEmits<{
   'update:activeTab': [value: 'daily' | 'weekly' | 'monthly' | 'yearly']
+  'toggleWeek': [week: number]
 }>()
 
 function getScoreClass(score: number) {
@@ -236,13 +241,81 @@ function formatDate(dateStr: string) {
               <div
                 v-for="w in monthlyFortune.weekly"
                 :key="w.week"
-                class="weekly-item"
+                class="weekly-item-wrapper"
               >
-                <span class="week-num">第 {{ w.week }} 週</span>
-                <div class="week-bar">
-                  <div class="week-fill" :class="getScoreClass(w.score)" :style="{ width: w.score + '%' }"></div>
+                <button
+                  class="weekly-item"
+                  :class="{ expanded: expandedMonthlyWeek === w.week }"
+                  :aria-expanded="expandedMonthlyWeek === w.week"
+                  :aria-controls="`week-detail-${w.week}`"
+                  @click="emit('toggleWeek', w.week)"
+                  @keydown.enter="emit('toggleWeek', w.week)"
+                  @keydown.space.prevent="emit('toggleWeek', w.week)"
+                >
+                  <span class="week-toggle" aria-hidden="true">{{ expandedMonthlyWeek === w.week ? '▼' : '▶' }}</span>
+                  <span class="week-num">第 {{ w.week }} 週</span>
+                  <span v-if="w.week === currentWeekNumber" class="week-current-tag">本週</span>
+                  <div class="week-bar">
+                    <div class="week-fill" :class="getScoreClass(w.score)" :style="{ width: w.score + '%' }"></div>
+                  </div>
+                  <span class="week-score">{{ w.score }}</span>
+                </button>
+
+                <!-- 展開的週詳細內容 -->
+                <div
+                  v-if="expandedMonthlyWeek === w.week"
+                  :id="`week-detail-${w.week}`"
+                  class="week-detail"
+                >
+                  <template v-if="weekDetailLoading">
+                    <div class="week-detail-loading">
+                      <sl-spinner></sl-spinner>
+                    </div>
+                  </template>
+                  <template v-else-if="monthlyFortune && getWeekDetail(monthlyFortune.year, w.week)">
+                    <div class="week-detail-content">
+                      <div class="week-detail-scores">
+                        <div class="detail-score-item">
+                          <span class="detail-label">整體</span>
+                          <span class="detail-value" :class="getScoreClass(getWeekDetail(monthlyFortune.year, w.week)!.fortune.overall)">
+                            {{ getWeekDetail(monthlyFortune.year, w.week)!.fortune.overall }}
+                          </span>
+                        </div>
+                        <div class="detail-score-item">
+                          <span class="detail-label">事業</span>
+                          <span class="detail-value" :class="getScoreClass(getWeekDetail(monthlyFortune.year, w.week)!.fortune.career)">
+                            {{ getWeekDetail(monthlyFortune.year, w.week)!.fortune.career }}
+                          </span>
+                        </div>
+                        <div class="detail-score-item">
+                          <span class="detail-label">感情</span>
+                          <span class="detail-value" :class="getScoreClass(getWeekDetail(monthlyFortune.year, w.week)!.fortune.love)">
+                            {{ getWeekDetail(monthlyFortune.year, w.week)!.fortune.love }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="week-detail-daily">
+                        <span class="daily-label">每日：</span>
+                        <div class="daily-chips">
+                          <span
+                            v-for="day in getWeekDetail(monthlyFortune.year, w.week)!.daily_overview"
+                            :key="day.date"
+                            class="daily-chip"
+                            :class="getScoreClass(day.score)"
+                          >
+                            {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="week-detail-advice">
+                        <span class="advice-label">建議：</span>
+                        <span class="advice-text">{{ getWeekDetail(monthlyFortune.year, w.week)!.advice }}</span>
+                      </div>
+                    </div>
+                  </template>
                 </div>
-                <span class="week-score">{{ w.score }}</span>
               </div>
             </div>
           </div>
@@ -571,19 +644,68 @@ function formatDate(dateStr: string) {
 .weekly-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+}
+
+.weekly-item-wrapper {
+  display: flex;
+  flex-direction: column;
 }
 
 .weekly-item {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.weekly-item:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+
+.weekly-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.weekly-item.expanded {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.week-toggle {
+  width: 16px;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  flex-shrink: 0;
 }
 
 .week-num {
-  width: 60px;
+  width: 56px;
   font-size: var(--font-sm);
   color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.week-current-tag {
+  font-size: var(--font-xs);
+  color: var(--accent);
+  background: rgba(245, 158, 11, 0.15);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .week-bar {
@@ -611,6 +733,122 @@ function formatDate(dateStr: string) {
   font-size: var(--font-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* Week Detail Expansion */
+.week-detail {
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: var(--space-md);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.week-detail-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.week-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.week-detail-scores {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.detail-score-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.detail-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.detail-value {
+  font-size: var(--font-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-value.excellent { color: var(--success); }
+.detail-value.good { color: var(--accent); }
+.detail-value.fair { color: var(--info); }
+.detail-value.caution { color: #eab308; }
+.detail-value.warning { color: var(--warning); }
+
+.week-detail-daily {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.daily-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.daily-chips {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.daily-chip {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-chip.excellent { border-left: 2px solid var(--success); }
+.daily-chip.good { border-left: 2px solid var(--accent); }
+.daily-chip.fair { border-left: 2px solid var(--info); }
+.daily-chip.caution { border-left: 2px solid #eab308; }
+.daily-chip.warning { border-left: 2px solid var(--warning); }
+
+.week-detail-advice {
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.advice-label {
+  color: var(--accent);
+  margin-right: var(--space-xs);
+}
+
+.advice-text {
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-detail {
+    animation: none;
+  }
 }
 
 .opportunities,

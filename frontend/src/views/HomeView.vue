@@ -37,6 +37,9 @@ const {
   weeklyFortune,
   monthlyFortune,
   yearlyFortune,
+  expandedMonthlyWeek,
+  weekDetailLoading,
+  currentWeekNumber,
 
   // Compatibility
   compatFinder,
@@ -79,6 +82,8 @@ const {
   toggleRelation,
   toggleLunarDate,
   quickSelect,
+  toggleMonthlyWeek,
+  getWeekDetail,
 
   // Init
   init
@@ -214,6 +219,11 @@ onMounted(() => {
         :weekly-fortune="weeklyFortune"
         :monthly-fortune="monthlyFortune"
         :yearly-fortune="yearlyFortune"
+        :expanded-monthly-week="expandedMonthlyWeek"
+        :week-detail-loading="weekDetailLoading"
+        :current-week-number="currentWeekNumber"
+        :get-week-detail="getWeekDetail"
+        @toggle-week="toggleMonthlyWeek"
       />
 
       <MatchTab
