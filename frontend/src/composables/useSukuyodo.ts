@@ -307,6 +307,16 @@ export interface LuckyDayResult {
   advice: string
 }
 
+export interface LuckyDaySummaryItem {
+  name: string
+  lucky_days: LuckyDay[]
+}
+
+export interface LuckyDaySummary {
+  your_mansion: Mansion
+  summary: LuckyDaySummaryItem[]
+}
+
 export interface WheelMansion {
   index: number
   name_jp: string
@@ -436,6 +446,8 @@ export function useSukuyodo() {
   const selectedLuckyAction = ref<string | null>(null)
   const luckyDayResult = ref<LuckyDayResult | null>(null)
   const luckyDayLoading = ref(false)
+  const luckyDaySummary = ref<LuckyDaySummary | null>(null)
+  const luckyDaySummaryLoading = ref(false)
 
   // Knowledge
   const expandedRelation = ref<string | null>(null)
@@ -542,8 +554,13 @@ export function useSukuyodo() {
         if (data.success) {
           mansion.value = data.data
           showQueryDialog.value = false
+          // 儲存生日到 localStorage
+          if (birthDate.value) {
+            profile.value.birthDate = birthDate.value
+          }
           fetchCompatibleMansions()
           fetchAllFortunes()
+          fetchLuckyDaySummary()
         } else {
           lookupError.value = data.error || '查詢失敗'
         }
@@ -766,6 +783,28 @@ export function useSukuyodo() {
       console.error('Failed to fetch lucky days')
     } finally {
       luckyDayLoading.value = false
+    }
+  }
+
+  async function fetchLuckyDaySummary() {
+    const queryDate = birthDate.value || myBirthDate.value
+    if (!queryDate) return
+
+    luckyDaySummaryLoading.value = true
+    luckyDaySummary.value = null
+
+    try {
+      const res = await fetch(getApiUrl(`/lucky-days/summary/${queryDate}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          luckyDaySummary.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch lucky days summary')
+    } finally {
+      luckyDaySummaryLoading.value = false
     }
   }
 
@@ -1033,6 +1072,8 @@ export function useSukuyodo() {
     selectedLuckyAction,
     luckyDayResult,
     luckyDayLoading,
+    luckyDaySummary,
+    luckyDaySummaryLoading,
 
     // Knowledge
     expandedRelation,
@@ -1053,6 +1094,7 @@ export function useSukuyodo() {
     // API Functions
     lookupMansion,
     fetchLuckyDays,
+    fetchLuckyDaySummary,
     calculateCompatibility,
     fetchPartnerCompatibilities,
 

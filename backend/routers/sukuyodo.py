@@ -527,6 +527,85 @@ async def get_lucky_day_categories():
     }
 
 
+@router.get("/lucky-days/summary/{date_str}")
+def get_lucky_days_summary(
+    date_str: str,
+    session: Session = Depends(get_session)
+):
+    """
+    取得吉日彙整
+
+    一次返回所有重要類別的吉日：
+    - 求職面試
+    - 簽約談判
+    - 搬家入宅
+    - 結婚登記
+    - 手術開刀
+    - 出遊出國
+    - 重要約會
+    """
+    try:
+        birth_date = date.fromisoformat(date_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth_date > today:
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    if birth_date.year < 1900:
+        raise HTTPException(
+            status_code=400,
+            detail="僅支援 1900 年後的日期"
+        )
+
+    # 精選 7 個最常用的項目
+    actions = [
+        {"category": "career", "action": "interview", "name": "求職面試"},
+        {"category": "career", "action": "contract", "name": "簽約談判"},
+        {"category": "housing", "action": "move_in", "name": "搬家入宅"},
+        {"category": "marriage", "action": "register", "name": "結婚登記"},
+        {"category": "medical", "action": "surgery", "name": "手術開刀"},
+        {"category": "travel", "action": "abroad", "name": "出遊出國"},
+        {"category": "dating", "action": "first_date", "name": "重要約會"},
+    ]
+
+    summary = []
+    for item in actions:
+        try:
+            result = sukuyodo_service.get_lucky_days(
+                birth_date,
+                item["category"],
+                item["action"],
+                days_ahead=30
+            )
+            summary.append({
+                "name": item["name"],
+                "lucky_days": result["lucky_days"][:5],  # 只取前 5 個
+            })
+        except Exception:
+            summary.append({
+                "name": item["name"],
+                "lucky_days": [],
+            })
+
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": {
+            "your_mansion": sukuyodo_service.get_mansion(birth_date),
+            "summary": summary
+        }
+    }
+
+
 @router.get("/lucky-days/{date_str}")
 def get_lucky_days(
     date_str: str,

@@ -1,27 +1,10 @@
 <script setup lang="ts">
-import type { LuckyDayCategory, LuckyDayAction, LuckyDayResult } from '../composables/useSukuyodo'
+import type { LuckyDaySummary } from '../composables/useSukuyodo'
 
 const props = defineProps<{
-  luckyDayCategories: LuckyDayCategory[]
-  selectedLuckyCategory: string | null
-  selectedLuckyAction: string | null
-  currentCategoryActions: LuckyDayAction[]
-  luckyDayResult: LuckyDayResult | null
-  luckyDayLoading: boolean
+  luckyDaySummary: LuckyDaySummary | null
+  luckyDaySummaryLoading: boolean
 }>()
-
-const emit = defineEmits<{
-  selectCategory: [categoryKey: string]
-  selectAction: [actionKey: string]
-}>()
-
-function getFortuneLevel(score: number) {
-  if (score >= 90) return { text: '大吉', class: 'excellent' }
-  if (score >= 75) return { text: '吉', class: 'good' }
-  if (score >= 60) return { text: '中吉', class: 'fair' }
-  if (score >= 45) return { text: '小吉', class: 'caution' }
-  return { text: '凶', class: 'warning' }
-}
 
 function getScoreClass(score: number) {
   if (score >= 90) return 'excellent'
@@ -29,6 +12,13 @@ function getScoreClass(score: number) {
   if (score >= 60) return 'fair'
   if (score >= 45) return 'caution'
   return 'warning'
+}
+
+function getRating(score: number) {
+  if (score >= 90) return '大吉'
+  if (score >= 75) return '吉'
+  if (score >= 60) return '中吉'
+  return '小吉'
 }
 
 function formatDate(dateStr: string) {
@@ -39,187 +29,49 @@ function formatDate(dateStr: string) {
 
 <template>
   <section class="lucky-tab">
-    <div class="lucky-layout">
-      <!-- Category Sidebar -->
-      <aside class="lucky-sidebar" role="tablist" aria-label="吉日類別選擇">
-        <button
-          v-for="cat in luckyDayCategories"
-          :key="cat.key"
-          class="category-btn"
-          :class="{ active: selectedLuckyCategory === cat.key }"
-          role="tab"
-          :aria-selected="selectedLuckyCategory === cat.key"
-          aria-controls="panel-lucky-main"
-          @click="emit('selectCategory', cat.key)"
+    <div v-if="luckyDaySummaryLoading" class="loading-state">
+      <sl-spinner></sl-spinner>
+      <span>載入吉日資料...</span>
+    </div>
+
+    <div v-else-if="luckyDaySummary" class="lucky-summary">
+      <h3 class="section-title">未來 30 天吉日一覽</h3>
+
+      <div class="category-list">
+        <div
+          v-for="item in luckyDaySummary.summary"
+          :key="item.name"
+          class="category-section"
         >
-          <sl-icon :name="cat.icon" aria-hidden="true"></sl-icon>
-          <span>{{ cat.name }}</span>
-        </button>
-      </aside>
+          <h4 class="category-name">{{ item.name }}</h4>
 
-      <!-- Main Content -->
-      <div class="lucky-main">
-        <template v-if="selectedLuckyCategory">
-          <!-- Action Buttons -->
-          <div class="action-btns" role="tablist" aria-label="項目選擇">
-            <button
-              v-for="act in currentCategoryActions"
-              :key="act.key"
-              class="action-btn"
-              :class="{ active: selectedLuckyAction === act.key }"
-              role="tab"
-              :aria-selected="selectedLuckyAction === act.key"
-              aria-controls="panel-lucky-results"
-              @click="emit('selectAction', act.key)"
-            >{{ act.name }}</button>
-          </div>
-
-          <!-- Results -->
-          <div v-if="luckyDayLoading" class="loading-state">
-            <sl-spinner></sl-spinner>
-          </div>
-          <div v-else-if="luckyDayResult" id="panel-lucky-results" class="lucky-results" role="tabpanel">
-            <div class="results-grid">
-              <div class="result-col good">
-                <h4>近 30 天吉日</h4>
-                <div class="day-list">
-                  <div
-                    v-for="day in luckyDayResult.lucky_days"
-                    :key="day.date"
-                    class="day-item"
-                    :class="getScoreClass(day.score)"
-                  >
-                    <span class="day-date">{{ formatDate(day.date) }}</span>
-                    <span class="day-weekday">{{ day.weekday }}</span>
-                    <span class="day-rating">{{ day.rating || getFortuneLevel(day.score).text }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="result-col avoid">
-                <h4>應避開的日期</h4>
-                <div class="day-list">
-                  <div
-                    v-for="day in luckyDayResult.avoid_days"
-                    :key="day.date"
-                    class="day-item warning"
-                  >
-                    <span class="day-date">{{ formatDate(day.date) }}</span>
-                    <span class="day-weekday">{{ day.weekday }}</span>
-                    <span class="day-reason">{{ day.reason }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="luckyDayResult.advice" class="advice-box">
-              <h4>建議</h4>
-              <p>{{ luckyDayResult.advice }}</p>
+          <div v-if="item.lucky_days.length > 0" class="day-chips">
+            <div
+              v-for="day in item.lucky_days"
+              :key="day.date"
+              class="day-chip"
+              :class="getScoreClass(day.score)"
+            >
+              <span class="chip-date">{{ formatDate(day.date) }}</span>
+              <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+              <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
             </div>
           </div>
-          <div v-else class="select-prompt">
-            <p>請選擇要查詢的項目</p>
+          <div v-else class="no-lucky-days">
+            <span>近期無特別吉日</span>
           </div>
-        </template>
-        <template v-else>
-          <div class="select-prompt">
-            <p>請先選擇類別</p>
-          </div>
-        </template>
+        </div>
       </div>
+    </div>
+
+    <div v-else class="empty-state">
+      <p>請先查詢本命宿</p>
     </div>
   </section>
 </template>
 
 <style scoped>
-.lucky-layout {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.lucky-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  min-width: 160px;
-}
-
-.category-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-surface);
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-  text-align: left;
-}
-
-.category-btn:hover {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-}
-
-.category-btn.active {
-  background: var(--accent);
-  color: var(--bg-primary);
-}
-
-.category-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.category-btn {
-  min-height: 44px;
-}
-
-.lucky-main {
-  flex: 1;
-}
-
-.action-btns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-}
-
-.action-btn {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.action-btn:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
-
-.action-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg-primary);
-}
-
-.action-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.action-btn {
-  min-height: 44px;
-}
-
-.lucky-results {
+.lucky-tab {
   animation: fadeIn 0.3s ease;
 }
 
@@ -228,127 +80,114 @@ function formatDate(dateStr: string) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.results-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.result-col h4 {
-  font-size: var(--font-sm);
-  margin: 0 0 var(--space-sm);
-}
-
-.result-col.good h4 { color: var(--success); }
-.result-col.avoid h4 { color: var(--warning); }
-
-.day-list {
+.loading-state {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.day-item {
-  display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  background: var(--bg-surface);
-  border-radius: var(--radius-sm);
-}
-
-.day-item.excellent { border-left: 3px solid var(--success); }
-.day-item.good { border-left: 3px solid var(--accent); }
-.day-item.fair { border-left: 3px solid var(--info); }
-.day-item.caution { border-left: 3px solid #eab308; }
-.day-item.warning { border-left: 3px solid var(--warning); }
-
-.day-date {
-  font-size: var(--font-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.day-weekday {
-  font-size: var(--font-sm);
+  gap: var(--space-md);
+  padding: var(--space-2xl);
   color: var(--text-secondary);
 }
 
-.day-rating {
-  margin-left: auto;
+.section-title {
+  font-size: var(--font-lg);
+  margin: 0 0 var(--space-lg);
+  color: var(--text-primary);
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.category-section {
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.category-name {
+  font-size: var(--font-md);
+  font-weight: 600;
+  margin: 0 0 var(--space-sm);
+  color: var(--accent);
+}
+
+.day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.day-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
   font-size: var(--font-sm);
+}
+
+.day-chip.excellent { border-left: 3px solid var(--success); }
+.day-chip.good { border-left: 3px solid var(--accent); }
+.day-chip.fair { border-left: 3px solid var(--info); }
+.day-chip.caution { border-left: 3px solid #eab308; }
+
+.chip-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.chip-weekday {
+  color: var(--text-secondary);
+}
+
+.chip-rating {
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.day-chip.excellent .chip-rating {
+  background: rgba(34, 197, 94, 0.15);
   color: var(--success);
 }
 
-.day-reason {
-  margin-left: auto;
-  font-size: var(--font-sm);
-  color: var(--warning);
-}
-
-.advice-box {
-  padding: var(--space-md);
-  background: var(--bg-elevated);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--accent);
-}
-
-.advice-box h4 {
-  font-size: var(--font-sm);
+.day-chip.good .chip-rating {
+  background: rgba(245, 158, 11, 0.15);
   color: var(--accent);
-  margin: 0 0 var(--space-sm);
 }
 
-.advice-box p {
-  margin: 0;
+.day-chip.fair .chip-rating {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--info);
+}
+
+.day-chip.caution .chip-rating {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+.no-lucky-days {
+  color: var(--text-secondary);
   font-size: var(--font-sm);
-  color: var(--text-secondary);
-  line-height: 1.6;
+  padding: var(--space-sm) 0;
 }
 
-.select-prompt {
+.empty-state {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: var(--space-2xl);
   color: var(--text-secondary);
-}
-
-.loading-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: var(--space-2xl);
-}
-
-@media (max-width: 767px) {
-  .lucky-layout {
-    flex-direction: column;
-  }
-
-  .lucky-sidebar {
-    flex-direction: row;
-    overflow-x: auto;
-    min-width: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .lucky-sidebar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .category-btn {
-    white-space: nowrap;
-  }
-
-  .results-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lucky-results {
+  .lucky-tab {
     animation: none;
   }
 }

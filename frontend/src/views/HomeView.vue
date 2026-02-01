@@ -58,11 +58,8 @@ const {
   partnerCompatLoading,
 
   // Lucky Days
-  luckyDayCategories,
-  selectedLuckyCategory,
-  selectedLuckyAction,
-  luckyDayResult,
-  luckyDayLoading,
+  luckyDaySummary,
+  luckyDaySummaryLoading,
 
   // Knowledge
   expandedRelation,
@@ -70,15 +67,12 @@ const {
   // Computed
   elementColors,
   mansionElementColor,
-  currentCategoryActions,
 
   // API Functions
   lookupMansion,
   calculateCompatibility,
 
   // Event Handlers
-  selectLuckyCategory,
-  selectLuckyAction,
   toggleRelation,
   toggleLunarDate,
   quickSelect,
@@ -249,14 +243,8 @@ onMounted(() => {
 
       <LuckyDaysTab
         v-if="activeMainTab === 'lucky'"
-        :lucky-day-categories="luckyDayCategories"
-        :selected-lucky-category="selectedLuckyCategory"
-        :selected-lucky-action="selectedLuckyAction"
-        :current-category-actions="currentCategoryActions"
-        :lucky-day-result="luckyDayResult"
-        :lucky-day-loading="luckyDayLoading"
-        @select-category="selectLuckyCategory"
-        @select-action="selectLuckyAction"
+        :lucky-day-summary="luckyDaySummary"
+        :lucky-day-summary-loading="luckyDaySummaryLoading"
       />
 
       <KnowledgeTab
