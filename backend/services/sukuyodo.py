@@ -859,20 +859,53 @@ class SukuyodoService:
             variation = random.randint(-10, 10)
             return max(30, min(100, base_score + cat_bonus + variation))
 
-        # 計算每週運勢
+        # 計算每週運勢（以該月日期為準，非 ISO 週數）
         weekly = []
         first_day = date(year, month, 1)
-        for week in range(4):
-            week_seed = f"{birth_date.isoformat()}{year}{month}week{week}"
+
+        # 計算該月有多少天
+        if month == 12:
+            next_month_first = date(year + 1, 1, 1)
+        else:
+            next_month_first = date(year, month + 1, 1)
+        days_in_month = (next_month_first - first_day).days
+
+        # 將月份分成每 7 天一週
+        week_num = 0
+        day_offset = 0
+        while day_offset < days_in_month:
+            week_num += 1
+            week_start = first_day + timedelta(days=day_offset)
+            week_end_offset = min(day_offset + 6, days_in_month - 1)
+            week_end = first_day + timedelta(days=week_end_offset)
+
+            week_seed = f"{birth_date.isoformat()}{year}{month}week{week_num}"
             random.seed(week_seed)
             week_score = max(40, min(100, base_score + random.randint(-15, 15)))
             categories = ["career", "love", "health", "wealth"]
             focus = random.choice(categories)
+
+            # 計算該週每日運勢
+            daily_overview = []
+            for d in range(week_end_offset - day_offset + 1):
+                day_date = week_start + timedelta(days=d)
+                daily_fortune = self.calculate_daily_fortune(birth_date, day_date)
+                daily_overview.append({
+                    "date": day_date.isoformat(),
+                    "weekday": daily_fortune["weekday"]["name"],
+                    "score": daily_fortune["fortune"]["overall"]
+                })
+
             weekly.append({
-                "week": week + 1,
+                "week": week_num,
+                "week_start": week_start.isoformat(),
+                "week_end": week_end.isoformat(),
                 "score": week_score,
-                "focus": fortune_data["fortune_categories"][focus]["name"]
+                "focus": fortune_data["fortune_categories"][focus]["name"],
+                "daily_overview": daily_overview
             })
+
+            day_offset += 7
 
         random.seed(f"{birth_date.isoformat()}{year}{month}")
 
@@ -913,17 +946,22 @@ class SukuyodoService:
             "advice": f"本月為{relation['name']}月，{relation['advice']}"
         }
 
-    def calculate_weekly_fortune(self, birth_date: date, year: int, week: int) -> dict:
+    def calculate_weekly_fortune(self, birth_date: date, target_date: date) -> dict:
         """
-        計算每週運勢
+        計算週運勢（滾動視窗）
+
+        以 target_date 為中心，返回：
+        - 昨天（1天）
+        - 今天（target_date）
+        - 未來 6 天
+        共 8 天的運勢，更直觀的「本週」概念
 
         Args:
             birth_date: 出生日期
-            year: 年份
-            week: ISO 週數 (1-53)
+            target_date: 中心日期（通常是今天）
 
         Returns:
-            每週運勢資料
+            週運勢資料
         """
         import random
         from datetime import timedelta
@@ -933,23 +971,20 @@ class SukuyodoService:
         user_index = mansion["index"]
         user_element = mansion["element"]
 
-        # 計算該週的起始和結束日期
-        # ISO 週數：第 1 週包含該年第一個星期四
-        jan_4 = date(year, 1, 4)
-        start_of_week_1 = jan_4 - timedelta(days=jan_4.weekday())
-        week_start = start_of_week_1 + timedelta(weeks=week - 1)
-        week_end = week_start + timedelta(days=6)
+        # 滾動視窗：昨天 + 今天 + 未來6天 = 8天
+        yesterday = target_date - timedelta(days=1)
+        week_end = target_date + timedelta(days=6)
 
-        # 取得該週的主宰七曜（以週一為準）
-        weekday = week_start.weekday()
+        # 取得 target_date 的七曜元素
+        weekday = target_date.weekday()
         jp_weekday = (weekday + 1) % 7
         day_info = fortune_data["weekday_elements"].get(str(jp_weekday), {
             "name": "月曜日", "reading": "げつようび", "element": "月", "planet": "月"
         })
-        week_element = day_info["element"]
+        center_element = day_info["element"]
 
         # 計算元素關係
-        relation_type, base_bonus = self._calc_fortune_element_relation(user_element, week_element)
+        relation_type, base_bonus = self._calc_fortune_element_relation(user_element, center_element)
         relation_desc = fortune_data["element_relations"].get(
             relation_type,
             fortune_data["element_relations"]["neutral"]
@@ -959,14 +994,14 @@ class SukuyodoService:
         base_score = 70 + base_bonus
 
         # 計算各項運勢
-        random.seed(f"{birth_date.isoformat()}{year}week{week}")
+        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
 
         def calc_weekly_category(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
             cat_bonus = 6 if user_element in cat_data["favorable_elements"] else 0
-            week_bonus = 4 if week_element in cat_data["favorable_elements"] else 0
+            day_bonus = 4 if center_element in cat_data["favorable_elements"] else 0
             variation = random.randint(-10, 10)
-            return max(30, min(100, base_score + cat_bonus + week_bonus + variation))
+            return max(30, min(100, base_score + cat_bonus + day_bonus + variation))
 
         overall_score = max(30, min(100, base_score))
         career_score = calc_weekly_category("career")
@@ -974,21 +1009,17 @@ class SukuyodoService:
         health_score = calc_weekly_category("health")
         wealth_score = calc_weekly_category("wealth")
 
-        # 計算每日運勢概覽
+        # 計算每日運勢概覽（8天：昨天 + 今天 + 未來6天）
         daily_overview = []
-        for day_offset in range(7):
-            day_date = week_start + timedelta(days=day_offset)
-            day_weekday = (day_date.weekday() + 1) % 7
-            day_element_info = fortune_data["weekday_elements"].get(str(day_weekday), {})
-            day_element = day_element_info.get("element", "土")
-
-            _, day_bonus = self._calc_fortune_element_relation(user_element, day_element)
-            day_score = max(40, min(100, 70 + day_bonus + random.randint(-8, 8)))
-
+        for day_offset in range(-1, 7):  # -1 = 昨天, 0 = 今天, 1-6 = 未來
+            day_date = target_date + timedelta(days=day_offset)
+            daily_fortune = self.calculate_daily_fortune(birth_date, day_date)
             daily_overview.append({
                 "date": day_date.isoformat(),
-                "weekday": day_element_info.get("name", ""),
-                "score": day_score
+                "weekday": daily_fortune["weekday"]["name"],
+                "score": daily_fortune["fortune"]["overall"],
+                "is_today": day_offset == 0,
+                "is_yesterday": day_offset == -1
             })
 
         # 選擇建議
@@ -1007,18 +1038,17 @@ class SukuyodoService:
 
         # 幸運物品
         lucky = fortune_data["lucky_items"]
-        lucky_direction = lucky["directions"].get(week_element, lucky["directions"]["土"])
-        lucky_color = lucky["colors"].get(week_element, lucky["colors"]["土"])
+        lucky_direction = lucky["directions"].get(center_element, lucky["directions"]["土"])
+        lucky_color = lucky["colors"].get(center_element, lucky["colors"]["土"])
 
         return {
-            "year": year,
-            "week": week,
-            "week_start": week_start.isoformat(),
+            "center_date": target_date.isoformat(),
+            "week_start": yesterday.isoformat(),
             "week_end": week_end.isoformat(),
-            "week_element": {
+            "today_element": {
                 "name": day_info["name"],
                 "reading": day_info["reading"],
-                "element": week_element,
+                "element": center_element,
                 "planet": day_info["planet"]
             },
             "your_mansion": {
@@ -1708,6 +1738,181 @@ class SukuyodoService:
             "土": "土性能量帶來的穩定和可靠是團隊中重要的支柱特質。建議選擇穩定的工作環境，能讓你的踏實特質得到發揮。長期耕耘型的職位往往能帶來豐碩的成果。"
         }
         return advice_map.get(element, "建議根據個人特質，選擇能充分發揮所長的工作方向。")
+
+    # ==================== 雙人吉日 ====================
+
+    # 關係類型對應的吉日項目
+    PAIR_LUCKY_ACTIONS = {
+        "dating": {  # 交往對象
+            "name": "交往對象",
+            "actions": [
+                {"key": "date", "name": "約會", "favor_relations": ["eishin", "gyotai", "yusui"], "favor_score": 70},
+                {"key": "confession", "name": "告白", "favor_relations": ["eishin", "mei"], "favor_score": 75},
+                {"key": "meet_parents", "name": "見家長", "favor_relations": ["eishin", "gyotai"], "favor_score": 80},
+                {"key": "engagement", "name": "訂婚", "favor_relations": ["eishin", "gyotai"], "favor_score": 80},
+                {"key": "register", "name": "結婚登記", "favor_relations": ["eishin", "mei", "gyotai"], "favor_score": 85},
+                {"key": "wedding", "name": "婚禮", "favor_relations": ["eishin", "mei", "gyotai"], "favor_score": 85},
+            ]
+        },
+        "spouse": {  # 配偶
+            "name": "配偶",
+            "actions": [
+                {"key": "date", "name": "約會", "favor_relations": ["eishin", "gyotai", "yusui"], "favor_score": 65},
+                {"key": "travel", "name": "旅遊", "favor_relations": ["eishin", "yusui"], "favor_score": 70},
+                {"key": "discussion", "name": "重要商量", "favor_relations": ["eishin", "mei"], "favor_score": 75},
+            ]
+        },
+        "parent": {  # 父母
+            "name": "父母",
+            "actions": [
+                {"key": "visit", "name": "探親", "favor_relations": ["eishin", "yusui", "gyotai"], "favor_score": 65},
+                {"key": "gift", "name": "送禮", "favor_relations": ["eishin", "yusui"], "favor_score": 60},
+                {"key": "discussion", "name": "重要商談", "favor_relations": ["eishin", "mei"], "favor_score": 75},
+            ]
+        },
+        "family": {  # 家人
+            "name": "家人",
+            "actions": [
+                {"key": "gathering", "name": "聚會", "favor_relations": ["eishin", "yusui", "gyotai"], "favor_score": 65},
+                {"key": "travel", "name": "旅遊", "favor_relations": ["eishin", "yusui"], "favor_score": 70},
+                {"key": "gift", "name": "送禮", "favor_relations": ["eishin", "yusui"], "favor_score": 60},
+            ]
+        },
+        "friend": {  # 朋友/同事
+            "name": "朋友/同事",
+            "actions": [
+                {"key": "gathering", "name": "聚會", "favor_relations": ["eishin", "yusui", "gyotai"], "favor_score": 65},
+                {"key": "collaboration", "name": "合作", "favor_relations": ["eishin", "gyotai"], "favor_score": 75},
+                {"key": "travel", "name": "旅遊", "favor_relations": ["eishin", "yusui"], "favor_score": 70},
+            ]
+        }
+    }
+
+    def get_pair_lucky_days(
+        self,
+        birth_date1: date,
+        birth_date2: date,
+        relation_type: str,
+        days_ahead: int = 30
+    ) -> dict:
+        """
+        計算雙人吉日
+
+        根據兩人的本命宿和關係類型，計算適合共同行動的吉日。
+
+        Args:
+            birth_date1: 第一人（自己）的生日
+            birth_date2: 第二人（收藏對象）的生日
+            relation_type: 關係類型（dating/spouse/parent/family/friend）
+            days_ahead: 查詢未來幾天（預設 30）
+
+        Returns:
+            各項吉日列表
+        """
+        from datetime import timedelta
+
+        # 驗證關係類型
+        if relation_type not in self.PAIR_LUCKY_ACTIONS:
+            raise ValueError(f"無效的關係類型: {relation_type}")
+
+        relation_config = self.PAIR_LUCKY_ACTIONS[relation_type]
+
+        # 取得雙方本命宿資料
+        mansion1 = self.get_mansion(birth_date1)
+        mansion2 = self.get_mansion(birth_date2)
+
+        # 計算兩人相性
+        compatibility = self.calculate_compatibility(birth_date1, birth_date2)
+
+        today = date.today()
+        fortune_data = self._load_fortune_data()
+
+        # 為每個行動項目計算吉日
+        results = []
+        for action in relation_config["actions"]:
+            lucky_days = []
+            favor_relations = action["favor_relations"]
+            favor_score = action["favor_score"]
+
+            for i in range(days_ahead):
+                check_date = today + timedelta(days=i)
+
+                # 計算雙方當日運勢
+                fortune1 = self.calculate_daily_fortune(birth_date1, check_date)
+                fortune2 = self.calculate_daily_fortune(birth_date2, check_date)
+
+                # 取雙方運勢平均
+                avg_score = (fortune1["fortune"]["overall"] + fortune2["fortune"]["overall"]) // 2
+
+                # 取得當日資訊
+                weekday = check_date.weekday()
+                day_info = fortune_data["weekday_elements"][str(weekday)]
+                day_name = day_info["name"]
+
+                # 計算當日宿
+                lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
+                day_mansion_index = self.get_mansion_index(lunar_month, lunar_day)
+
+                # 計算雙方與當日宿的關係
+                relation1 = self.get_relation_type(mansion1["index"], day_mansion_index)
+                relation2 = self.get_relation_type(mansion2["index"], day_mansion_index)
+
+                # 判斷是否吉日
+                is_lucky = False
+                lucky_reason = ""
+
+                # 雙方都是好關係
+                if relation1["type"] in favor_relations and relation2["type"] in favor_relations:
+                    is_lucky = True
+                    lucky_reason = f"雙方皆{relation1['name']}/{relation2['name']}日，大吉"
+                # 至少一方是好關係，另一方不是凶日
+                elif (relation1["type"] in favor_relations and relation2["type"] not in ["ankai", "kisei"]) or \
+                     (relation2["type"] in favor_relations and relation1["type"] not in ["ankai", "kisei"]):
+                    if avg_score >= favor_score:
+                        is_lucky = True
+                        lucky_reason = f"運勢佳（平均 {avg_score} 分）"
+                # 雙方運勢都很好
+                elif avg_score >= favor_score + 10:
+                    if relation1["type"] not in ["ankai", "kisei"] and relation2["type"] not in ["ankai", "kisei"]:
+                        is_lucky = True
+                        lucky_reason = f"雙方運勢極佳（{avg_score} 分）"
+
+                if is_lucky and len(lucky_days) < 5:
+                    rating = "大吉" if avg_score >= 85 else "吉" if avg_score >= 70 else "中吉"
+                    lucky_days.append({
+                        "date": check_date.isoformat(),
+                        "weekday": day_name,
+                        "score": avg_score,
+                        "rating": rating,
+                        "reason": lucky_reason
+                    })
+
+            results.append({
+                "action": action["key"],
+                "name": action["name"],
+                "lucky_days": lucky_days
+            })
+
+        return {
+            "relation_type": relation_type,
+            "relation_name": relation_config["name"],
+            "person1": {
+                "mansion": mansion1["name_jp"],
+                "reading": mansion1["reading"],
+                "element": mansion1["element"]
+            },
+            "person2": {
+                "mansion": mansion2["name_jp"],
+                "reading": mansion2["reading"],
+                "element": mansion2["element"]
+            },
+            "compatibility": {
+                "relation": compatibility["relation"]["name"],
+                "score": compatibility["score"],
+                "description": compatibility["relation"]["description"]
+            },
+            "actions": results
+        }
 
 
 # 全域實例

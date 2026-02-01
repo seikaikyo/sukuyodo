@@ -322,28 +322,24 @@ def get_monthly_fortune(
     }
 
 
-@router.get("/fortune/weekly/{year}/{week}")
+@router.get("/fortune/weekly/{target_date}")
 def get_weekly_fortune(
-    year: int,
-    week: int,
+    target_date: str,
     birth_date: str,
     session: Session = Depends(get_session)
 ):
     """
-    取得每週運勢
+    取得週運勢（滾動視窗）
+
+    以指定日期為中心，返回昨天 + 今天 + 未來6天 = 共8天的運勢。
+    更直觀的「本週」概念，不使用 ISO 週數。
 
     Args:
-        year: 年份
-        week: ISO 週數 (1-53)
+        target_date: 中心日期，格式 YYYY-MM-DD（通常是今天）
         birth_date: 出生日期，格式 YYYY-MM-DD（Query parameter）
     """
-    if week < 1 or week > 53:
-        raise HTTPException(
-            status_code=400,
-            detail="週數必須在 1-53 之間"
-        )
-
     try:
+        target = date.fromisoformat(target_date)
         birth = date.fromisoformat(birth_date)
     except ValueError:
         raise HTTPException(
@@ -351,7 +347,7 @@ def get_weekly_fortune(
             detail="日期格式錯誤，請使用 YYYY-MM-DD"
         )
 
-    result = sukuyodo_service.calculate_weekly_fortune(birth, year, week)
+    result = sukuyodo_service.calculate_weekly_fortune(birth, target)
 
     stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
 
@@ -565,15 +561,22 @@ def get_lucky_days_summary(
             detail="僅支援 1900 年後的日期"
         )
 
-    # 精選 7 個最常用的項目
+    # 個人吉日項目
     actions = [
+        # 事業
         {"category": "career", "action": "interview", "name": "求職面試"},
         {"category": "career", "action": "contract", "name": "簽約談判"},
+        # 居住
         {"category": "housing", "action": "move_in", "name": "搬家入宅"},
-        {"category": "marriage", "action": "register", "name": "結婚登記"},
+        # 醫療
         {"category": "medical", "action": "surgery", "name": "手術開刀"},
+        # 旅行
         {"category": "travel", "action": "abroad", "name": "出遊出國"},
-        {"category": "dating", "action": "first_date", "name": "重要約會"},
+        # 美容
+        {"category": "beauty", "action": "haircut", "name": "理髮"},
+        {"category": "beauty", "action": "hair_coloring", "name": "染燙髮"},
+        # 購物
+        {"category": "shopping", "action": "big_purchase", "name": "大額消費"},
     ]
 
     summary = []
@@ -653,6 +656,75 @@ def get_lucky_days(
 
     # 記錄使用統計
     stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
+@router.get("/lucky-days/pair/{date1}/{date2}")
+def get_pair_lucky_days(
+    date1: str,
+    date2: str,
+    relation: str,
+    session: Session = Depends(get_session)
+):
+    """
+    查詢雙人吉日
+
+    根據兩人的本命宿和關係類型，計算適合共同行動的吉日。
+
+    Args:
+        date1: 第一人（自己）的生日，格式 YYYY-MM-DD
+        date2: 第二人（收藏對象）的生日，格式 YYYY-MM-DD
+        relation: 關係類型（dating/spouse/parent/family/friend）
+    """
+    try:
+        birth_date1 = date.fromisoformat(date1)
+        birth_date2 = date.fromisoformat(date2)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    # 驗證日期範圍
+    today = date.today()
+    for d in [birth_date1, birth_date2]:
+        if d > today:
+            raise HTTPException(
+                status_code=400,
+                detail="生日不可為未來日期"
+            )
+        if d.year < 1900:
+            raise HTTPException(
+                status_code=400,
+                detail="僅支援 1900 年後的日期"
+            )
+
+    # 驗證關係類型
+    valid_relations = ["dating", "spouse", "parent", "family", "friend"]
+    if relation not in valid_relations:
+        raise HTTPException(
+            status_code=400,
+            detail=f"無效的關係類型，可用值：{', '.join(valid_relations)}"
+        )
+
+    try:
+        result = sukuyodo_service.get_pair_lucky_days(
+            birth_date1,
+            birth_date2,
+            relation
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+
+    # 記錄使用統計
+    stats_service.log_usage(session, Features.SUKUYODO_COMPATIBILITY)
 
     return {
         "success": True,

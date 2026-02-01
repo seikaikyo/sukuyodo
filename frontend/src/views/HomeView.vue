@@ -38,7 +38,6 @@ const {
   monthlyFortune,
   yearlyFortune,
   expandedMonthlyWeek,
-  weekDetailLoading,
   currentWeekNumber,
 
   // Compatibility
@@ -60,6 +59,10 @@ const {
   // Lucky Days
   luckyDaySummary,
   luckyDaySummaryLoading,
+  activeLuckyTab,
+  selectedPartnerId,
+  pairLuckyDays,
+  pairLuckyDaysLoading,
 
   // Knowledge
   expandedRelation,
@@ -71,13 +74,15 @@ const {
   // API Functions
   lookupMansion,
   calculateCompatibility,
+  fetchPairLuckyDays,
+  clearPairSelection,
+  fetchDailyFortuneForDate,
 
   // Event Handlers
   toggleRelation,
   toggleLunarDate,
   quickSelect,
   toggleMonthlyWeek,
-  getWeekDetail,
 
   // Init
   init
@@ -214,10 +219,9 @@ onMounted(() => {
         :monthly-fortune="monthlyFortune"
         :yearly-fortune="yearlyFortune"
         :expanded-monthly-week="expandedMonthlyWeek"
-        :week-detail-loading="weekDetailLoading"
         :current-week-number="currentWeekNumber"
-        :get-week-detail="getWeekDetail"
         @toggle-week="toggleMonthlyWeek"
+        @select-day="fetchDailyFortuneForDate"
       />
 
       <MatchTab
@@ -245,6 +249,14 @@ onMounted(() => {
         v-if="activeMainTab === 'lucky'"
         :lucky-day-summary="luckyDaySummary"
         :lucky-day-summary-loading="luckyDaySummaryLoading"
+        :active-lucky-tab="activeLuckyTab"
+        :selected-partner-id="selectedPartnerId"
+        :pair-lucky-days="pairLuckyDays"
+        :pair-lucky-days-loading="pairLuckyDaysLoading"
+        @update:active-lucky-tab="activeLuckyTab = $event"
+        @select-partner="fetchPairLuckyDays"
+        @clear-partner="clearPairSelection"
+        @refresh-partner="fetchPairLuckyDays"
       />
 
       <KnowledgeTab

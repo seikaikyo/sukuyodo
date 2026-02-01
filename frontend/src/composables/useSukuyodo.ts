@@ -121,11 +121,10 @@ export interface DailyFortune {
 }
 
 export interface WeeklyFortune {
-  year: number
-  week: number
+  center_date: string
   week_start: string
   week_end: string
-  week_element: {
+  today_element: {
     name: string
     reading: string
     element: string
@@ -146,6 +145,8 @@ export interface WeeklyFortune {
     date: string
     weekday: string
     score: number
+    is_today: boolean
+    is_yesterday: boolean
   }[]
   advice: string
   lucky: {
@@ -186,8 +187,15 @@ export interface MonthlyFortune {
   fortune: FortuneScores
   weekly: {
     week: number
+    week_start: string
+    week_end: string
     score: number
     focus: string
+    daily_overview: {
+      date: string
+      weekday: string
+      score: number
+    }[]
   }[]
   advice: string
 }
@@ -317,6 +325,33 @@ export interface LuckyDaySummary {
   summary: LuckyDaySummaryItem[]
 }
 
+export interface PairLuckyAction {
+  action: string
+  name: string
+  lucky_days: LuckyDay[]
+}
+
+export interface PairLuckyDaysResult {
+  relation_type: string
+  relation_name: string
+  person1: {
+    mansion: string
+    reading: string
+    element: string
+  }
+  person2: {
+    mansion: string
+    reading: string
+    element: string
+  }
+  compatibility: {
+    relation: string
+    score: number
+    description: string
+  }
+  actions: PairLuckyAction[]
+}
+
 export interface WheelMansion {
   index: number
   name_jp: string
@@ -421,8 +456,6 @@ export function useSukuyodo() {
 
   // Monthly Week Expansion
   const expandedMonthlyWeek = ref<number | null>(null)
-  const weekDetailCache = ref<Map<string, WeeklyFortune>>(new Map())
-  const weekDetailLoading = ref(false)
 
   // Compatibility
   const compatFinder = ref<CompatibilityFinderResult | null>(null)
@@ -448,6 +481,12 @@ export function useSukuyodo() {
   const luckyDayLoading = ref(false)
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
   const luckyDaySummaryLoading = ref(false)
+
+  // Pair Lucky Days
+  const activeLuckyTab = ref<'personal' | 'pair'>('personal')
+  const selectedPartnerId = ref<string | null>(null)
+  const pairLuckyDays = ref<PairLuckyDaysResult | null>(null)
+  const pairLuckyDaysLoading = ref(false)
 
   // Knowledge
   const expandedRelation = ref<string | null>(null)
@@ -614,17 +653,35 @@ export function useSukuyodo() {
     }
   }
 
+  async function fetchDailyFortuneForDate(targetDate: string) {
+    if (!birthDate.value) return
+    fortuneLoading.value = true
+
+    try {
+      const res = await fetch(getApiUrl(`/fortune/daily/${targetDate}?birth_date=${birthDate.value}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          dailyFortune.value = data.data
+          activeFortuneTab.value = 'daily'
+        }
+      }
+    } catch {
+      console.error('Failed to fetch daily fortune for date')
+    } finally {
+      fortuneLoading.value = false
+    }
+  }
+
   async function fetchWeeklyFortune() {
     if (!birthDate.value) return
     fortuneLoading.value = true
 
-    const now = new Date()
-    const jan4 = new Date(now.getFullYear(), 0, 4)
-    const daysSinceJan4 = Math.floor((now.getTime() - jan4.getTime()) / 86400000)
-    const week = Math.ceil((daysSinceJan4 + jan4.getDay() + 1) / 7)
+    // 使用今天作為中心日期（滾動視窗）
+    const today = new Date().toISOString().split('T')[0]
 
     try {
-      const res = await fetch(getApiUrl(`/fortune/weekly/${now.getFullYear()}/${week}?birth_date=${birthDate.value}`))
+      const res = await fetch(getApiUrl(`/fortune/weekly/${today}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -638,65 +695,19 @@ export function useSukuyodo() {
     }
   }
 
-  // 計算 ISO 週數
-  function getISOWeek(d: Date): number {
-    const dt = new Date(d.valueOf())
-    const dayNum = (d.getDay() + 6) % 7  // Monday = 0
-    dt.setDate(dt.getDate() - dayNum + 3)  // Thursday
-    const firstThursday = dt.valueOf()
-    dt.setMonth(0, 1)
-    if (dt.getDay() !== 4) {
-      dt.setMonth(0, 1 + ((4 - dt.getDay()) + 7) % 7)
-    }
-    return 1 + Math.ceil((firstThursday - dt.valueOf()) / 604800000)
-  }
+  // 計算當月第幾週（用於標示「本週」）
+  const currentWeekNumber = computed(() => {
+    const today = new Date()
+    return Math.ceil(today.getDate() / 7)
+  })
 
-  // 本週週次
-  const currentWeekNumber = computed(() => getISOWeek(new Date()))
-
-  // 載入特定週的詳細運勢
-  async function fetchWeekDetail(year: number, week: number): Promise<WeeklyFortune | null> {
-    if (!birthDate.value) return null
-
-    const cacheKey = `${year}-${week}-${birthDate.value}`
-    if (weekDetailCache.value.has(cacheKey)) {
-      return weekDetailCache.value.get(cacheKey)!
-    }
-
-    weekDetailLoading.value = true
-    try {
-      const res = await fetch(getApiUrl(`/fortune/weekly/${year}/${week}?birth_date=${birthDate.value}`))
-      if (res.ok) {
-        const data = await res.json()
-        if (data.success) {
-          weekDetailCache.value.set(cacheKey, data.data)
-          return data.data
-        }
-      }
-    } catch {
-      console.error('Failed to fetch week detail')
-    } finally {
-      weekDetailLoading.value = false
-    }
-    return null
-  }
-
-  // 切換月運勢中的週次展開
-  async function toggleMonthlyWeek(week: number) {
+  // 切換月運勢中的週次展開（資料已內嵌，無需額外 fetch）
+  function toggleMonthlyWeek(week: number) {
     if (expandedMonthlyWeek.value === week) {
       expandedMonthlyWeek.value = null
     } else {
       expandedMonthlyWeek.value = week
-      if (monthlyFortune.value) {
-        await fetchWeekDetail(monthlyFortune.value.year, week)
-      }
     }
-  }
-
-  // 取得快取的週詳細資料
-  function getWeekDetail(year: number, week: number): WeeklyFortune | null {
-    const cacheKey = `${year}-${week}-${birthDate.value}`
-    return weekDetailCache.value.get(cacheKey) || null
   }
 
   async function fetchMonthlyFortune() {
@@ -806,6 +817,39 @@ export function useSukuyodo() {
     } finally {
       luckyDaySummaryLoading.value = false
     }
+  }
+
+  async function fetchPairLuckyDays(partnerId: string) {
+    const myDate = birthDate.value || myBirthDate.value
+    if (!myDate) return
+
+    const partner = profile.value.partners.find(p => p.id === partnerId)
+    if (!partner || !partner.birthDate) return
+
+    selectedPartnerId.value = partnerId
+    pairLuckyDaysLoading.value = true
+    pairLuckyDays.value = null
+
+    try {
+      const res = await fetch(
+        getApiUrl(`/lucky-days/pair/${myDate}/${partner.birthDate}?relation=${partner.relation}`)
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          pairLuckyDays.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch pair lucky days')
+    } finally {
+      pairLuckyDaysLoading.value = false
+    }
+  }
+
+  function clearPairSelection() {
+    selectedPartnerId.value = null
+    pairLuckyDays.value = null
   }
 
   async function calculateCompatibility() {
@@ -1047,7 +1091,6 @@ export function useSukuyodo() {
     yearlyFortune,
     fortuneLoading,
     expandedMonthlyWeek,
-    weekDetailLoading,
     currentWeekNumber,
 
     // Compatibility
@@ -1074,6 +1117,10 @@ export function useSukuyodo() {
     luckyDayLoading,
     luckyDaySummary,
     luckyDaySummaryLoading,
+    activeLuckyTab,
+    selectedPartnerId,
+    pairLuckyDays,
+    pairLuckyDaysLoading,
 
     // Knowledge
     expandedRelation,
@@ -1095,8 +1142,11 @@ export function useSukuyodo() {
     lookupMansion,
     fetchLuckyDays,
     fetchLuckyDaySummary,
+    fetchPairLuckyDays,
+    clearPairSelection,
     calculateCompatibility,
     fetchPartnerCompatibilities,
+    fetchDailyFortuneForDate,
 
     // Event Handlers
     selectLuckyCategory,
@@ -1106,7 +1156,6 @@ export function useSukuyodo() {
     toggleLunarDate,
     quickSelect,
     toggleMonthlyWeek,
-    getWeekDetail,
 
     // Init
     init

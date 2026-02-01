@@ -15,10 +15,10 @@ class Settings(BaseSettings):
 
     # CORS
     cors_origins: list[str] = [
-        "http://localhost:5173",
-        "http://localhost:5174",
+        "http://localhost:5171",  # sukuyodo 固定 port
         "http://localhost:3000",
         "https://sukuyodo.vercel.app",
+        "https://sukuyodo.dashai.dev",
     ]
 
     class Config:

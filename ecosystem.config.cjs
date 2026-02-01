@@ -14,7 +14,7 @@ module.exports = {
       name: 'sukuyodo-frontend',
       cwd: '/Users/dash/Documents/github/sukuyodo/frontend',
       script: 'npm',
-      args: 'run dev -- --port 5174',
+      args: 'run dev -- --port 5171',
       interpreter: 'none'
     }
   ]

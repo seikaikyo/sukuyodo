@@ -1,15 +1,23 @@
 import { ref, computed, watch } from 'vue'
 
+export type RelationType = 'dating' | 'spouse' | 'parent' | 'family' | 'friend'
+
+export const RELATION_TYPES: { value: RelationType; label: string }[] = [
+  { value: 'dating', label: '交往對象' },
+  { value: 'spouse', label: '配偶' },
+  { value: 'parent', label: '父母' },
+  { value: 'family', label: '家人' },
+  { value: 'friend', label: '朋友/同事' },
+]
+
 export interface Partner {
   id: string
   nickname: string
-  gender: 'male' | 'female' | 'other'
   birthDate: string  // YYYY-MM-DD 格式
-  isPrimary: boolean
+  relation: RelationType
 }
 
 export interface UserProfile {
-  gender: 'male' | 'female' | 'other' | null
   birthDate: string | null  // YYYY-MM-DD 格式
   partners: Partner[]
 }
@@ -21,13 +29,22 @@ function loadProfile(): UserProfile {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
-      return JSON.parse(saved)
+      const parsed = JSON.parse(saved)
+      // 遷移舊資料：移除不再使用的欄位
+      return {
+        birthDate: parsed.birthDate || null,
+        partners: (parsed.partners || []).map((p: Partner & { gender?: string; isPrimary?: boolean }) => ({
+          id: p.id,
+          nickname: p.nickname,
+          birthDate: p.birthDate,
+          relation: p.relation || 'friend'
+        }))
+      }
     }
   } catch (e) {
     console.error('載入個人檔案失敗')
   }
   return {
-    gender: null,
     birthDate: null,
     partners: []
   }
@@ -50,34 +67,16 @@ watch(profile, (newProfile) => {
   saveProfile(newProfile)
 }, { deep: true })
 
-export const GENDER_OPTIONS = [
-  { value: 'male', label: '男' },
-  { value: 'female', label: '女' },
-  { value: 'other', label: '其他' }
-]
-
 export function useProfile() {
   const isProfileSet = computed(() => {
-    return profile.value.gender !== null && profile.value.birthDate !== null
+    return profile.value.birthDate !== null
   })
 
   const myBirthDate = computed(() => profile.value.birthDate || null)
 
-  const primaryPartner = computed(() => {
-    return profile.value.partners.find(p => p.isPrimary) || profile.value.partners[0] || null
-  })
-
-  function setMyProfile(
-    gender: 'male' | 'female' | 'other',
-    birthDate: string
-  ) {
-    profile.value.gender = gender
-    profile.value.birthDate = birthDate
-  }
-
   function addPartner(partner: Omit<Partner, 'id'>) {
-    if (profile.value.partners.length >= 5) {
-      throw new Error('最多只能新增 5 個關注對象')
+    if (profile.value.partners.length >= 10) {
+      throw new Error('最多只能新增 10 個收藏對象')
     }
 
     const newPartner: Partner = {
@@ -85,40 +84,25 @@ export function useProfile() {
       id: crypto.randomUUID()
     }
 
-    // 如果是第一個，設為主要
-    if (profile.value.partners.length === 0) {
-      newPartner.isPrimary = true
-    }
-
     profile.value.partners.push(newPartner)
+  }
+
+  function updatePartner(id: string, updates: Partial<Omit<Partner, 'id'>>) {
+    const partner = profile.value.partners.find(p => p.id === id)
+    if (partner) {
+      Object.assign(partner, updates)
+    }
   }
 
   function removePartner(id: string) {
     const idx = profile.value.partners.findIndex(p => p.id === id)
-    if (idx === -1) return
-
-    const partner = profile.value.partners[idx]
-    if (!partner) return
-
-    const wasPrimary = partner.isPrimary
-    profile.value.partners.splice(idx, 1)
-
-    // 如果移除的是主要對象，設定第一個為主要
-    const firstPartner = profile.value.partners[0]
-    if (wasPrimary && firstPartner) {
-      firstPartner.isPrimary = true
+    if (idx !== -1) {
+      profile.value.partners.splice(idx, 1)
     }
-  }
-
-  function setPrimaryPartner(id: string) {
-    profile.value.partners.forEach(p => {
-      p.isPrimary = p.id === id
-    })
   }
 
   function clearProfile() {
     profile.value = {
-      gender: null,
       birthDate: null,
       partners: []
     }
@@ -128,11 +112,10 @@ export function useProfile() {
     profile,
     isProfileSet,
     myBirthDate,
-    primaryPartner,
-    setMyProfile,
     addPartner,
+    updatePartner,
     removePartner,
-    setPrimaryPartner,
-    clearProfile
+    clearProfile,
+    RELATION_TYPES
   }
 }
