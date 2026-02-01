@@ -1,0 +1,99 @@
+/* 宿曜道 - 設計系統變數 */
+
+:root {
+  /* 基底色 - 星空深夜 */
+  --cosmos-void: #0D0B14;
+  --cosmos-night: #1A1625;
+  --cosmos-dusk: #2A2438;
+  --cosmos-twilight: #3D3650;
+
+  /* 主色 - 星語紫 */
+  --astral-deep: #4A3B6B;
+  --astral-medium: #6B5A8E;
+  --astral-light: #8E7CB3;
+
+  /* 強調色 - 星光金 */
+  --stellar-gold: #D4AF37;
+  --stellar-glow: #E8C547;
+  --stellar-soft: #C9A87C;
+
+  /* 輔助色 */
+  --moon-silver: #B8C4D0;
+  --parchment: #FAF8F5;
+  --scroll-cream: #F5F0E8;
+
+  /* 文字層次 */
+  --text-primary: #F5F0E8;
+  --text-secondary: #B8C4D0;
+  --text-muted: #6B5A8E;
+
+  /* 邊框 */
+  --border-subtle: rgba(184, 196, 208, 0.08);
+  --border-default: rgba(184, 196, 208, 0.12);
+  --border-gold: rgba(212, 175, 55, 0.3);
+
+  /* 語意色 */
+  --success: #4A9B6B;
+  --warning: #C9A847;
+  --error: #9B4A5A;
+
+  /* 字型 */
+  --font-display: 'Noto Serif TC', serif;
+  --font-body: 'Noto Sans TC', sans-serif;
+
+  /* 間距基數 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* 圓角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* 陰影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.2);
+
+  /* 動畫 */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}
+
+/* Shoelace 主題覆寫 */
+:root {
+  --sl-color-primary-50: #f5f0e8;
+  --sl-color-primary-100: #e8c547;
+  --sl-color-primary-200: #d4af37;
+  --sl-color-primary-300: #c9a87c;
+  --sl-color-primary-400: #8e7cb3;
+  --sl-color-primary-500: #6b5a8e;
+  --sl-color-primary-600: #4a3b6b;
+  --sl-color-primary-700: #3d3650;
+  --sl-color-primary-800: #2a2438;
+  --sl-color-primary-900: #1a1625;
+  --sl-color-primary-950: #0d0b14;
+
+  --sl-panel-background-color: var(--cosmos-dusk);
+  --sl-panel-border-color: var(--border-default);
+
+  --sl-input-background-color: var(--cosmos-night);
+  --sl-input-border-color: var(--border-default);
+  --sl-input-color: var(--text-primary);
+  --sl-input-placeholder-color: var(--text-muted);
+  --sl-input-focus-ring-color: var(--stellar-gold);
+
+  --sl-font-sans: var(--font-body);
+  --sl-font-serif: var(--font-display);
+}

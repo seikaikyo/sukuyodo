@@ -104,7 +104,7 @@ onMounted(() => {
 
     <!-- Query Dialog -->
     <sl-dialog
-      :open="showQueryDialog"
+      :open.prop="showQueryDialog"
       label="查詢本命宿"
       class="query-dialog"
       @sl-hide="showQueryDialog = false"
@@ -149,8 +149,8 @@ onMounted(() => {
         <sl-button variant="default" @click="showQueryDialog = false">取消</sl-button>
         <sl-button
           variant="primary"
-          :loading="lookupLoading"
-          :disabled="!birthDate"
+          :loading.prop="lookupLoading"
+          :disabled.prop="!birthDate"
           @click="lookupMansion"
         >查詢</sl-button>
       </div>
