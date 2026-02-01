@@ -3,6 +3,9 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from config import get_settings
 
+# 導入模型以確保 SQLModel 能建立資料表
+from models.stats import UsageStats  # noqa: F401
+
 settings = get_settings()
 
 # 同步引擎 (用於初始化)

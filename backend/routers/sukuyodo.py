@@ -9,7 +9,7 @@ from services.sukuyodo import sukuyodo_service
 from services.stats import stats_service
 from models.stats import Features
 
-router = APIRouter(prefix="/api/sukuyodo", tags=["宿曜道"])
+router = APIRouter(tags=["宿曜道"])
 
 
 class CompatibilityRequest(BaseModel):
