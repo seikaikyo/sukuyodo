@@ -7,6 +7,7 @@ from sqlmodel import Session
 from database import get_session
 from services.sukuyodo import sukuyodo_service
 from services.stats import stats_service
+from services.japanese_calendar import japanese_calendar_service
 from models.stats import Features
 
 router = APIRouter(tags=["宿曜道"])
@@ -655,6 +656,109 @@ def get_lucky_days(
         )
 
     # 記錄使用統計
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
+@router.get("/calendar/lucky-days/{year}/{month}")
+def get_japanese_calendar_lucky_days(
+    year: int,
+    month: int,
+    session: Session = Depends(get_session)
+):
+    """
+    取得指定月份的日本選日曆注
+
+    返回一粒萬倍日、天赦日、寅の日、巳の日等吉日列表，
+    以及不成就日等凶日列表。
+
+    Args:
+        year: 年份
+        month: 月份 (1-12)
+
+    Returns:
+        選日曆注資料
+    """
+    if month < 1 or month > 12:
+        raise HTTPException(
+            status_code=400,
+            detail="月份必須在 1-12 之間"
+        )
+
+    if year < 1900 or year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    result = japanese_calendar_service.get_calendar_days(year, month)
+
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
+@router.get("/calendar/day/{date_str}")
+def get_japanese_calendar_day(
+    date_str: str,
+    session: Session = Depends(get_session)
+):
+    """
+    取得單日的日本選日曆注資訊
+
+    Args:
+        date_str: 日期，格式 YYYY-MM-DD
+
+    Returns:
+        單日選日資訊
+    """
+    try:
+        target_date = date.fromisoformat(date_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    result = japanese_calendar_service.get_day_info(target_date)
+
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
+@router.get("/calendar/upcoming")
+def get_upcoming_japanese_lucky_days(
+    days: int = 30,
+    session: Session = Depends(get_session)
+):
+    """
+    取得未來指定天數內的日本吉日
+
+    Args:
+        days: 查詢未來幾天（預設 30，最大 90）
+
+    Returns:
+        各類吉日列表
+    """
+    if days < 1 or days > 90:
+        raise HTTPException(
+            status_code=400,
+            detail="天數必須在 1-90 之間"
+        )
+
+    result = japanese_calendar_service.get_upcoming_lucky_days(days)
+
     stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
 
     return {

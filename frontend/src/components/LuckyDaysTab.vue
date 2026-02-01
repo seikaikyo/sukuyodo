@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { LuckyDaySummary, PairLuckyDaysResult } from '../composables/useSukuyodo'
+import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
 
 const props = defineProps<{
   luckyDaySummary: LuckyDaySummary | null
   luckyDaySummaryLoading: boolean
+  japaneseCalendar: JapaneseCalendarResult | null
+  japaneseCalendarLoading: boolean
   activeLuckyTab: 'personal' | 'pair'
   selectedPartnerId: string | null
   pairLuckyDays: PairLuckyDaysResult | null
@@ -114,6 +116,17 @@ function formatDate(dateStr: string) {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
+function getLabelClass(label: string) {
+  const classMap: Record<string, string> = {
+    '天赦日': 'tensya',
+    '一粒萬倍日': 'ichiryumanbai',
+    '寅の日': 'tora',
+    '巳の日': 'mi',
+    '己巳の日': 'tsuchinoto-mi'
+  }
+  return classMap[label] || ''
+}
+
 const selectedPartner = computed(() => {
   if (!props.selectedPartnerId) return null
   return profile.value.partners.find(p => p.id === props.selectedPartnerId) || null
@@ -142,44 +155,134 @@ const selectedPartner = computed(() => {
 
     <!-- 我的吉日 -->
     <div v-if="activeLuckyTab === 'personal'" class="personal-section">
-      <div v-if="luckyDaySummaryLoading" class="loading-state">
+      <div v-if="luckyDaySummaryLoading && japaneseCalendarLoading" class="loading-state">
         <sl-spinner></sl-spinner>
         <span>載入吉日資料...</span>
       </div>
 
-      <div v-else-if="luckyDaySummary" class="lucky-summary">
-        <h3 class="section-title">未來 30 天吉日一覽</h3>
+      <template v-else>
+        <!-- 宿曜吉日區塊 -->
+        <div v-if="luckyDaySummary" class="lucky-summary sukuyodo-section">
+          <h3 class="section-title">
+            <sl-icon name="stars"></sl-icon>
+            宿曜吉日
+          </h3>
+          <p class="section-desc">根據您的本命宿計算的個人吉日</p>
 
-        <div class="category-list">
-          <div
-            v-for="item in luckyDaySummary.summary"
-            :key="item.name"
-            class="category-section"
-          >
-            <h4 class="category-name">{{ item.name }}</h4>
+          <div class="category-list">
+            <div
+              v-for="item in luckyDaySummary.summary"
+              :key="item.name"
+              class="category-section"
+            >
+              <h4 class="category-name">{{ item.name }}</h4>
 
-            <div v-if="item.lucky_days.length > 0" class="day-chips">
-              <div
-                v-for="day in item.lucky_days"
-                :key="day.date"
-                class="day-chip"
-                :class="getScoreClass(day.score)"
-              >
-                <span class="chip-date">{{ formatDate(day.date) }}</span>
-                <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+              <div v-if="item.lucky_days.length > 0" class="day-chips">
+                <div
+                  v-for="day in item.lucky_days"
+                  :key="day.date"
+                  class="day-chip"
+                  :class="getScoreClass(day.score)"
+                >
+                  <span class="chip-date">{{ formatDate(day.date) }}</span>
+                  <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+                  <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                </div>
               </div>
-            </div>
-            <div v-else class="no-lucky-days">
-              <span>近期無特別吉日</span>
+              <div v-else class="no-lucky-days">
+                <span>近期無特別吉日</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="empty-state">
-        <p>請先查詢本命宿</p>
-      </div>
+        <!-- 選日曆注區塊 -->
+        <div v-if="japaneseCalendar" class="senjitsu-section">
+          <h3 class="section-title">
+            <sl-icon name="calendar-event"></sl-icon>
+            選日曆注
+          </h3>
+          <p class="section-desc">日本傳統擇日系統，通用於所有人</p>
+
+          <!-- 吉日列表 -->
+          <div v-if="japaneseCalendar.days.length > 0" class="senjitsu-categories">
+            <div class="senjitsu-group">
+              <h4 class="senjitsu-group-title">本月吉日</h4>
+              <div class="senjitsu-chips">
+                <div
+                  v-for="day in japaneseCalendar.days"
+                  :key="day.date"
+                  class="senjitsu-chip"
+                  :class="{ 'super-lucky': day.is_super_lucky }"
+                >
+                  <div class="senjitsu-date-row">
+                    <span class="senjitsu-date">{{ formatDate(day.date) }}</span>
+                    <span class="senjitsu-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+                    <span v-if="day.is_super_lucky" class="super-mark">★</span>
+                  </div>
+                  <div class="senjitsu-labels">
+                    <span
+                      v-for="label in day.labels"
+                      :key="label"
+                      class="senjitsu-label"
+                      :class="getLabelClass(label)"
+                    >{{ label }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="no-lucky-days">
+            <span>本月無特別吉日</span>
+          </div>
+
+          <!-- 凶日警示 -->
+          <div v-if="japaneseCalendar.unlucky_days.length > 0" class="unlucky-section">
+            <h4 class="unlucky-title">
+              <sl-icon name="exclamation-triangle"></sl-icon>
+              需注意日期
+            </h4>
+            <div class="unlucky-chips">
+              <div
+                v-for="day in japaneseCalendar.unlucky_days"
+                :key="day.date"
+                class="unlucky-chip"
+              >
+                <span class="unlucky-date">{{ formatDate(day.date) }}</span>
+                <span class="unlucky-label">{{ day.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 圖例說明 -->
+          <div class="senjitsu-legend">
+            <div class="legend-item">
+              <span class="legend-dot tensya"></span>
+              <span>天赦日：年間最大吉日</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot ichiryumanbai"></span>
+              <span>一粒萬倍日：開始新事物吉</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot tora"></span>
+              <span>寅の日：財運、旅行吉</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot mi"></span>
+              <span>巳の日：金運、藝術吉</span>
+            </div>
+          </div>
+        </div>
+        <div v-else-if="japaneseCalendarLoading" class="loading-state small">
+          <sl-spinner></sl-spinner>
+          <span>載入選日資料...</span>
+        </div>
+
+        <div v-if="!luckyDaySummary && !japaneseCalendar" class="empty-state">
+          <p>請先查詢本命宿</p>
+        </div>
+      </template>
     </div>
 
     <!-- 雙人吉日 -->
@@ -454,6 +557,47 @@ const selectedPartner = computed(() => {
   color: var(--text-secondary);
 }
 
+/* 區塊區隔 */
+.sukuyodo-section {
+  border-left: 4px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-xl);
+}
+
+.senjitsu-section {
+  border-left: 4px solid #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.section-title sl-icon {
+  font-size: 1.2em;
+}
+
+.sukuyodo-section .section-title {
+  color: #8b5cf6;
+}
+
+.senjitsu-section .section-title {
+  color: #dc2626;
+}
+
+.section-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: var(--space-xs) 0 var(--space-md);
+}
+
 /* 個人吉日 */
 .category-list {
   display: flex;
@@ -536,6 +680,187 @@ const selectedPartner = computed(() => {
   color: var(--text-secondary);
   font-size: var(--font-sm);
   padding: var(--space-sm) 0;
+}
+
+/* 選日曆注區塊 */
+.senjitsu-categories {
+  margin-bottom: var(--space-lg);
+}
+
+.senjitsu-group-title {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm);
+}
+
+.senjitsu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.senjitsu-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 100px;
+}
+
+.senjitsu-chip.super-lucky {
+  background: linear-gradient(135deg,
+    rgba(234, 179, 8, 0.15),
+    rgba(220, 38, 38, 0.1));
+  border-color: #eab308;
+}
+
+.senjitsu-date-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.senjitsu-date {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.senjitsu-weekday {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.super-mark {
+  color: #eab308;
+  font-size: var(--font-sm);
+}
+
+.senjitsu-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.senjitsu-label {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-xs);
+  font-weight: 500;
+}
+
+.senjitsu-label.tensya {
+  background: rgba(234, 179, 8, 0.2);
+  color: #b45309;
+}
+
+.senjitsu-label.ichiryumanbai {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.senjitsu-label.tora {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.senjitsu-label.mi,
+.senjitsu-label.tsuchinoto-mi {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+/* 凶日警示 */
+.unlucky-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.unlucky-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.unlucky-title sl-icon {
+  color: #eab308;
+}
+
+.unlucky-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.unlucky-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+}
+
+.unlucky-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.unlucky-label {
+  color: #b45309;
+  font-size: var(--font-xs);
+}
+
+/* 圖例說明 */
+.senjitsu-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot.tensya {
+  background: #eab308;
+}
+
+.legend-dot.ichiryumanbai {
+  background: #dc2626;
+}
+
+.legend-dot.tora {
+  background: #f59e0b;
+}
+
+.legend-dot.mi {
+  background: #22c55e;
 }
 
 /* 雙人吉日 */

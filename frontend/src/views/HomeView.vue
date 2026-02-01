@@ -59,6 +59,8 @@ const {
   // Lucky Days
   luckyDaySummary,
   luckyDaySummaryLoading,
+  japaneseCalendar,
+  japaneseCalendarLoading,
   activeLuckyTab,
   selectedPartnerId,
   pairLuckyDays,
@@ -249,6 +251,8 @@ onMounted(() => {
         v-if="activeMainTab === 'lucky'"
         :lucky-day-summary="luckyDaySummary"
         :lucky-day-summary-loading="luckyDaySummaryLoading"
+        :japanese-calendar="japaneseCalendar"
+        :japanese-calendar-loading="japaneseCalendarLoading"
         :active-lucky-tab="activeLuckyTab"
         :selected-partner-id="selectedPartnerId"
         :pair-lucky-days="pairLuckyDays"

@@ -331,6 +331,43 @@ export interface PairLuckyAction {
   lucky_days: LuckyDay[]
 }
 
+// 日本選日曆注型別
+export interface JapaneseLuckyDay {
+  date: string
+  weekday: string
+  types: string[]
+  labels: string[]
+  is_super_lucky: boolean
+  stem_branch: string
+  rokuyo: string
+}
+
+export interface JapaneseUnluckyDay {
+  date: string
+  weekday: string
+  type: string
+  label: string
+  stem_branch: string
+  rokuyo: string
+}
+
+export interface JapaneseCalendarSummary {
+  tensya_count: number
+  ichiryumanbai_count: number
+  tora_count: number
+  mi_count: number
+  super_lucky_count: number
+  fujoubyou_count: number
+}
+
+export interface JapaneseCalendarResult {
+  year: number
+  month: number
+  days: JapaneseLuckyDay[]
+  unlucky_days: JapaneseUnluckyDay[]
+  summary: JapaneseCalendarSummary
+}
+
 export interface PairLuckyDaysResult {
   relation_type: string
   relation_name: string
@@ -488,6 +525,10 @@ export function useSukuyodo() {
   const pairLuckyDays = ref<PairLuckyDaysResult | null>(null)
   const pairLuckyDaysLoading = ref(false)
 
+  // Japanese Calendar (選日曆注)
+  const japaneseCalendar = ref<JapaneseCalendarResult | null>(null)
+  const japaneseCalendarLoading = ref(false)
+
   // Knowledge
   const expandedRelation = ref<string | null>(null)
 
@@ -600,6 +641,7 @@ export function useSukuyodo() {
           fetchCompatibleMansions()
           fetchAllFortunes()
           fetchLuckyDaySummary()
+          fetchJapaneseCalendar()
         } else {
           lookupError.value = data.error || '查詢失敗'
         }
@@ -816,6 +858,29 @@ export function useSukuyodo() {
       console.error('Failed to fetch lucky days summary')
     } finally {
       luckyDaySummaryLoading.value = false
+    }
+  }
+
+  async function fetchJapaneseCalendar(year?: number, month?: number) {
+    const now = new Date()
+    const targetYear = year ?? now.getFullYear()
+    const targetMonth = month ?? now.getMonth() + 1
+
+    japaneseCalendarLoading.value = true
+    japaneseCalendar.value = null
+
+    try {
+      const res = await fetch(getApiUrl(`/calendar/lucky-days/${targetYear}/${targetMonth}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          japaneseCalendar.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch Japanese calendar')
+    } finally {
+      japaneseCalendarLoading.value = false
     }
   }
 
@@ -1117,6 +1182,8 @@ export function useSukuyodo() {
     luckyDayLoading,
     luckyDaySummary,
     luckyDaySummaryLoading,
+    japaneseCalendar,
+    japaneseCalendarLoading,
     activeLuckyTab,
     selectedPartnerId,
     pairLuckyDays,
@@ -1142,6 +1209,7 @@ export function useSukuyodo() {
     lookupMansion,
     fetchLuckyDays,
     fetchLuckyDaySummary,
+    fetchJapaneseCalendar,
     fetchPairLuckyDays,
     clearPairSelection,
     calculateCompatibility,
