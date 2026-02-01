@@ -3,6 +3,7 @@ title: 宿曜道系統完整審查
 type: refactor
 status: completed
 created: 2026-01-31
+last_audit: 2026-01-31T20:20:00+08:00
 ---
 
 # 宿曜道系統完整審查報告
@@ -263,3 +264,107 @@ function formatDate(dateStr: string) {
 4. **sl-icon aria-hidden** - LuckyDaysTab 的圖示已補充 aria-hidden
 5. **Touch target 尺寸** - 互動元素已補充 min-height: 44px
 6. **prefers-reduced-motion** - 所有動畫已支援減少動效偏好
+
+---
+
+## 2026-01-31 複查報告 (OpenSpec + dash-skills)
+
+### dash validate 結果
+
+```
+┏━━━━━━┳━━━━━━━━┳━━━━━━┳━━━━━━┓
+┃ 專案 ┃ 狀態   ┃ 錯誤 ┃ 警告 ┃
+┡━━━━━━╇━━━━━━━━╇━━━━━━╇━━━━━━┩
+│      │ PASS   │ 0    │ 4    │
+└──────┴────────┴──────┴──────┘
+```
+
+### 建構測試
+
+| 項目 | 結果 |
+|------|------|
+| 前端建構 (`npm run build`) | PASS - 460ms |
+| 產出大小 | JS: 138KB (gzip: 47KB), CSS: 40KB (gzip: 6KB) |
+| TypeScript | PASS (vue-tsc) |
+
+### 安全性審查
+
+| 項目 | 狀態 | 說明 |
+|------|------|------|
+| API Key/Token 外洩 | PASS | 未發現硬編碼 |
+| .env 檔案 | PASS | 已加入 .gitignore |
+| SQL 注入 | PASS | 使用 SQLModel 參數化查詢 |
+| 路徑遍歷 | PASS | 使用 Path 相對路徑 |
+| CORS 設定 | PASS | 限制允許的 origins |
+
+### 發現問題
+
+#### 1. README.md 密碼外洩 (中風險) - 已修正
+
+~~原本包含硬編碼密碼，已移除。~~
+
+#### 2. console.error 殘留 (低風險)
+
+共 14 處 `console.error` 呼叫，用於錯誤記錄：
+- `frontend/src/composables/useSukuyodo.ts` (12 處)
+- `frontend/src/stores/profile.ts` (2 處)
+
+**建議**: 這些是合理的錯誤記錄，但正式環境可考慮使用 logger 服務。
+
+### 架構審查
+
+| 項目 | 狀態 |
+|------|------|
+| 技術棧符合規範 | PASS - Vite + Vue 3 + Shoelace |
+| UI 框架正確 | PASS - 使用 Shoelace |
+| 後端框架 | PASS - FastAPI + SQLModel |
+| 資料庫連線 | PASS - 使用環境變數 |
+| API 回應格式 | PASS - `{ success, data/error }` |
+
+### 前端元件結構
+
+```
+frontend/src/
+├── components/
+│   ├── FortuneTab.vue      # 運勢頁籤
+│   ├── MatchTab.vue        # 配對頁籤
+│   ├── LuckyDaysTab.vue    # 吉日頁籤
+│   ├── KnowledgeTab.vue    # 知識頁籤
+│   ├── SummaryCard.vue     # 摘要卡片
+│   └── MansionWheel.vue    # 27 宿輪盤
+├── composables/
+│   └── useSukuyodo.ts      # 主要狀態管理 (1002 行)
+├── stores/
+│   └── profile.ts          # 使用者檔案
+├── views/
+│   └── HomeView.vue        # 首頁視圖
+└── config/
+    └── api.ts              # API 設定
+```
+
+### 後端 API 端點
+
+| 端點 | 方法 | 用途 |
+|------|------|------|
+| `/api/sukuyodo/mansion/{date}` | GET | 查詢本命宿 |
+| `/api/sukuyodo/compatibility` | POST | 雙人相性診斷 |
+| `/api/sukuyodo/compatibility-finder/{date}` | GET | 尋找配對 |
+| `/api/sukuyodo/fortune/daily/{date}` | GET | 每日運勢 |
+| `/api/sukuyodo/fortune/weekly/{year}/{week}` | GET | 每週運勢 |
+| `/api/sukuyodo/fortune/monthly/{year}/{month}` | GET | 每月運勢 |
+| `/api/sukuyodo/fortune/yearly/{year}` | GET | 每年運勢 |
+| `/api/sukuyodo/lucky-days/{date}` | GET | 吉日查詢 |
+| `/api/sukuyodo/mansions` | GET | 27 宿列表 |
+| `/api/sukuyodo/relations` | GET | 六種關係 |
+| `/api/sukuyodo/elements` | GET | 七曜元素 |
+
+### 結論
+
+系統整體可靠度良好：
+- 建構通過，無 TypeScript 錯誤
+- 安全性審查通過
+- WCAG AA 無障礙合規
+- 架構符合規範
+
+**已完成項目**:
+1. [x] 移除 README.md 中的硬編碼密碼 (2026-01-31)

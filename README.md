@@ -23,8 +23,8 @@
 # 啟動資料庫容器
 docker start sukuyodo-db
 
-# 連接資料庫
-PGPASSWORD=200821 psql -h localhost -p 5433 -U sukuyodo -d sukuyodo
+# 連接資料庫 (密碼請參考 .env 或 docker-compose.yml)
+psql -h localhost -p 5433 -U sukuyodo -d sukuyodo
 ```
 
 ### 後端
