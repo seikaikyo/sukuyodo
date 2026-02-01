@@ -668,6 +668,46 @@ class SukuyodoService:
         "ankai": (32, 48),    # 安壞 - 凶 - 權力不對等日
     }
 
+    # 每日運勢專用描述（區別於雙人配對描述）
+    DAILY_FORTUNE_DESCRIPTIONS = {
+        "eishin": "大吉之日，天時地利人和，貴人運旺盛。適合積極行動、開展新事物、重要會議或面試。把握機會，事半功倍。",
+        "gyotai": "吉日，直覺特別敏銳，靈感泉湧。適合創意發想、深度思考、學習新知。內心的聲音值得傾聽。",
+        "mei": "中吉，能量回歸平穩，與自我對話的好日子。適合自我反省、整理思緒、規劃未來。靜心內觀，收穫更多。",
+        "yusui": "平穩之日，一切按部就班即可。適合處理例行事務、維持現狀。不宜冒進或做重大改變，穩中求進為佳。",
+        "kisei": "需謹慎之日，行事宜三思而後行。注意細節、避免粗心大意。遇事多請教他人意見，可化險為夷。",
+        "ankai": "挑戰之日，外在環境較為不順。重大決定建議延後，保持低調、韜光養晦。靜待時機，不宜強求。"
+    }
+
+    # 每日運勢關係名稱（更適合每日運勢語境）
+    DAILY_FORTUNE_RELATION_NAMES = {
+        "eishin": "大吉",
+        "gyotai": "吉",
+        "mei": "中吉",
+        "yusui": "平",
+        "kisei": "小凶",
+        "ankai": "凶"
+    }
+
+    # 月運勢專用描述
+    MONTHLY_FORTUNE_DESCRIPTIONS = {
+        "eishin": "本月運勢極佳，天時地利皆站在你這邊。適合推動重要計畫、拓展人脈、爭取機會。積極主動，必有所獲。",
+        "gyotai": "本月靈感充沛，創造力旺盛。適合學習進修、開發新專案、探索未知領域。相信直覺，勇於嘗試。",
+        "mei": "本月能量穩定，適合沉澱反思。整理過去的經驗，規劃未來的方向。內省的功夫，將為下個階段打好基礎。",
+        "yusui": "本月步調平緩，維持現狀即可。專注於日常工作與生活品質，不宜大動作。穩紮穩打，細水長流。",
+        "kisei": "本月需多加留意，做事宜謹慎細心。重要決定多方考量，遇到困難尋求協助。小心駛得萬年船。",
+        "ankai": "本月運勢較為低迷，宜守不宜攻。重大事項建議延後，保守理財，避免衝動決策。韜光養晦，等待時機。"
+    }
+
+    # 月運勢建議
+    MONTHLY_FORTUNE_ADVICE = {
+        "eishin": "把握良機，積極行動，本月的努力將會有豐碩的回報。",
+        "gyotai": "傾聽內心的聲音，本月的靈感可能帶來意想不到的突破。",
+        "mei": "給自己一些獨處的時間，好好整理思緒，為未來做準備。",
+        "yusui": "享受平穩的節奏，專注於提升生活品質，不必急於求成。",
+        "kisei": "遇事多想幾步，謹慎行事，小心能避開大部分的麻煩。",
+        "ankai": "保持低調，養精蓄銳，等待更好的時機再出擊。"
+    }
+
     def calculate_daily_fortune(self, birth_date: date, target_date: date) -> dict:
         """
         計算每日運勢
@@ -788,9 +828,9 @@ class SukuyodoService:
             },
             "mansion_relation": {
                 "type": mansion_relation_type,
-                "name": mansion_relation["name"],
+                "name": self.DAILY_FORTUNE_RELATION_NAMES.get(mansion_relation_type, mansion_relation["name"]),
                 "reading": mansion_relation.get("reading", ""),
-                "description": mansion_relation["description"]
+                "description": self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, mansion_relation["description"])
             },
             "element_relation": {
                 "type": element_relation_type,
@@ -926,9 +966,9 @@ class SukuyodoService:
             },
             "relation": {
                 "type": relation["type"],
-                "name": relation["name"],
+                "name": self.DAILY_FORTUNE_RELATION_NAMES.get(relation["type"], relation["name"]),
                 "reading": relation.get("reading", ""),
-                "description": relation["description"]
+                "description": self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], relation["description"])
             },
             "theme": {
                 "title": month_theme.get("theme", ""),
@@ -943,7 +983,7 @@ class SukuyodoService:
                 "wealth": calc_monthly_category("wealth")
             },
             "weekly": weekly,
-            "advice": f"本月為{relation['name']}月，{relation['advice']}"
+            "advice": self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。")
         }
 
     def calculate_weekly_fortune(self, birth_date: date, target_date: date) -> dict:
