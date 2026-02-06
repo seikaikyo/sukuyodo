@@ -8,17 +8,47 @@ from models.stats import UsageStats  # noqa: F401
 
 settings = get_settings()
 
+
+def _is_sqlite(url: str) -> bool:
+    return url.startswith("sqlite")
+
+
+def _build_sync_url(url: str) -> str:
+    """產生同步引擎用的 URL"""
+    if _is_sqlite(url):
+        return url
+    return url.replace("postgresql://", "postgresql+psycopg://")
+
+
+def _build_async_url(url: str) -> str:
+    """產生非同步引擎用的 URL"""
+    if _is_sqlite(url):
+        return url.replace("sqlite:///", "sqlite+aiosqlite:///")
+    return url.replace("postgresql://", "postgresql+asyncpg://")
+
+
+def _build_engine(url: str):
+    sync_url = _build_sync_url(url)
+    kwargs = {"echo": settings.debug}
+    if _is_sqlite(url):
+        kwargs["connect_args"] = {"check_same_thread": False}
+    return create_engine(sync_url, **kwargs)
+
+
+def _build_async_engine(url: str):
+    async_url = _build_async_url(url)
+    return create_async_engine(async_url, echo=settings.debug)
+
+
 # 同步引擎 (用於初始化)
 if settings.database_url:
-    sync_url = settings.database_url.replace("postgresql://", "postgresql+psycopg://")
-    engine = create_engine(sync_url, echo=settings.debug)
+    engine = _build_engine(settings.database_url)
 else:
     engine = None
 
 # 非同步引擎 (用於 API 請求)
 if settings.database_url:
-    async_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
-    async_engine = create_async_engine(async_url, echo=settings.debug)
+    async_engine = _build_async_engine(settings.database_url)
     AsyncSessionLocal = sessionmaker(
         async_engine, class_=AsyncSession, expire_on_commit=False
     )
