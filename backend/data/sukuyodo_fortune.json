@@ -141,18 +141,18 @@
     "12": {"theme": "年終收尾", "focus": "總結", "element_boost": "水"}
   },
   "yearly_zodiac": {
-    "子": {"name": "鼠", "reading": "ねずみ", "element": "水", "mansion_range": [9, 10, 11]},
-    "丑": {"name": "牛", "reading": "うし", "element": "土", "mansion_range": [12, 13, 14]},
-    "寅": {"name": "虎", "reading": "とら", "element": "木", "mansion_range": [15, 16, 17]},
-    "卯": {"name": "兔", "reading": "うさぎ", "element": "木", "mansion_range": [18, 19, 20]},
-    "辰": {"name": "龍", "reading": "たつ", "element": "土", "mansion_range": [21, 22, 23]},
-    "巳": {"name": "蛇", "reading": "へび", "element": "火", "mansion_range": [24, 25, 26]},
-    "午": {"name": "馬", "reading": "うま", "element": "火", "mansion_range": [0, 1, 2]},
-    "未": {"name": "羊", "reading": "ひつじ", "element": "土", "mansion_range": [3, 4, 5]},
-    "申": {"name": "猴", "reading": "さる", "element": "金", "mansion_range": [6, 7, 8]},
-    "酉": {"name": "雞", "reading": "とり", "element": "金", "mansion_range": [9, 10, 11]},
-    "戌": {"name": "狗", "reading": "いぬ", "element": "土", "mansion_range": [12, 13, 14]},
-    "亥": {"name": "豬", "reading": "いのしし", "element": "水", "mansion_range": [15, 16, 17]}
+    "子": {"name": "鼠", "reading": "ねずみ", "element": "水"},
+    "丑": {"name": "牛", "reading": "うし", "element": "土"},
+    "寅": {"name": "虎", "reading": "とら", "element": "木"},
+    "卯": {"name": "兔", "reading": "うさぎ", "element": "木"},
+    "辰": {"name": "龍", "reading": "たつ", "element": "土"},
+    "巳": {"name": "蛇", "reading": "へび", "element": "火"},
+    "午": {"name": "馬", "reading": "うま", "element": "火"},
+    "未": {"name": "羊", "reading": "ひつじ", "element": "土"},
+    "申": {"name": "猴", "reading": "さる", "element": "金"},
+    "酉": {"name": "雞", "reading": "とり", "element": "金"},
+    "戌": {"name": "狗", "reading": "いぬ", "element": "土"},
+    "亥": {"name": "豬", "reading": "いのしし", "element": "水"}
   },
   "heavenly_stems": {
     "甲": {"reading": "きのえ", "element": "木", "yin_yang": "陽"},

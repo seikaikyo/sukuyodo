@@ -651,9 +651,15 @@ class SukuyodoService:
                (elem1 == pair[1] and elem2 == pair[0]):
                 return ("weakening", fortune_data["element_relations"]["weakening"]["bonus"])
 
-        # 日月特殊處理
-        if elem1 in ["日", "月"] or elem2 in ["日", "月"]:
-            return ("generating", 5)  # 日月與大部分元素相合
+        # 日/月特殊處理：使用 special_elements 資料
+        special = fortune_data.get("special_elements", {})
+        for special_elem in ["日", "月"]:
+            if elem1 == special_elem or elem2 == special_elem:
+                other = elem2 if elem1 == special_elem else elem1
+                spec = special.get(special_elem, {})
+                if other in spec.get("generates", []):
+                    return ("generating", fortune_data["element_relations"]["generating"]["bonus"])
+                return ("neutral", fortune_data["element_relations"]["neutral"]["bonus"])
 
         return ("neutral", fortune_data["element_relations"]["neutral"]["bonus"])
 
@@ -891,7 +897,10 @@ class SukuyodoService:
         user_element = mansion["element"]
 
         # 取得該月的月宿（使用月宿傍通曆）
-        month_mansion_index = self.MONTH_START_MANSION.get(month, 0)
+        # MONTH_START_MANSION 是農曆月份表，需先將西曆轉農曆
+        mid_date = date(year, month, 15)
+        _, lunar_month_for_mansion, _, _ = self.solar_to_lunar(mid_date)
+        month_mansion_index = self.MONTH_START_MANSION.get(lunar_month_for_mansion, 0)
         month_mansion = self.mansions_data[month_mansion_index]
 
         # 計算本命宿與月宿的關係
@@ -968,6 +977,7 @@ class SukuyodoService:
         return {
             "year": year,
             "month": month,
+            "lunar_month": lunar_month_for_mansion,
             "month_mansion": {
                 "name_jp": month_mansion["name_jp"],
                 "reading": month_mansion["reading"],
@@ -1188,13 +1198,7 @@ class SukuyodoService:
 
         base_score = 70 + (stem_bonus + zodiac_bonus) // 2
 
-        # 檢查是否犯太歲
         warnings = []
-        mansion_range = zodiac_data.get("mansion_range", [])
-        tai_sui_penalty = 0
-        if user_index in mansion_range:
-            warnings.append("本命宿與太歲相沖，重大決策宜謹慎，可透過行善積德化解")
-            tai_sui_penalty = 10
 
         # 計算每月趨勢
         random.seed(f"{birth_date.isoformat()}{year}")
@@ -1236,8 +1240,7 @@ class SukuyodoService:
             if wm["score"] < 55:
                 warnings.append(f"{wm['month']}月運勢較低（{wm['score']}分），避免重大投資或簽約")
 
-        # 應用犯太歲減分
-        base_score = max(50, base_score - tai_sui_penalty)
+        base_score = max(50, base_score)
 
         # 各項運勢
         random.seed(f"{birth_date.isoformat()}{year}categories")

@@ -75,7 +75,7 @@ class JapaneseCalendarService:
         5: [5, 13, 21, 29],
         6: [6, 14, 22, 30],
         7: [3, 11, 19, 27],
-        8: [8, 16, 24],
+        8: [2, 10, 18, 26],
         9: [1, 9, 17, 25],
         10: [4, 12, 20, 28],
         11: [5, 13, 21, 29],
@@ -97,11 +97,11 @@ class JapaneseCalendarService:
         Returns:
             (天干索引, 地支索引)
         """
-        # 1900-01-01 是甲子日
+        # 1900-01-01 是甲戌日（天干=甲(0)，地支=戌(10)）
         base = date(1900, 1, 1)
         days = (target_date - base).days
         stem = days % 10
-        branch = days % 12
+        branch = (days + 10) % 12
         return stem, branch
 
     def get_stem_branch_name(self, target_date: date) -> dict:
