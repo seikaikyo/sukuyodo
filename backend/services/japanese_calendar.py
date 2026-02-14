@@ -28,31 +28,31 @@ class JapaneseCalendarService:
     BRANCHES_ANIMAL = ["鼠", "牛", "虎", "兔", "龍", "蛇", "馬", "羊", "猴", "雞", "狗", "豬"]
 
     # 六曜順序
-    ROKUYO = ["先勝", "友引", "先負", "仏滅", "大安", "赤口"]
-    ROKUYO_READING = ["せんしょう", "ともびき", "せんぶ", "ぶつめつ", "たいあん", "しゃっこう"]
+    ROKUYO = ["大安", "赤口", "先勝", "友引", "先負", "仏滅"]
+    ROKUYO_READING = ["たいあん", "しゃっこう", "せんしょう", "ともびき", "せんぶ", "ぶつめつ"]
     ROKUYO_MEANING = [
-        "午前吉、午後凶",
-        "朝夕吉、正午凶",
-        "午前凶、午後吉",
-        "終日凶、慶事避ける",
-        "終日吉、万事大吉",
-        "正午前後一時吉、他凶"
+        "終日吉、万事大吉",           # 大安
+        "正午前後一時吉、他凶",       # 赤口
+        "午前吉、午後凶",             # 先勝
+        "朝夕吉、正午凶",             # 友引
+        "午前凶、午後吉",             # 先負
+        "終日凶、慶事避ける",         # 仏滅
     ]
 
     # 一粒萬倍日：每月對應的地支
     # 格式：{月份: [地支索引列表]}
     ICHIRYUMANBAI_MAP = {
         1: [1, 6],    # 丑、午
-        2: [8, 2],    # 酉、寅（注：日本曆法中二月為酉、寅）
+        2: [9, 2],    # 酉、寅
         3: [0, 3],    # 子、卯
-        4: [3, 8],    # 卯、酉（注：日本曆法中四月為卯、酉）
-        5: [4, 9],    # 辰、酉
-        6: [5, 8],    # 巳、酉（注：日本曆法中六月為巳、酉）
-        7: [6, 11],   # 午、亥
-        8: [0, 7],    # 子、未
-        9: [3, 8],    # 卯、酉（注：日本曆法中九月為卯、酉）
-        10: [1, 6],   # 丑、午
-        11: [2, 7],   # 寅、未
+        4: [3, 4],    # 卯、辰
+        5: [5, 6],    # 巳、午
+        6: [6, 9],    # 午、酉
+        7: [0, 7],    # 子、未
+        8: [3, 8],    # 卯、申
+        9: [6, 9],    # 午、酉
+        10: [9, 10],  # 酉、戌
+        11: [0, 11],  # 子、亥
         12: [0, 3],   # 子、卯
     }
 
@@ -272,10 +272,15 @@ class JapaneseCalendarService:
         Returns:
             六曜資訊
         """
-        # 簡化計算：使用西曆日期的近似算法
-        # 實際上應該使用農曆，但這裡採用常見的近似方法
-        # (月 + 日) mod 6
-        idx = (target_date.month + target_date.day) % 6
+        # 使用農曆月日計算：(農曆月 + 農曆日) mod 6
+        try:
+            from lunarcalendar import Converter, Solar
+            solar = Solar(target_date.year, target_date.month, target_date.day)
+            lunar = Converter.Solar2Lunar(solar)
+            idx = (lunar.month + lunar.day) % 6
+        except ImportError:
+            # lunarcalendar 未安裝時用西曆近似
+            idx = (target_date.month + target_date.day) % 6
         return {
             "name": self.ROKUYO[idx],
             "reading": self.ROKUYO_READING[idx],

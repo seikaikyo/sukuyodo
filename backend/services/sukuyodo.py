@@ -16,18 +16,18 @@ class SukuyodoService:
     # 月宿傍通曆：農曆月份對應的起始宿
     # 每月初一從這個宿開始，之後每天進一宿
     MONTH_START_MANSION = {
-        1: 11,   # 正月：危宿（室宿之後）
-        2: 13,   # 二月：壁宿
-        3: 15,   # 三月：婁宿
-        4: 17,   # 四月：昴宿
-        5: 19,   # 五月：觜宿
-        6: 21,   # 六月：井宿
-        7: 24,   # 七月：星宿
+        1: 12,   # 正月：室宿
+        2: 14,   # 二月：奎宿
+        3: 16,   # 三月：胃宿
+        4: 18,   # 四月：畢宿
+        5: 20,   # 五月：参宿
+        6: 22,   # 六月：鬼宿
+        7: 25,   # 七月：張宿
         8: 0,    # 八月：角宿
         9: 2,    # 九月：氐宿
         10: 4,   # 十月：心宿
         11: 7,   # 十一月：斗宿
-        12: 9,   # 十二月：女宿
+        12: 10,  # 十二月：虚宿
     }
 
     # 距離類型對照表：用於判斷近距離/中距離/遠距離及方向性
@@ -1374,8 +1374,9 @@ class SukuyodoService:
 
             # 取得當日七曜元素
             weekday = check_date.weekday()
-            day_element = fortune_data["weekday_elements"][str(weekday)]["element"]
-            day_name = fortune_data["weekday_elements"][str(weekday)]["name"]
+            jp_weekday = (weekday + 1) % 7
+            day_element = fortune_data["weekday_elements"][str(jp_weekday)]["element"]
+            day_name = fortune_data["weekday_elements"][str(jp_weekday)]["name"]
 
             # 計算當日宿
             lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
@@ -1389,7 +1390,7 @@ class SukuyodoService:
             is_job_seeking_lucky = False
             job_reason = ""
 
-            if relation_type in ["榮親", "業胎"]:
+            if relation_type in ["eishin", "gyotai"]:
                 is_job_seeking_lucky = True
                 job_reason = f"{relation['name']}日，貴人運旺"
             elif day_element == user_element:
@@ -1415,7 +1416,7 @@ class SukuyodoService:
             resign_reason = ""
 
             if check_date.day <= 5 or check_date.day >= 25:
-                if score >= 65 and relation_type not in ["安壞", "危成"]:
+                if score >= 65 and relation_type not in ["ankai", "kisei"]:
                     is_resignation_ok = True
                     resign_reason = "月初/月底，運勢穩定" if score >= 70 else "運勢平穩，可行"
 
@@ -1428,7 +1429,7 @@ class SukuyodoService:
                 })
 
             # 需避開的日子
-            if score < 50 or relation_type in ["安壞", "危成"]:
+            if score < 50 or relation_type in ["ankai", "kisei"]:
                 if len(avoid_days) < 5:
                     avoid_reason = "運勢低迷" if score < 50 else f"{relation['name']}日，不宜重大決定"
                     avoid_days.append({
@@ -1603,8 +1604,9 @@ class SukuyodoService:
 
             # 取得當日資訊
             weekday = check_date.weekday()
-            day_element = fortune_data["weekday_elements"][str(weekday)]["element"]
-            day_name = fortune_data["weekday_elements"][str(weekday)]["name"]
+            jp_weekday = (weekday + 1) % 7
+            day_element = fortune_data["weekday_elements"][str(jp_weekday)]["element"]
+            day_name = fortune_data["weekday_elements"][str(jp_weekday)]["name"]
 
             # 計算當日宿
             lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
@@ -1713,12 +1715,12 @@ class SukuyodoService:
     def _get_relation_benefit(self, relation_type: str, action: str) -> str:
         """取得關係類型對特定行動的好處描述"""
         benefits = {
-            "榮親": "貴人相助，順利圓滿",
-            "業胎": "前世因緣，水到渠成",
-            "命": "能量共鳴，心想事成",
-            "友衰": "平穩順遂，適合進行",
-            "危成": "需謹慎行事",
-            "安壞": "建議避開此日"
+            "eishin": "貴人相助，順利圓滿",
+            "gyotai": "前世因緣，水到渠成",
+            "mei": "能量共鳴，心想事成",
+            "yusui": "平穩順遂，適合進行",
+            "kisei": "需謹慎行事",
+            "ankai": "建議避開此日"
         }
         return benefits.get(relation_type, "")
 
@@ -1886,7 +1888,8 @@ class SukuyodoService:
 
                 # 取得當日資訊
                 weekday = check_date.weekday()
-                day_info = fortune_data["weekday_elements"][str(weekday)]
+                jp_weekday = (weekday + 1) % 7
+                day_info = fortune_data["weekday_elements"][str(jp_weekday)]
                 day_name = day_info["name"]
 
                 # 計算當日宿
