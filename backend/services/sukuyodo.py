@@ -652,13 +652,19 @@ class SukuyodoService:
                 return ("conflicting", fortune_data["element_relations"]["conflicting"]["bonus"])
 
         # 日/月特殊處理：使用 special_elements 資料
+        # 日生火、月生水，需區分方向性
         special = fortune_data.get("special_elements", {})
         for special_elem in ["日", "月"]:
             if elem1 == special_elem or elem2 == special_elem:
                 other = elem2 if elem1 == special_elem else elem1
                 spec = special.get(special_elem, {})
                 if other in spec.get("generates", []):
-                    return ("generating", fortune_data["element_relations"]["generating"]["bonus"])
+                    if elem1 == special_elem:
+                        # 用戶元素是日/月，生出環境元素 → 能量被消耗
+                        return ("weakening", fortune_data["element_relations"]["weakening"]["bonus"])
+                    else:
+                        # 環境元素是日/月，生出用戶元素 → 用戶被生
+                        return ("generating", fortune_data["element_relations"]["generating"]["bonus"])
                 return ("neutral", fortune_data["element_relations"]["neutral"]["bonus"])
 
         return ("neutral", fortune_data["element_relations"]["neutral"]["bonus"])
