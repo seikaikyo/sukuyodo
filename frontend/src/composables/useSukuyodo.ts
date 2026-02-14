@@ -419,6 +419,25 @@ export interface ElementType {
   planet: string
   traits: string
   energy: string
+  description: string
+}
+
+export interface HistoryEntry {
+  title: string
+  content: string
+}
+
+export interface MonthMansionEntry {
+  month: number
+  name: string
+  start_mansion: string
+  start_index: number
+  reading: string
+}
+
+export interface MonthMansionTable {
+  calendar_description: string
+  months: MonthMansionEntry[]
 }
 
 export interface PartnerCompatibility {
@@ -450,6 +469,8 @@ export interface Metadata {
   scripture_reading: string
   method: string
   method_reading: string
+  history?: HistoryEntry[]
+  month_mansion_table?: MonthMansionTable
 }
 
 // ============================================================================

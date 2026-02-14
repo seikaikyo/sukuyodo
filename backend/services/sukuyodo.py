@@ -65,6 +65,7 @@ class SukuyodoService:
         self._relations_data = None
         self._elements_data = None
         self._metadata = None
+        self._month_mansion_table = None
 
     def _load_data(self):
         """載入所有資料"""
@@ -76,6 +77,7 @@ class SukuyodoService:
                 self._relations_data = data["relations"]
                 self._elements_data = data.get("elements", {})
                 self._metadata = data.get("metadata", {})
+                self._month_mansion_table = data.get("month_mansion_table", {})
 
     @property
     def mansions_data(self) -> list[dict]:
@@ -100,6 +102,12 @@ class SukuyodoService:
         """載入元資料"""
         self._load_data()
         return self._metadata
+
+    @property
+    def month_mansion_table(self) -> dict:
+        """載入傍通曆資料"""
+        self._load_data()
+        return self._month_mansion_table
 
     def solar_to_lunar(self, solar_date: date) -> tuple[int, int, int, bool]:
         """
@@ -682,12 +690,36 @@ class SukuyodoService:
 
     # 每日運勢專用描述（區別於雙人配對描述）
     DAILY_FORTUNE_DESCRIPTIONS = {
-        "eishin": "大吉之日，天時地利人和，貴人運旺盛。適合積極行動、開展新事物、重要會議或面試。把握機會，事半功倍。",
-        "gyotai": "吉日，直覺特別敏銳，靈感泉湧。適合創意發想、深度思考、學習新知。內心的聲音值得傾聽。",
-        "mei": "中吉，能量回歸平穩，與自我對話的好日子。適合自我反省、整理思緒、規劃未來。靜心內觀，收穫更多。",
-        "yusui": "平穩之日，一切按部就班即可。適合處理例行事務、維持現狀。不宜冒進或做重大改變，穩中求進為佳。",
-        "kisei": "需謹慎之日，行事宜三思而後行。注意細節、避免粗心大意。遇事多請教他人意見，可化險為夷。",
-        "ankai": "挑戰之日，外在環境較為不順。重大決定建議延後，保持低調、韜光養晦。靜待時機，不宜強求。"
+        "eishin": [
+            "大吉之日，天時地利人和，貴人運旺盛。適合積極行動、開展新事物、重要會議或面試。把握機會，事半功倍。",
+            "今天的能量場對你非常有利，無論是提案、談判還是開啟新合作，成功率都比平時高出許多。主動出擊會有好結果。",
+            "各方面條件都在向你靠攏的一天。人際關係中容易遇到幫助你的人，工作上的努力也會得到相應的回報。放手去做吧。"
+        ],
+        "gyotai": [
+            "吉日，直覺特別敏銳，靈感泉湧。適合創意發想、深度思考、學習新知。內心的聲音值得傾聽。",
+            "今天你的感知力比平時更強，可能會突然想通一件困擾已久的事情。適合做需要創造力的工作，或者學習一項新技能。",
+            "與過去的經驗產生共鳴的一天。你可能會從舊回憶或過往的學習中找到解決當前問題的線索。靜下心來感受，答案就在那裡。"
+        ],
+        "mei": [
+            "中吉，能量回歸平穩，與自我對話的好日子。適合自我反省、整理思緒、規劃未來。靜心內觀，收穫更多。",
+            "今天適合面對真實的自己。不管是檢視最近的生活狀態，還是重新思考未來的方向，你會比平時更清楚自己要什麼。",
+            "內在能量充沛的一天，適合做決定和確認方向。你對自己的了解會特別深刻，趁這個時候把模糊的想法整理清楚。"
+        ],
+        "yusui": [
+            "平穩之日，一切按部就班即可。適合處理例行事務、維持現狀。不宜冒進或做重大改變，穩中求進為佳。",
+            "今天的節奏偏慢，不適合趕進度或做激進的決策。把手邊的事情處理好，整理一下桌面和待辦清單，會讓你感到踏實。",
+            "能量處於休養狀態的一天。不需要刻意追求突破，做好份內的事、維持穩定的生活節奏就是最好的安排。"
+        ],
+        "kisei": [
+            "需謹慎之日，行事宜三思而後行。注意細節、避免粗心大意。遇事多請教他人意見，可化險為夷。",
+            "今天容易在小地方出差錯，出門前多檢查一次、重要文件多看幾遍。如果遇到猶豫的事情，聽聽身邊人的看法。",
+            "外在環境有些不穩定的跡象，做任何決定前多留一點緩衝時間。避免在情緒激動時做出承諾或回應。"
+        ],
+        "ankai": [
+            "挑戰之日，外在環境較為不順。重大決定建議延後，保持低調、韜光養晦。靜待時機，不宜強求。",
+            "今天可能會遇到意料之外的阻礙或延誤，不要和它硬碰硬。暫時退一步，把精力放在不需要外界配合的事情上。",
+            "運勢處於低點的一天，但不代表什麼都不能做。處理簡單的日常事務沒問題，只是要避開涉及大筆金錢或重要合約的事項。"
+        ]
     }
 
     # 每日運勢關係名稱（更適合每日運勢語境）
@@ -702,22 +734,70 @@ class SukuyodoService:
 
     # 月運勢專用描述
     MONTHLY_FORTUNE_DESCRIPTIONS = {
-        "eishin": "本月運勢極佳，天時地利皆站在你這邊。適合推動重要計畫、拓展人脈、爭取機會。積極主動，必有所獲。",
-        "gyotai": "本月靈感充沛，創造力旺盛。適合學習進修、開發新專案、探索未知領域。相信直覺，勇於嘗試。",
-        "mei": "本月能量穩定，適合沉澱反思。整理過去的經驗，規劃未來的方向。內省的功夫，將為下個階段打好基礎。",
-        "yusui": "本月步調平緩，維持現狀即可。專注於日常工作與生活品質，不宜大動作。穩紮穩打，細水長流。",
-        "kisei": "本月需多加留意，做事宜謹慎細心。重要決定多方考量，遇到困難尋求協助。小心駛得萬年船。",
-        "ankai": "本月運勢較為低迷，宜守不宜攻。重大事項建議延後，保守理財，避免衝動決策。韜光養晦，等待時機。"
+        "eishin": [
+            "本月運勢極佳，天時地利皆站在你這邊。適合推動重要計畫、拓展人脈、爭取機會。積極主動，必有所獲。",
+            "這個月你做什麼都比平時順手，特別是需要和人互動的事情。面試、提案、拓展業務都是好時機。",
+            "貴人運集中出現的月份。你可能會遇到對職涯或人生有幫助的人，別猶豫，主動建立連結。"
+        ],
+        "gyotai": [
+            "本月靈感充沛，創造力旺盛。適合學習進修、開發新專案、探索未知領域。相信直覺，勇於嘗試。",
+            "這個月你的腦袋特別活躍，很適合研究新東西或啟動一個放在心裡很久的計畫。行動力配合靈感，效果加倍。",
+            "你在本月對事情的判斷力比平時更準確。如果心裡有一個方向一直在呼喚你，這個月就是去嘗試的好時機。"
+        ],
+        "mei": [
+            "本月能量穩定，適合沉澱反思。整理過去的經驗，規劃未來的方向。內省的功夫，將為下個階段打好基礎。",
+            "這個月適合慢下來看看自己走到了哪裡。不需要急著做大事，花時間整理思緒和環境，會讓你接下來更有方向。",
+            "安靜蓄力的一個月。表面上看起來沒什麼大動作，但你在內心做的規劃和調整，會在之後的月份發揮作用。"
+        ],
+        "yusui": [
+            "本月步調平緩，維持現狀即可。專注於日常工作與生活品質，不宜大動作。穩紮穩打，細水長流。",
+            "這個月不需要追求突破，把手邊的事情做扎實比開闢新戰場更重要。享受穩定的生活節奏。",
+            "一個適合休養和充電的月份。不要給自己太大壓力，該休息就休息，等精力回復了再衝刺也不遲。"
+        ],
+        "kisei": [
+            "本月需多加留意，做事宜謹慎細心。重要決定多方考量，遇到困難尋求協助。小心駛得萬年船。",
+            "這個月在工作和財務上要多留心細節，特別是合約條款和金額計算。遇到拿不準的事情，多問一個人的意見。",
+            "外在環境可能出現一些變數，提前做好備案比事後補救容易得多。這個月的耐心和細心會為你擋掉不少麻煩。"
+        ],
+        "ankai": [
+            "本月運勢較為低迷，宜守不宜攻。重大事項建議延後，保守理財，避免衝動決策。韜光養晦，等待時機。",
+            "這個月適合處理已經在進行的事情，不適合開啟新的大計畫。如果有重大簽約或投資，能延到下個月更好。",
+            "暫時進入蟄伏期，但這不代表浪費時間。趁這段時間整理資源、補充知識、修復關係，下個月就能重新出發。"
+        ]
     }
 
     # 月運勢建議
     MONTHLY_FORTUNE_ADVICE = {
-        "eishin": "把握良機，積極行動，本月的努力將會有豐碩的回報。",
-        "gyotai": "傾聽內心的聲音，本月的靈感可能帶來意想不到的突破。",
-        "mei": "給自己一些獨處的時間，好好整理思緒，為未來做準備。",
-        "yusui": "享受平穩的節奏，專注於提升生活品質，不必急於求成。",
-        "kisei": "遇事多想幾步，謹慎行事，小心能避開大部分的麻煩。",
-        "ankai": "保持低調，養精蓄銳，等待更好的時機再出擊。"
+        "eishin": [
+            "把握良機，積極行動，本月的努力將會有豐碩的回報。",
+            "趁運勢好的時候多做幾件一直想做的事，現在開始的成功率最高。",
+            "這個月你的存在感特別強，適合爭取曝光、發表意見、展現自己的能力。"
+        ],
+        "gyotai": [
+            "傾聽內心的聲音，本月的靈感可能帶來意想不到的突破。",
+            "如果有什麼念頭反覆出現在腦海裡，認真對待它——那可能就是你的突破口。",
+            "本月適合報名課程、閱讀新書、參加工作坊，任何形式的學習都會有收穫。"
+        ],
+        "mei": [
+            "給自己一些獨處的時間，好好整理思緒，為未來做準備。",
+            "寫日記、做心智圖、或跟信任的朋友深聊一次，這個月的自我梳理會很有價值。",
+            "回顧一下過去三個月做的事情，哪些值得繼續、哪些該調整，趁現在想清楚。"
+        ],
+        "yusui": [
+            "享受平穩的節奏，專注於提升生活品質，不必急於求成。",
+            "趁這個月沒什麼大事的時候，處理拖延已久的小事和雜務，清爽迎接下個階段。",
+            "把注意力放在吃好、睡好、運動這些基本功上，身體狀態好了，做什麼都會更順。"
+        ],
+        "kisei": [
+            "遇事多想幾步，謹慎行事，小心能避開大部分的麻煩。",
+            "這個月做決定前多留一天冷靜期，急著回覆的衝動往往會帶來後悔。",
+            "備份重要檔案、確認截止日期、提前處理行政事務，這些小動作能幫你避開大問題。"
+        ],
+        "ankai": [
+            "保持低調，養精蓄銳，等待更好的時機再出擊。",
+            "這個月先把體力和精力養好，下個月運勢回升時你就有本錢衝刺了。",
+            "不需要和困難硬碰硬，暫時繞路走也是一種策略。保存實力比消耗自己更聰明。"
+        ]
     }
 
     def calculate_daily_fortune(self, birth_date: date, target_date: date) -> dict:
@@ -858,7 +938,7 @@ class SukuyodoService:
                 "type": mansion_relation_type,
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(mansion_relation_type, mansion_relation["name"]),
                 "reading": mansion_relation.get("reading", ""),
-                "description": self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, mansion_relation["description"])
+                "description": random.choice(self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]]))
             },
             "element_relation": {
                 "type": element_relation_type,
@@ -1000,7 +1080,7 @@ class SukuyodoService:
                 "type": relation["type"],
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(relation["type"], relation["name"]),
                 "reading": relation.get("reading", ""),
-                "description": self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], relation["description"])
+                "description": random.choice(self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], [relation["description"]]))
             },
             "theme": {
                 "title": month_theme.get("theme", ""),
@@ -1015,7 +1095,7 @@ class SukuyodoService:
                 "wealth": calc_monthly_category("wealth")
             },
             "weekly": weekly,
-            "advice": self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。")
+            "advice": random.choice(self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], [f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。"]))
         }
 
     def calculate_weekly_fortune(self, birth_date: date, target_date: date) -> dict:

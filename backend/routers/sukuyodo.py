@@ -186,7 +186,8 @@ async def get_elements():
                 "reading": data.get("reading", ""),
                 "planet": data.get("planet", ""),
                 "traits": data.get("traits", ""),
-                "energy": data.get("energy", "")
+                "energy": data.get("energy", ""),
+                "description": data.get("description", "")
             }
             for name, data in elements.items()
         ]
@@ -198,9 +199,14 @@ async def get_metadata():
     """
     取得宿曜道基本資訊
 
-    返回宿曜道的名稱、起源、創始者等元資料，含讀音標註。
+    返回宿曜道的名稱、起源、創始者等元資料，含歷史沿革和讀音標註。
     """
-    return sukuyodo_service.metadata
+    metadata = sukuyodo_service.metadata
+    month_mansion_table = sukuyodo_service.month_mansion_table
+    return {
+        **metadata,
+        "month_mansion_table": month_mansion_table
+    }
 
 
 @router.get("/compatibility-finder/{date_str}")

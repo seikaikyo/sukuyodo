@@ -190,7 +190,8 @@ function handleWheelSelect(m: WheelMansion) {
           <div class="element-body">
             <p class="planet">{{ el.planet }}</p>
             <p class="traits">{{ el.traits }}</p>
-            <p class="energy">{{ el.energy }}</p>
+            <p class="energy-label">能量屬性：{{ el.energy }}</p>
+            <p v-if="el.description" class="element-description">{{ el.description }}</p>
           </div>
         </div>
       </div>
@@ -200,37 +201,30 @@ function handleWheelSelect(m: WheelMansion) {
     <div v-if="activeTab === 'calendar'" id="panel-knowledge-calendar" class="knowledge-content" role="tabpanel">
       <div class="calendar-info">
         <h3>月宿傍通曆</h3>
-        <p>宿曜道使用的是「月宿傍通曆」，根據農曆月份和日期來對應二十七宿。</p>
-        <p>每個農曆日期對應一個特定的「宿」，這個對應關係是固定的，不會因年份而改變。</p>
-        <div class="calendar-table">
+        <p v-if="metadata?.month_mansion_table?.calendar_description">{{ metadata.month_mansion_table.calendar_description }}</p>
+        <template v-else>
+          <p>宿曜道使用的是「月宿傍通曆」，根據農曆月份和日期來對應二十七宿。</p>
+          <p>每個農曆日期對應一個特定的「宿」，這個對應關係是固定的，不會因年份而改變。</p>
+        </template>
+        <div class="calendar-table" v-if="metadata?.month_mansion_table?.months?.length">
           <table>
             <thead>
               <tr>
                 <th>農曆月</th>
-                <th>1日</th>
-                <th>2日</th>
-                <th>3日</th>
-                <th>...</th>
+                <th>初一起始宿</th>
+                <th>讀音</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>正月</td>
-                <td>室</td>
-                <td>壁</td>
-                <td>奎</td>
-                <td>...</td>
-              </tr>
-              <tr>
-                <td>二月</td>
-                <td>奎</td>
-                <td>婁</td>
-                <td>胃</td>
-                <td>...</td>
+              <tr v-for="m in metadata.month_mansion_table.months" :key="m.month">
+                <td>{{ m.name }}</td>
+                <td>{{ m.start_mansion }}</td>
+                <td>{{ m.reading }}</td>
               </tr>
             </tbody>
           </table>
         </div>
+        <p class="calendar-note">每月初一從起始宿開始，之後每天前進一宿，按二十七宿順序循環。</p>
       </div>
     </div>
 
@@ -238,22 +232,28 @@ function handleWheelSelect(m: WheelMansion) {
     <div v-if="activeTab === 'history'" id="panel-knowledge-history" class="knowledge-content" role="tabpanel">
       <div class="history-info" v-if="metadata">
         <h3>{{ metadata.name }}（{{ metadata.reading }}）</h3>
-        <div class="history-sections">
-          <div class="history-item">
-            <h4>起源</h4>
-            <p>{{ metadata.origin }}（{{ metadata.origin_reading }}）</p>
+        <div class="history-meta">
+          <div class="meta-row">
+            <span class="meta-label">宗派</span>
+            <span>{{ metadata.origin }}（{{ metadata.origin_reading }}）</span>
           </div>
-          <div class="history-item">
-            <h4>傳承者</h4>
-            <p>{{ metadata.founder }}（{{ metadata.founder_reading }}）</p>
+          <div class="meta-row">
+            <span class="meta-label">傳承者</span>
+            <span>{{ metadata.founder }}（{{ metadata.founder_reading }}）</span>
           </div>
-          <div class="history-item">
-            <h4>典籍</h4>
-            <p>{{ metadata.scripture }}（{{ metadata.scripture_reading }}）</p>
+          <div class="meta-row">
+            <span class="meta-label">典籍</span>
+            <span>{{ metadata.scripture }}（{{ metadata.scripture_reading }}）</span>
           </div>
-          <div class="history-item">
-            <h4>核心方法</h4>
-            <p>{{ metadata.method }}（{{ metadata.method_reading }}）</p>
+          <div class="meta-row">
+            <span class="meta-label">核心方法</span>
+            <span>{{ metadata.method }}（{{ metadata.method_reading }}）</span>
+          </div>
+        </div>
+        <div v-if="metadata.history?.length" class="history-sections">
+          <div v-for="(entry, i) in metadata.history" :key="i" class="history-item">
+            <h4>{{ entry.title }}</h4>
+            <p>{{ entry.content }}</p>
           </div>
         </div>
       </div>
@@ -511,10 +511,19 @@ function handleWheelSelect(m: WheelMansion) {
 }
 
 .element-body .traits,
-.element-body .energy {
+.element-body .energy-label {
   color: var(--text-secondary);
   font-size: var(--font-sm);
   margin: 0 0 var(--space-xs);
+}
+
+.element-body .element-description {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: var(--space-sm) 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-sm);
 }
 
 .calendar-info,
@@ -562,6 +571,32 @@ function handleWheelSelect(m: WheelMansion) {
   color: var(--text-secondary);
 }
 
+.history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.meta-label {
+  background: var(--bg-elevated);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
 .history-sections {
   display: flex;
   flex-direction: column;
@@ -576,6 +611,14 @@ function handleWheelSelect(m: WheelMansion) {
 
 .history-item p {
   margin: 0;
+  line-height: 1.6;
+}
+
+.calendar-note {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary, var(--text-secondary));
+  font-style: italic;
+  margin-top: var(--space-sm);
 }
 
 @media (max-width: 767px) {
