@@ -800,11 +800,27 @@ class SukuyodoService:
 
         advice = random.choice(advice_list)
 
-        # === 幸運物品 ===
+        # === 幸運物品（每日動態計算） ===
         lucky = fortune_data["lucky_items"]
-        lucky_direction = lucky["directions"].get(user_element, lucky["directions"]["土"])
-        lucky_color = lucky["colors"].get(user_element, lucky["colors"]["土"])
-        lucky_numbers = lucky["numbers"].get(user_element, [5])
+
+        # 方位：以當日宿元素為主，大吉日回歸本命方位
+        if mansion_relation_type in ("eishin", "gyotai", "mei"):
+            lucky_direction = lucky["directions"].get(user_element, lucky["directions"]["土"])
+        else:
+            lucky_direction = lucky["directions"].get(day_mansion["element"], lucky["directions"]["土"])
+
+        # 顏色：以七曜元素為主，同元素日使用本命色
+        if element_relation_type == "same":
+            lucky_color = lucky["colors"].get(user_element, lucky["colors"]["土"])
+        else:
+            lucky_color = lucky["colors"].get(day_element, lucky["colors"]["土"])
+
+        # 數字：當日宿 index + 農曆日推導，每天不同
+        num1 = (day_mansion_index % 9) + 1
+        num2 = ((day_mansion_index + lunar_d) % 9) + 1
+        if num2 == num1:
+            num2 = (num2 % 9) + 1
+        lucky_numbers = [num1, num2]
 
         return {
             "date": target_date.isoformat(),
