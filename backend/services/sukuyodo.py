@@ -635,23 +635,21 @@ class SukuyodoService:
         if elem1 == elem2:
             return ("same", fortune_data["element_relations"]["same"]["bonus"])
 
-        # 檢查相生
+        # 相生（有方向性）：環境元素(elem2)生用戶元素(elem1) → 有利
         for pair in fortune_data["generating_pairs"]:
-            if (elem1 == pair[0] and elem2 == pair[1]) or \
-               (elem1 == pair[1] and elem2 == pair[0]):
+            if elem2 == pair[0] and elem1 == pair[1]:
                 return ("generating", fortune_data["element_relations"]["generating"]["bonus"])
 
-        # 檢查相剋
+        # 相洩（有方向性）：用戶元素(elem1)生環境元素(elem2) → 能量被消耗
+        for pair in fortune_data["generating_pairs"]:
+            if elem1 == pair[0] and elem2 == pair[1]:
+                return ("weakening", fortune_data["element_relations"]["weakening"]["bonus"])
+
+        # 相剋（維持雙向）
         for pair in fortune_data["conflicting_pairs"]:
             if (elem1 == pair[0] and elem2 == pair[1]) or \
                (elem1 == pair[1] and elem2 == pair[0]):
                 return ("conflicting", fortune_data["element_relations"]["conflicting"]["bonus"])
-
-        # 檢查相洩
-        for pair in fortune_data["weakening_pairs"]:
-            if (elem1 == pair[0] and elem2 == pair[1]) or \
-               (elem1 == pair[1] and elem2 == pair[0]):
-                return ("weakening", fortune_data["element_relations"]["weakening"]["bonus"])
 
         # 日/月特殊處理：使用 special_elements 資料
         special = fortune_data.get("special_elements", {})

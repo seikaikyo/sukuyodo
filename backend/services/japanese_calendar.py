@@ -65,6 +65,23 @@ class JapaneseCalendarService:
         "winter": (0, 0),   # 甲子 (stem=0, branch=0)
     }
 
+    # 節月境界：(西曆月, 近似節氣日, 對應節月)
+    # 用於一粒萬倍日等需要節月的計算
+    SETSU_BOUNDARIES = [
+        (1, 6, 12),   # 小寒 → 節月12
+        (2, 4, 1),    # 立春 → 節月1
+        (3, 6, 2),    # 驚蟄 → 節月2
+        (4, 5, 3),    # 清明 → 節月3
+        (5, 6, 4),    # 立夏 → 節月4
+        (6, 6, 5),    # 芒種 → 節月5
+        (7, 7, 6),    # 小暑 → 節月6
+        (8, 7, 7),    # 立秋 → 節月7
+        (9, 8, 8),    # 白露 → 節月8
+        (10, 8, 9),   # 寒露 → 節月9
+        (11, 7, 10),  # 立冬 → 節月10
+        (12, 7, 11),  # 大雪 → 節月11
+    ]
+
     # 不成就日：每月的特定日期
     # 日本不成就日每月有固定的日期模式
     FUJOUBYOU_PATTERN = {
@@ -152,6 +169,34 @@ class JapaneseCalendarService:
         else:
             return "winter"
 
+    def get_setsugetsu(self, target_date: date) -> int:
+        """
+        取得節月（二十四節氣劃分的月份）
+
+        節月以節氣為分界，與西曆月不同：
+        - 立春(約2/4)起為節月1，驚蟄(約3/6)起為節月2，以此類推
+        - 大雪(約12/7)起為節月11，小寒(約1/6)起為節月12
+
+        Args:
+            target_date: 目標日期
+
+        Returns:
+            節月 (1-12)
+        """
+        m = target_date.month
+        d = target_date.day
+
+        # 找出當月的節氣日，判定屬於哪個節月
+        for solar_month, setsu_day, setsu_month in self.SETSU_BOUNDARIES:
+            if m == solar_month:
+                if d >= setsu_day:
+                    return setsu_month
+                # 日期在節氣之前，屬於前一個節月
+                prev_idx = (self.SETSU_BOUNDARIES.index((solar_month, setsu_day, setsu_month)) - 1) % 12
+                return self.SETSU_BOUNDARIES[prev_idx][2]
+
+        return m  # fallback
+
     def is_ichiryumanbai(self, target_date: date) -> bool:
         """
         判定是否為一粒萬倍日
@@ -166,7 +211,7 @@ class JapaneseCalendarService:
             是否為一粒萬倍日
         """
         _, branch = self.get_stem_branch(target_date)
-        valid_branches = self.ICHIRYUMANBAI_MAP.get(target_date.month, [])
+        valid_branches = self.ICHIRYUMANBAI_MAP.get(self.get_setsugetsu(target_date), [])
         return branch in valid_branches
 
     def is_tensya(self, target_date: date) -> bool:
@@ -252,10 +297,15 @@ class JapaneseCalendarService:
         Returns:
             是否為不成就日
         """
-        month = target_date.month
-        day = target_date.day
-        pattern = self.FUJOUBYOU_PATTERN.get(month, [])
-        return day in pattern
+        try:
+            from lunarcalendar import Converter, Solar
+            solar = Solar(target_date.year, target_date.month, target_date.day)
+            lunar = Converter.Solar2Lunar(solar)
+            pattern = self.FUJOUBYOU_PATTERN.get(lunar.month, [])
+            return lunar.day in pattern
+        except ImportError:
+            pattern = self.FUJOUBYOU_PATTERN.get(target_date.month, [])
+            return target_date.day in pattern
 
     def get_rokuyo(self, target_date: date) -> dict:
         """
