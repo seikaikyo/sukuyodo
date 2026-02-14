@@ -16,18 +16,18 @@ class SukuyodoService:
     # 月宿傍通曆：農曆月份對應的起始宿
     # 每月初一從這個宿開始，之後每天進一宿
     MONTH_START_MANSION = {
-        1: 12,   # 正月：室宿
-        2: 14,   # 二月：奎宿
-        3: 16,   # 三月：胃宿
-        4: 18,   # 四月：畢宿
-        5: 20,   # 五月：参宿
-        6: 22,   # 六月：鬼宿
-        7: 25,   # 七月：張宿
+        1: 11,   # 正月：室宿
+        2: 13,   # 二月：奎宿
+        3: 15,   # 三月：胃宿
+        4: 17,   # 四月：畢宿
+        5: 19,   # 五月：参宿
+        6: 21,   # 六月：鬼宿
+        7: 24,   # 七月：張宿
         8: 0,    # 八月：角宿
         9: 2,    # 九月：氐宿
         10: 4,   # 十月：心宿
         11: 7,   # 十一月：斗宿
-        12: 10,  # 十二月：虚宿
+        12: 9,   # 十二月：虛宿
     }
 
     # 距離類型對照表：用於判斷近距離/中距離/遠距離及方向性
@@ -36,20 +36,22 @@ class SukuyodoService:
         "eishin": {
             "near": {"distances": [1, 26], "direction_map": {1: "栄", 26: "親"}},
             "mid": {"distances": [10, 17], "direction_map": {10: "栄", 17: "親"}},
-            "far": {"distances": [3, 12, 15, 24], "direction_map": {3: "栄", 12: "栄", 15: "親", 24: "親"}}
+            "far": {"distances": [8, 19], "direction_map": {8: "親", 19: "栄"}}
         },
         "yusui": {
-            "near": {"distances": [2, 25], "direction_map": {2: "友", 25: "衰"}},
-            "mid": {"distances": [11, 16], "direction_map": {11: "友", 16: "衰"}},
-            "far": {"distances": [5, 13, 14, 22], "direction_map": {5: "友", 13: "友", 14: "衰", 22: "衰"}}
+            "near": {"distances": [2, 25], "direction_map": {2: "衰", 25: "友"}},
+            "mid": {"distances": [11, 16], "direction_map": {11: "衰", 16: "友"}},
+            "far": {"distances": [7, 20], "direction_map": {7: "友", 20: "衰"}}
         },
         "ankai": {
-            "near": {"distances": [4, 23], "direction_map": {4: "安", 23: "壊"}},
-            "mid": {"distances": [6, 21], "direction_map": {6: "安", 21: "壊"}}
+            "near": {"distances": [3, 24], "direction_map": {3: "安", 24: "壊"}},
+            "mid": {"distances": [12, 15], "direction_map": {12: "安", 15: "壊"}},
+            "far": {"distances": [6, 21], "direction_map": {6: "壊", 21: "安"}}
         },
         "kisei": {
-            "near": {"distances": [7, 20], "direction_map": {7: "危", 20: "成"}},
-            "mid": {"distances": [8, 19], "direction_map": {8: "危", 19: "成"}}
+            "near": {"distances": [4, 23], "direction_map": {4: "危", 23: "成"}},
+            "mid": {"distances": [13, 14], "direction_map": {13: "危", 14: "成"}},
+            "far": {"distances": [5, 22], "direction_map": {5: "成", 22: "危"}}
         },
         "mei": {"near": {"distances": [0], "direction_map": {0: "命"}}},
         "gyotai": {
@@ -529,28 +531,28 @@ class SukuyodoService:
             "eishin": {
                 "relation": "榮親",
                 "reading": "えいしん",
-                "distances": [1, 3, 10, 12, 15, 17, 24, 26],
+                "distances": [1, 8, 10, 17, 19, 26],
                 "score": 95,
                 "description": "最適合結婚的對象，互相提攜成長的良緣"
             },
             "yusui": {
                 "relation": "友衰",
                 "reading": "ゆうすい",
-                "distances": [2, 5, 11, 13, 14, 16, 22, 25],
+                "distances": [2, 7, 11, 16, 20, 25],
                 "score": 70,
                 "description": "相處舒適自在，但需注意不要一起停滯不前"
             },
             "ankai": {
                 "relation": "安壊",
                 "reading": "あんかい",
-                "distances": [4, 6, 21, 23],
+                "distances": [3, 6, 12, 15, 21, 24],
                 "score": 50,
                 "description": "強烈吸引力但權力不對等，需謹慎經營"
             },
             "kisei": {
                 "relation": "危成",
                 "reading": "きせい",
-                "distances": [7, 8, 19, 20],
+                "distances": [4, 5, 13, 14, 22, 23],
                 "score": 75,
                 "description": "互補的關係，需要磨合但能促進彼此成長"
             }
