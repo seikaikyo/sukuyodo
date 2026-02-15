@@ -6,6 +6,13 @@ import { getApiUrl } from '../config/api'
 // Type Definitions
 // ============================================================================
 
+export interface LifeStages {
+  twenties: string
+  thirties: string
+  forties: string
+  fifties_plus: string
+}
+
 export interface Mansion {
   index: number
   name_jp: string
@@ -17,6 +24,8 @@ export interface Mansion {
   love: string
   career: string
   health: string
+  life_stages?: LifeStages
+  seasonal?: string
   lunar_date?: {
     year: number
     month: number
@@ -39,6 +48,8 @@ export interface Relation {
   distance_type?: 'near' | 'mid' | 'far' | null
   distance_type_name?: string
   direction?: string | null
+  love?: string
+  career?: string
 }
 
 export interface Person {
@@ -420,6 +431,9 @@ export interface ElementType {
   traits: string
   energy: string
   description: string
+  detailed_traits?: string
+  interactions?: string
+  life_advice?: string
 }
 
 export interface HistoryEntry {
@@ -458,6 +472,16 @@ export interface PartnerCompatibility {
   score: number
 }
 
+export interface KeyConcept {
+  title: string
+  content: string
+}
+
+export interface PracticalGuide {
+  title: string
+  content: string
+}
+
 export interface Metadata {
   name: string
   reading: string
@@ -470,6 +494,8 @@ export interface Metadata {
   method: string
   method_reading: string
   history?: HistoryEntry[]
+  key_concepts?: KeyConcept[]
+  practical_guide?: PracticalGuide[]
   month_mansion_table?: MonthMansionTable
 }
 

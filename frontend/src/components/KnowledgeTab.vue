@@ -114,6 +114,31 @@ function handleWheelSelect(m: WheelMansion) {
             <h4>健康運</h4>
             <p>{{ mansion?.health }}</p>
           </div>
+          <div v-if="mansion?.life_stages" class="info-section">
+            <h4>人生階段</h4>
+            <div class="life-stages">
+              <div class="stage-item">
+                <span class="stage-label">20 代</span>
+                <p>{{ mansion.life_stages.twenties }}</p>
+              </div>
+              <div class="stage-item">
+                <span class="stage-label">30 代</span>
+                <p>{{ mansion.life_stages.thirties }}</p>
+              </div>
+              <div class="stage-item">
+                <span class="stage-label">40 代</span>
+                <p>{{ mansion.life_stages.forties }}</p>
+              </div>
+              <div class="stage-item">
+                <span class="stage-label">50 代+</span>
+                <p>{{ mansion.life_stages.fifties_plus }}</p>
+              </div>
+            </div>
+          </div>
+          <div v-if="mansion?.seasonal" class="info-section">
+            <h4>四季能量</h4>
+            <p>{{ mansion.seasonal }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -194,6 +219,9 @@ function handleWheelSelect(m: WheelMansion) {
             <p class="traits">{{ el.traits }}</p>
             <p class="energy-label">能量屬性：{{ el.energy }}</p>
             <p v-if="el.description" class="element-description">{{ el.description }}</p>
+            <p v-if="el.detailed_traits" class="element-extra">{{ el.detailed_traits }}</p>
+            <p v-if="el.interactions" class="element-extra">{{ el.interactions }}</p>
+            <p v-if="el.life_advice" class="element-extra element-advice">{{ el.life_advice }}</p>
           </div>
         </div>
       </div>
@@ -256,6 +284,20 @@ function handleWheelSelect(m: WheelMansion) {
           <div v-for="(entry, i) in metadata.history" :key="i" class="history-item">
             <h4>{{ entry.title }}</h4>
             <p>{{ entry.content }}</p>
+          </div>
+        </div>
+        <div v-if="metadata.key_concepts?.length" class="history-sections">
+          <h3 class="section-subtitle">核心概念</h3>
+          <div v-for="(concept, i) in metadata.key_concepts" :key="'kc-' + i" class="history-item">
+            <h4>{{ concept.title }}</h4>
+            <p>{{ concept.content }}</p>
+          </div>
+        </div>
+        <div v-if="metadata.practical_guide?.length" class="history-sections">
+          <h3 class="section-subtitle">實用指南</h3>
+          <div v-for="(guide, i) in metadata.practical_guide" :key="'pg-' + i" class="history-item">
+            <h4>{{ guide.title }}</h4>
+            <p>{{ guide.content }}</p>
           </div>
         </div>
       </div>
@@ -543,6 +585,17 @@ function handleWheelSelect(m: WheelMansion) {
   padding-top: var(--space-sm);
 }
 
+.element-body .element-extra {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: var(--space-sm) 0 0;
+}
+
+.element-body .element-advice {
+  font-style: italic;
+}
+
 .calendar-info,
 .history-info {
   background: var(--bg-surface);
@@ -629,6 +682,43 @@ function handleWheelSelect(m: WheelMansion) {
 .history-item p {
   margin: 0;
   line-height: 1.6;
+}
+
+.life-stages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.stage-item {
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--accent);
+}
+
+.stage-label {
+  display: inline-block;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.stage-item p {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.section-subtitle {
+  color: var(--accent);
+  font-size: var(--font-base);
+  margin: 0 0 var(--space-md);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
 }
 
 .calendar-note {

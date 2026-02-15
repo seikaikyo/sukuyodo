@@ -208,6 +208,17 @@ function handleMansionClick(m: CompatibleMansion) {
           <p>{{ compatibility.summary }}</p>
         </div>
 
+        <div v-if="compatibility.relation.love || compatibility.relation.career" class="compat-aspects">
+          <div v-if="compatibility.relation.love" class="aspect-section">
+            <h5>愛情面向</h5>
+            <p>{{ compatibility.relation.love }}</p>
+          </div>
+          <div v-if="compatibility.relation.career" class="aspect-section">
+            <h5>事業面向</h5>
+            <p>{{ compatibility.relation.career }}</p>
+          </div>
+        </div>
+
         <div class="compat-advice">
           <h5>相處建議</h5>
           <p>{{ compatibility.relation.advice }}</p>
@@ -639,6 +650,29 @@ function handleMansionClick(m: CompatibleMansion) {
   font-size: var(--font-sm);
   line-height: 1.6;
   margin: 0 0 var(--space-sm);
+}
+
+.compat-aspects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.aspect-section h5 {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-xs);
+}
+
+.aspect-section p {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .compat-advice h5 {

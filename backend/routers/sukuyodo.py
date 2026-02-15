@@ -187,7 +187,10 @@ async def get_elements():
                 "planet": data.get("planet", ""),
                 "traits": data.get("traits", ""),
                 "energy": data.get("energy", ""),
-                "description": data.get("description", "")
+                "description": data.get("description", ""),
+                "detailed_traits": data.get("detailed_traits", ""),
+                "interactions": data.get("interactions", ""),
+                "life_advice": data.get("life_advice", "")
             }
             for name, data in elements.items()
         ]
