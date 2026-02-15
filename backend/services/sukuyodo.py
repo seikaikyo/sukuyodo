@@ -31,33 +31,35 @@ class SukuyodoService:
     }
 
     # 距離類型對照表：用於判斷近距離/中距離/遠距離及方向性
-    # 三九秘法分組：近=命group(d=1-6,25-26) 中=業group(d=10-17) 遠=胎group(d=7-8,19-24)
+    # 依據 yakumoin.net（八雲院）絕對距離分類：
+    #   近距離 = abs_dist 0-4（含業/胎）→ d=0,1,2,3,4,9,18,23,24,25,26
+    #   中距離 = abs_dist 5-8           → d=5,6,7,8,19,20,21,22
+    #   遠距離 = abs_dist 10-13         → d=10,11,12,13,14,15,16,17
     # direction_map: 從 person1 角度看，該距離代表的方向（如 1 = 栄，26 = 親）
     DISTANCE_TYPE_MAP = {
         "eishin": {
             "near": {"distances": [1, 26], "direction_map": {1: "栄", 26: "親"}},
-            "mid": {"distances": [10, 17], "direction_map": {10: "栄", 17: "親"}},
-            "far": {"distances": [8, 19], "direction_map": {8: "親", 19: "栄"}}
+            "mid": {"distances": [8, 19], "direction_map": {8: "親", 19: "栄"}},
+            "far": {"distances": [10, 17], "direction_map": {10: "栄", 17: "親"}}
         },
         "yusui": {
             "near": {"distances": [2, 25], "direction_map": {2: "衰", 25: "友"}},
-            "mid": {"distances": [11, 16], "direction_map": {11: "衰", 16: "友"}},
-            "far": {"distances": [7, 20], "direction_map": {7: "友", 20: "衰"}}
+            "mid": {"distances": [7, 20], "direction_map": {7: "友", 20: "衰"}},
+            "far": {"distances": [11, 16], "direction_map": {11: "衰", 16: "友"}}
         },
         "ankai": {
-            "near": {"distances": [3, 6], "direction_map": {3: "安", 6: "壊"}},
-            "mid": {"distances": [12, 15], "direction_map": {12: "安", 15: "壊"}},
-            "far": {"distances": [21, 24], "direction_map": {21: "安", 24: "壊"}}
+            "near": {"distances": [3, 24], "direction_map": {3: "安", 24: "壊"}},
+            "mid": {"distances": [6, 21], "direction_map": {6: "壊", 21: "安"}},
+            "far": {"distances": [12, 15], "direction_map": {12: "安", 15: "壊"}}
         },
         "kisei": {
-            "near": {"distances": [4, 5], "direction_map": {4: "危", 5: "成"}},
-            "mid": {"distances": [13, 14], "direction_map": {13: "危", 14: "成"}},
-            "far": {"distances": [22, 23], "direction_map": {22: "危", 23: "成"}}
+            "near": {"distances": [4, 23], "direction_map": {4: "危", 23: "成"}},
+            "mid": {"distances": [5, 22], "direction_map": {5: "成", 22: "危"}},
+            "far": {"distances": [13, 14], "direction_map": {13: "危", 14: "成"}}
         },
         "mei": {"near": {"distances": [0], "direction_map": {0: "命"}}},
         "gyotai": {
-            "near": {"distances": [9], "direction_map": {9: "業"}},
-            "far": {"distances": [18], "direction_map": {18: "胎"}}
+            "near": {"distances": [9, 18], "direction_map": {9: "業", 18: "胎"}}
         }
     }
 
