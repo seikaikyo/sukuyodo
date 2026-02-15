@@ -420,18 +420,18 @@ async def get_formula_explanation():
             ],
             "formula": "本命宿 = (月起始宿 + 日 - 1) mod 27",
             "month_start_mansions": [
-                {"month": 1, "name": "正月", "start_mansion": "危宿", "index": 11},
-                {"month": 2, "name": "二月", "start_mansion": "壁宿", "index": 13},
-                {"month": 3, "name": "三月", "start_mansion": "婁宿", "index": 15},
-                {"month": 4, "name": "四月", "start_mansion": "昴宿", "index": 17},
-                {"month": 5, "name": "五月", "start_mansion": "觜宿", "index": 19},
-                {"month": 6, "name": "六月", "start_mansion": "井宿", "index": 21},
-                {"month": 7, "name": "七月", "start_mansion": "星宿", "index": 24},
+                {"month": 1, "name": "正月", "start_mansion": "室宿", "index": 11},
+                {"month": 2, "name": "二月", "start_mansion": "奎宿", "index": 13},
+                {"month": 3, "name": "三月", "start_mansion": "胃宿", "index": 15},
+                {"month": 4, "name": "四月", "start_mansion": "畢宿", "index": 17},
+                {"month": 5, "name": "五月", "start_mansion": "参宿", "index": 19},
+                {"month": 6, "name": "六月", "start_mansion": "鬼宿", "index": 21},
+                {"month": 7, "name": "七月", "start_mansion": "張宿", "index": 24},
                 {"month": 8, "name": "八月", "start_mansion": "角宿", "index": 0},
                 {"month": 9, "name": "九月", "start_mansion": "氐宿", "index": 2},
                 {"month": 10, "name": "十月", "start_mansion": "心宿", "index": 4},
                 {"month": 11, "name": "十一月", "start_mansion": "斗宿", "index": 7},
-                {"month": 12, "name": "十二月", "start_mansion": "女宿", "index": 9}
+                {"month": 12, "name": "十二月", "start_mansion": "虚宿", "index": 9}
             ]
         },
         "compatibility_calculation": {
@@ -439,18 +439,18 @@ async def get_formula_explanation():
             "reading": "さんくひほう",
             "description": "根據兩人本命宿的距離判斷關係類型",
             "steps": [
-                "步驟 1：計算兩人本命宿的索引差",
-                "步驟 2：取絕對值作為距離（0-13 範圍）",
-                "步驟 3：根據距離對照六種關係"
+                "步驟 1：計算兩人本命宿的前向距離",
+                "步驟 2：前向距離 = (宿B索引 - 宿A索引) mod 27（範圍 0-26）",
+                "步驟 3：根據前向距離對照六種關係"
             ],
-            "formula": "距離 = min(|宿A - 宿B|, 27 - |宿A - 宿B|)",
+            "formula": "前向距離 = (宿B - 宿A) mod 27",
             "distance_relations": [
                 {"distances": [0], "relation": "命", "reading": "めい"},
                 {"distances": [9, 18], "relation": "業胎", "reading": "ぎょうたい"},
-                {"distances": [1, 3, 10, 12, 15, 17, 24, 26], "relation": "栄親", "reading": "えいしん"},
-                {"distances": [2, 5, 11, 13, 14, 16, 22, 25], "relation": "友衰", "reading": "ゆうすい"},
-                {"distances": [4, 6, 21, 23], "relation": "安壊", "reading": "あんかい"},
-                {"distances": [7, 8, 19, 20], "relation": "危成", "reading": "きせい"}
+                {"distances": [1, 8, 10, 17, 19, 26], "relation": "栄親", "reading": "えいしん"},
+                {"distances": [2, 7, 11, 16, 20, 25], "relation": "友衰", "reading": "ゆうすい"},
+                {"distances": [3, 6, 12, 15, 21, 24], "relation": "安壊", "reading": "あんかい"},
+                {"distances": [4, 5, 13, 14, 22, 23], "relation": "危成", "reading": "きせい"}
             ]
         },
         "element_bonus": {
