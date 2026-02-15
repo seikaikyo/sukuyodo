@@ -94,7 +94,7 @@ created: 2026-02-15
 
 - [x] Partners Tab 完整化（展開式卡片，完整相性資訊）
 - [x] 月運/年運建議擴充（YEARLY_FORTUNE_ADVICE + MONTHLY_THEME_DESCRIPTIONS）
-- [ ] 每日/週運建議加深（P1 下一階段）
+- [x] 每日/週運建議加深（宿曜提示 + 本週焦點）
 - [x] 吉日解說擴充（reason 從 ~30 字擴充至 ~80 字）
 - [x] 尋找配對說明擴充（detailed 描述 + 展開按鈕）
 - [x] Bug: dialog @sl-after-hide（已在 HomeView.vue 修正）

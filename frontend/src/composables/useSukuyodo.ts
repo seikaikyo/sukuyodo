@@ -161,6 +161,7 @@ export interface WeeklyFortune {
     is_yesterday: boolean
   }[]
   advice: string
+  focus?: string
   lucky: {
     direction: string
     direction_reading: string

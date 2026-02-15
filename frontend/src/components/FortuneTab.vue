@@ -133,6 +133,21 @@ function formatDate(dateStr: string) {
             </div>
           </div>
 
+          <div class="mansion-hint">
+            <h4>
+              今日宿曜提示
+              <span class="hint-relation" :class="dailyFortune.mansion_relation.type">{{ dailyFortune.mansion_relation.name }}</span>
+            </h4>
+            <p class="hint-mansions">
+              本命宿 <strong>{{ dailyFortune.your_mansion.name_jp }}</strong>（{{ dailyFortune.your_mansion.element }}）
+              ／當日宿 <strong>{{ dailyFortune.day_mansion.name_jp }}</strong>（{{ dailyFortune.day_mansion.element }}）
+            </p>
+            <p>{{ dailyFortune.mansion_relation.description }}</p>
+            <p v-if="dailyFortune.element_relation" class="hint-element">
+              {{ dailyFortune.element_relation.description }}
+            </p>
+          </div>
+
           <div class="advice-box">
             <h4>今日建議</h4>
             <p>{{ dailyFortune.advice }}</p>
@@ -175,6 +190,11 @@ function formatDate(dateStr: string) {
               </div>
               <span class="score-value">{{ weeklyFortune.fortune.love }}</span>
             </div>
+          </div>
+
+          <div v-if="weeklyFortune.focus" class="weekly-focus">
+            <h4>本週焦點</h4>
+            <p>{{ weeklyFortune.focus }}</p>
           </div>
 
           <div class="daily-overview">
@@ -561,6 +581,63 @@ function formatDate(dateStr: string) {
   border-radius: 50%;
 }
 
+/* Mansion Hint */
+.mansion-hint {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.mansion-hint h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm);
+}
+
+.hint-relation {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.hint-relation.eishin { background: var(--success); color: var(--bg-primary); }
+.hint-relation.gyotai { background: var(--accent); color: var(--bg-primary); }
+.hint-relation.mei { background: var(--info); color: var(--bg-primary); }
+.hint-relation.yusui { background: var(--text-secondary); color: var(--bg-primary); }
+.hint-relation.kisei { background: #eab308; color: var(--bg-primary); }
+.hint-relation.ankai { background: var(--warning); color: var(--bg-primary); }
+
+.hint-mansions {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.hint-mansions strong {
+  color: var(--text-primary);
+}
+
+.mansion-hint p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-xs);
+}
+
+.mansion-hint p:last-child {
+  margin-bottom: 0;
+}
+
+.hint-element {
+  font-style: italic;
+  opacity: 0.85;
+}
+
 .advice-box {
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
@@ -604,6 +681,27 @@ function formatDate(dateStr: string) {
   font-size: var(--font-sm);
   line-height: 1.6;
   margin: var(--space-sm) 0 0;
+}
+
+/* Weekly Focus */
+.weekly-focus {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.weekly-focus h4 {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.weekly-focus p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .daily-overview,
