@@ -137,7 +137,7 @@ class SukuyodoService:
                 "宿曜道計算需要精確的農曆轉換，不接受近似值。"
             )
 
-    def lunar_to_solar(self, lunar_year: int, lunar_month: int, lunar_day: int) -> date | None:
+    def lunar_to_solar(self, lunar_year: int, lunar_month: int, lunar_day: int) -> Optional[date]:
         """
         農曆轉西曆
 
@@ -163,7 +163,7 @@ class SukuyodoService:
         lunar_month: int,
         lunar_day: int,
         year_range: int = 20,
-        center_year: int | None = None
+        center_year: Optional[int] = None
     ) -> list[dict]:
         """
         將農曆月日轉換為多年的西曆日期
@@ -286,7 +286,7 @@ class SukuyodoService:
             "direction": None
         }
 
-    def _get_distance_info(self, rel_type: str, distance: int) -> tuple[str | None, str | None]:
+    def _get_distance_info(self, rel_type: str, distance: int) -> tuple[Optional[str], Optional[str]]:
         """
         根據關係類型和距離，取得距離類型和方向
 
@@ -308,7 +308,7 @@ class SukuyodoService:
 
         return (None, None)
 
-    def _get_distance_type_name(self, distance_type: str | None) -> str:
+    def _get_distance_type_name(self, distance_type: Optional[str]) -> str:
         """將距離類型轉換為中文名稱"""
         return {"near": "近距離", "mid": "中距離", "far": "遠距離"}.get(distance_type or "", "")
 
@@ -867,6 +867,35 @@ class SukuyodoService:
         ]
     }
 
+    # 週運焦點：根據元素關係類型提供本週關注方向
+    WEEKLY_FORTUNE_FOCUS = {
+        "same": [
+            "本週的七曜能量與你的本命元素相同，內在能量充沛，做事的手感特別好。適合推進需要個人專注力的工作，你的判斷力和執行力都處於高峰。把重要的決策和關鍵會議安排在這幾天，效率會讓你自己驚訝。",
+            "同元素週意味著你和環境的頻率完全對上了。平時覺得吃力的事情這週會變得輕鬆，與人溝通的理解力也比平時好。拿來處理需要深度思考的任務，或者跟重要的人談一件你一直想談的事。",
+            "你的本命元素在這週被強化，個人特質會更鮮明。擅長的領域表現突出，但也要注意別太執著於自己的想法，聽聽不同聲音能讓你的計畫更全面。"
+        ],
+        "generating": [
+            "本週外在能量正在滋養你的本命元素，環境條件對你特別有利。別人的支持和配合會比平時更容易到位，適合處理需要外部資源的事情。開口求助、提出合作邀請、爭取預算，這週的成功率值得你積極嘗試。",
+            "相生週帶來的是一種「什麼都比較順」的感覺。人際互動中你會發現貴人不請自來，工作上的阻力也比預期小。把握這段好時機，把拖延已久的重要事項排進行程。",
+            "能量場向你傾斜的一週。學新東西的吸收力強，推動計畫的執行力好，連運氣都比平時好一些。不需要刻意做什麼特別的事，但也別浪費了這份順勢。"
+        ],
+        "weakening": [
+            "本週你的能量有向外流失的跡象，做事可能需要比平時多花一點力氣。不必焦慮，調整好節奏最重要：減少不必要的社交、推掉能推的應酬、把精力集中在少數幾件真正重要的事上。做得少但做得好，比什麼都碰一點但都做不完更有價值。",
+            "能量被消耗的一週，你可能會覺得動力不如上週。這是正常的週期變化，對策是降低同時處理的事情數量。把待辦清單砍掉一半，專心把剩下的做好。同時注意飲食和睡眠，身體的補給比任何策略都管用。",
+            "本週適合用效率取代時間。不要用加班來補進度，而是想辦法優化流程。能自動化的就自動化、能委託的就委託、能簡化的就簡化。省下來的精力留給需要你親自處理的關鍵環節。"
+        ],
+        "conflicting": [
+            "本週外在能量與你有些摩擦，計畫可能遇到預期之外的變數。不要把這當成壞事——阻力往往是在提醒你哪個環節還沒準備好。遇到卡關的時候先退一步看全局，找到問題的真正原因再處理，比硬推有效。這週的耐心比能力更重要。",
+            "這週的挑戰在於控制節奏。外在環境會製造一些干擾，讓你很想加快速度把事情搞定，但越急越容易出錯。每天完成最重要的三件事就好，其他的留到下週。穩住不急躁，比什麼都重要。",
+            "溝通方面本週需要多花心思。別人的反應可能不如你預期，不是你說錯了什麼，而是雙方的頻率暫時沒對上。重要的訊息用文字確認、口頭協議留下紀錄，減少誤會的空間。"
+        ],
+        "neutral": [
+            "本週能量平穩，沒有特別好也沒有特別差的外力影響。這種時候你的主動作為比什麼都重要——想推什麼就去推、想學什麼就去學，不會有意外的阻礙，也不會有天上掉下來的好運。踏實做事，結果不會讓你失望。",
+            "中性能量的一週，適合處理需要穩定輸出的工作。寫報告、整理資料、複習進度，這些不太刺激但很重要的事情在這週做最恰當。把基礎打好，下週如果有好機會就能馬上接住。",
+            "既然外在環境不會主動推你或拉你，那就自己決定這週的重點。挑一件你最想完成的事情，集中火力去做。沒有干擾的時候，專注力是你最強的武器。"
+        ]
+    }
+
     # 月運主題描述：根據本命宿與月宿的關係描述整體氣氛
     MONTHLY_THEME_DESCRIPTIONS = {
         "eishin": [
@@ -1393,6 +1422,7 @@ class SukuyodoService:
             },
             "daily_overview": daily_overview,
             "advice": advice,
+            "focus": random.choice(self.WEEKLY_FORTUNE_FOCUS.get(relation_type, self.WEEKLY_FORTUNE_FOCUS["neutral"])),
             "lucky": {
                 "direction": lucky_direction["direction"],
                 "direction_reading": lucky_direction["reading"],
