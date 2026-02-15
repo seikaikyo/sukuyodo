@@ -44,7 +44,6 @@ const {
   compatFinder,
   finderLoading,
   selectedMansion,
-  expandedLunarDates,
 
   // Pair Diagnosis
   date2,
@@ -82,7 +81,6 @@ const {
 
   // Event Handlers
   toggleRelation,
-  toggleLunarDate,
   quickSelect,
   toggleMonthlyWeek,
 
@@ -232,7 +230,6 @@ onMounted(() => {
         :compat-finder="compatFinder"
         :finder-loading="finderLoading"
         :selected-mansion="selectedMansion"
-        :expanded-lunar-dates="expandedLunarDates"
         :date2="date2"
         :compatibility="compatibility"
         :compat-loading="compatLoading"
@@ -243,7 +240,6 @@ onMounted(() => {
         :element-colors="elementColors"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
-        @toggle-lunar-date="toggleLunarDate"
         @calculate-compatibility="calculateCompatibility"
       />
 

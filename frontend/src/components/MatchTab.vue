@@ -4,19 +4,13 @@ import type {
   CompatibilityFinderResult,
   CompatibleMansion,
   CompatibilityResult,
-  PartnerCompatibility,
-  LunarDate
+  PartnerCompatibility
 } from '../composables/useSukuyodo'
 
 const expandedPartnerId = ref<string | null>(null)
-const expandedFinderKey = ref<string | null>(null)
 
 function togglePartner(id: string) {
   expandedPartnerId.value = expandedPartnerId.value === id ? null : id
-}
-
-function toggleFinderDetail(key: string) {
-  expandedFinderKey.value = expandedFinderKey.value === key ? null : key
 }
 
 const props = defineProps<{
@@ -24,7 +18,6 @@ const props = defineProps<{
   compatFinder: CompatibilityFinderResult | null
   finderLoading: boolean
   selectedMansion: CompatibleMansion | null
-  expandedLunarDates: number[]
   date2: string
   compatibility: CompatibilityResult | null
   compatLoading: boolean
@@ -39,7 +32,6 @@ const emit = defineEmits<{
   'update:activeTab': [value: 'finder' | 'compat' | 'partners']
   'update:selectedMansion': [value: CompatibleMansion | null]
   'update:date2': [value: string]
-  toggleLunarDate: [ld: LunarDate]
   calculateCompatibility: []
 }>()
 
@@ -65,6 +57,13 @@ function getScoreLevel(score: number) {
   if (score >= 75) return { text: '相當不錯', class: 'good' }
   if (score >= 60) return { text: '需要磨合', class: 'fair' }
   return { text: '多加小心', class: 'warning' }
+}
+
+const roleLabels: Record<string, string> = {
+  colleague: '同事/工作夥伴',
+  friend: '朋友',
+  lover: '戀人/配偶',
+  family: '家人'
 }
 
 function handleMansionClick(m: CompatibleMansion) {
@@ -116,14 +115,7 @@ function handleMansionClick(m: CompatibleMansion) {
               <span class="relation-score">{{ (compatFinder as any)[rk.key]?.score }} 分</span>
             </h4>
             <p class="relation-desc">{{ (compatFinder as any)[rk.key]?.description }}</p>
-            <button
-              v-if="(compatFinder as any)[rk.key]?.detailed"
-              class="detail-toggle"
-              @click.stop="toggleFinderDetail(rk.key)"
-            >
-              {{ expandedFinderKey === rk.key ? '收起詳細說明' : '查看詳細說明' }}
-            </button>
-            <p v-if="expandedFinderKey === rk.key" class="relation-detailed">
+            <p v-if="(compatFinder as any)[rk.key]?.detailed" class="relation-detailed">
               {{ (compatFinder as any)[rk.key]?.detailed }}
             </p>
             <div class="mansion-chips">
@@ -147,20 +139,6 @@ function handleMansionClick(m: CompatibleMansion) {
           <p>{{ selectedMansion.personality }}</p>
           <div class="keywords">
             <span v-for="kw in selectedMansion.keywords" :key="kw" class="keyword">{{ kw }}</span>
-          </div>
-          <div class="lunar-dates">
-            <h5>農曆日期對照</h5>
-            <div v-for="ld in selectedMansion.lunar_dates" :key="ld.lunar_month" class="lunar-date">
-              <button class="lunar-toggle" :aria-expanded="expandedLunarDates.includes(ld.lunar_month)" @click="emit('toggleLunarDate', ld)">
-                {{ ld.display }}
-                <sl-icon :name="expandedLunarDates.includes(ld.lunar_month) ? 'chevron-up' : 'chevron-down'" aria-hidden="true"></sl-icon>
-              </button>
-              <div v-if="expandedLunarDates.includes(ld.lunar_month) && ld.solar_dates" class="solar-dates">
-                <span v-for="sd in ld.solar_dates" :key="sd.solar_date" class="solar-date">
-                  {{ sd.display }}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </template>
@@ -241,6 +219,20 @@ function handleMansionClick(m: CompatibleMansion) {
           </div>
         </div>
 
+        <div v-if="compatibility.relation.roles && Object.keys(compatibility.relation.roles).length" class="role-advice">
+          <h5>角色別相處指南</h5>
+          <div class="role-grid">
+            <div
+              v-for="(desc, role) in compatibility.relation.roles"
+              :key="role"
+              class="role-card"
+            >
+              <h6 class="role-label">{{ roleLabels[role] || role }}</h6>
+              <p>{{ desc }}</p>
+            </div>
+          </div>
+        </div>
+
         <div class="compat-advice">
           <h5>相處建議</h5>
           <p>{{ compatibility.relation.advice }}</p>
@@ -307,6 +299,20 @@ function handleMansionClick(m: CompatibleMansion) {
                 <div v-if="pc.relation.career" class="aspect-section">
                   <h5>事業面向</h5>
                   <p>{{ pc.relation.career }}</p>
+                </div>
+              </div>
+
+              <div v-if="pc.relation.roles && Object.keys(pc.relation.roles).length" class="role-advice">
+                <h5>角色別相處指南</h5>
+                <div class="role-grid">
+                  <div
+                    v-for="(desc, role) in pc.relation.roles"
+                    :key="role"
+                    class="role-card"
+                  >
+                    <h6 class="role-label">{{ roleLabels[role] || role }}</h6>
+                    <p>{{ desc }}</p>
+                  </div>
                 </div>
               </div>
 
@@ -410,28 +416,6 @@ function handleMansionClick(m: CompatibleMansion) {
   margin: 0 0 var(--space-sm);
 }
 
-.detail-toggle {
-  display: inline-block;
-  padding: 0;
-  margin-bottom: var(--space-sm);
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: var(--font-xs);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.detail-toggle:hover {
-  opacity: 0.8;
-}
-
-.detail-toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .relation-detailed {
   font-size: var(--font-sm);
   color: var(--text-secondary);
@@ -440,7 +424,6 @@ function handleMansionClick(m: CompatibleMansion) {
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
-  animation: fadeIn 0.2s ease;
 }
 
 .mansion-chips {
@@ -518,54 +501,6 @@ function handleMansionClick(m: CompatibleMansion) {
 .keyword {
   padding: var(--space-xs) var(--space-sm);
   background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-xs);
-  color: var(--text-secondary);
-}
-
-.lunar-dates h5 {
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
-  margin: 0 0 var(--space-sm);
-}
-
-.lunar-date {
-  margin-bottom: var(--space-xs);
-}
-
-.lunar-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: var(--space-sm);
-  background: var(--bg-elevated);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  min-height: 44px;
-}
-
-.lunar-toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.solar-dates {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  padding: var(--space-sm);
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
-  margin-top: var(--space-xs);
-}
-
-.solar-date {
-  padding: var(--space-xs) var(--space-sm);
-  background: var(--bg-surface);
   border-radius: var(--radius-sm);
   font-size: var(--font-xs);
   color: var(--text-secondary);
@@ -777,6 +712,43 @@ function handleMansionClick(m: CompatibleMansion) {
   font-size: var(--font-sm);
   line-height: 1.6;
   margin: 0 0 var(--space-md);
+}
+
+/* Role Advice */
+.role-advice {
+  margin-bottom: var(--space-lg);
+}
+
+.role-advice > h5 {
+  color: var(--accent);
+  font-size: var(--font-base);
+  margin: 0 0 var(--space-md);
+}
+
+.role-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.role-card {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--border);
+}
+
+.role-card h6.role-label {
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  margin: 0 0 var(--space-sm);
+}
+
+.role-card p {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .tips h6 {

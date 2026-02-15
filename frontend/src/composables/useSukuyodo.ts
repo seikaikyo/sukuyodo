@@ -50,6 +50,7 @@ export interface Relation {
   direction?: string | null
   love?: string
   career?: string
+  roles?: Record<string, string>
 }
 
 export interface Person {
@@ -547,7 +548,6 @@ export function useSukuyodo() {
   const compatFinder = ref<CompatibilityFinderResult | null>(null)
   const finderLoading = ref(false)
   const selectedMansion = ref<CompatibleMansion | null>(null)
-  const expandedLunarDates = ref<number[]>([])
 
   // Pair Diagnosis
   const date2 = ref('')
@@ -1134,15 +1134,6 @@ export function useSukuyodo() {
     expandedRelation.value = expandedRelation.value === type ? null : type
   }
 
-  function toggleLunarDate(ld: LunarDate) {
-    const idx = expandedLunarDates.value.indexOf(ld.lunar_month)
-    if (idx >= 0) {
-      expandedLunarDates.value.splice(idx, 1)
-    } else {
-      expandedLunarDates.value.push(ld.lunar_month)
-    }
-  }
-
   function quickSelect(date: string) {
     birthDate.value = date
     lookupMansion()
@@ -1213,8 +1204,6 @@ export function useSukuyodo() {
     compatFinder,
     finderLoading,
     selectedMansion,
-    expandedLunarDates,
-
     // Pair Diagnosis
     date2,
     compatibility,
@@ -1272,7 +1261,6 @@ export function useSukuyodo() {
     selectLuckyAction,
     handleWheelSelect,
     toggleRelation,
-    toggleLunarDate,
     quickSelect,
     toggleMonthlyWeek,
 
