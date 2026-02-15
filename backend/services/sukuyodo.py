@@ -31,6 +31,7 @@ class SukuyodoService:
     }
 
     # 距離類型對照表：用於判斷近距離/中距離/遠距離及方向性
+    # 三九秘法分組：近=命group(d=1-6,25-26) 中=業group(d=10-17) 遠=胎group(d=7-8,19-24)
     # direction_map: 從 person1 角度看，該距離代表的方向（如 1 = 栄，26 = 親）
     DISTANCE_TYPE_MAP = {
         "eishin": {
@@ -44,14 +45,14 @@ class SukuyodoService:
             "far": {"distances": [7, 20], "direction_map": {7: "友", 20: "衰"}}
         },
         "ankai": {
-            "near": {"distances": [3, 24], "direction_map": {3: "安", 24: "壊"}},
+            "near": {"distances": [3, 6], "direction_map": {3: "安", 6: "壊"}},
             "mid": {"distances": [12, 15], "direction_map": {12: "安", 15: "壊"}},
-            "far": {"distances": [6, 21], "direction_map": {6: "壊", 21: "安"}}
+            "far": {"distances": [21, 24], "direction_map": {21: "安", 24: "壊"}}
         },
         "kisei": {
-            "near": {"distances": [4, 23], "direction_map": {4: "危", 23: "成"}},
+            "near": {"distances": [4, 5], "direction_map": {4: "危", 5: "成"}},
             "mid": {"distances": [13, 14], "direction_map": {13: "危", 14: "成"}},
-            "far": {"distances": [5, 22], "direction_map": {5: "成", 22: "危"}}
+            "far": {"distances": [22, 23], "direction_map": {22: "危", 23: "成"}}
         },
         "mei": {"near": {"distances": [0], "direction_map": {0: "命"}}},
         "gyotai": {
@@ -856,8 +857,8 @@ class SukuyodoService:
         element_relation_type, element_bonus = self._calc_fortune_element_relation(
             user_element, day_element
         )
-        # 將元素加成縮小為次要因素
-        element_adjustment = element_bonus // 2  # 最多 ±10 變成 ±5
+        # 將元素加成縮小為次要因素（截斷除法，避免負數偏移）
+        element_adjustment = int(element_bonus / 2)  # ±20→±10, ±10→±5, ±5→±2
         element_desc = fortune_data["element_relations"].get(
             element_relation_type,
             fortune_data["element_relations"]["neutral"]
