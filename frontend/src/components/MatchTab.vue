@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type {
   CompatibilityFinderResult,
   CompatibleMansion,
@@ -6,6 +7,17 @@ import type {
   PartnerCompatibility,
   LunarDate
 } from '../composables/useSukuyodo'
+
+const expandedPartnerId = ref<string | null>(null)
+const expandedFinderKey = ref<string | null>(null)
+
+function togglePartner(id: string) {
+  expandedPartnerId.value = expandedPartnerId.value === id ? null : id
+}
+
+function toggleFinderDetail(key: string) {
+  expandedFinderKey.value = expandedFinderKey.value === key ? null : key
+}
 
 const props = defineProps<{
   activeTab: 'finder' | 'compat' | 'partners'
@@ -104,6 +116,16 @@ function handleMansionClick(m: CompatibleMansion) {
               <span class="relation-score">{{ (compatFinder as any)[rk.key]?.score }} 分</span>
             </h4>
             <p class="relation-desc">{{ (compatFinder as any)[rk.key]?.description }}</p>
+            <button
+              v-if="(compatFinder as any)[rk.key]?.detailed"
+              class="detail-toggle"
+              @click.stop="toggleFinderDetail(rk.key)"
+            >
+              {{ expandedFinderKey === rk.key ? '收起詳細說明' : '查看詳細說明' }}
+            </button>
+            <p v-if="expandedFinderKey === rk.key" class="relation-detailed">
+              {{ (compatFinder as any)[rk.key]?.detailed }}
+            </p>
             <div class="mansion-chips">
               <button
                 v-for="m in (compatFinder as any)[rk.key]?.mansions"
@@ -250,18 +272,54 @@ function handleMansionClick(m: CompatibleMansion) {
           <div
             v-for="pc in partnerCompatibilities"
             :key="pc.partnerId"
-            class="partner-card"
-            :class="getScoreClass(pc.score)"
+            class="partner-card-wrapper"
           >
-            <div class="partner-info">
-              <span class="partner-name">{{ pc.nickname }}</span>
-              <span class="partner-mansion">{{ pc.mansion.name_jp }}</span>
-            </div>
-            <div class="partner-relation">
-              <span class="relation-name">{{ pc.relation.name }}</span>
-            </div>
-            <div class="partner-score">
-              <span class="score-num">{{ pc.score }}</span>
+            <button
+              class="partner-card"
+              :class="[getScoreClass(pc.score), { expanded: expandedPartnerId === pc.partnerId }]"
+              :aria-expanded="expandedPartnerId === pc.partnerId"
+              @click="togglePartner(pc.partnerId)"
+            >
+              <div class="partner-info">
+                <span class="partner-name">{{ pc.nickname }}</span>
+                <span class="partner-mansion">{{ pc.mansion.name_jp }}（{{ pc.mansion.reading }}）</span>
+              </div>
+              <div class="partner-relation">
+                <span class="relation-name">{{ pc.relation.name }}</span>
+                <span v-if="pc.relation.distance_type_name" class="distance-tag" :class="pc.relation.distance_type">{{ pc.relation.distance_type_name }}</span>
+              </div>
+              <div class="partner-score">
+                <span class="score-num">{{ pc.score }}</span>
+              </div>
+            </button>
+
+            <div v-if="expandedPartnerId === pc.partnerId" class="partner-detail">
+              <div class="compat-detail">
+                <p>{{ pc.relation.description }}</p>
+                <p v-if="pc.summary">{{ pc.summary }}</p>
+              </div>
+
+              <div v-if="pc.relation.love || pc.relation.career" class="compat-aspects">
+                <div v-if="pc.relation.love" class="aspect-section">
+                  <h5>愛情面向</h5>
+                  <p>{{ pc.relation.love }}</p>
+                </div>
+                <div v-if="pc.relation.career" class="aspect-section">
+                  <h5>事業面向</h5>
+                  <p>{{ pc.relation.career }}</p>
+                </div>
+              </div>
+
+              <div class="compat-advice">
+                <h5>相處建議</h5>
+                <p>{{ pc.relation.advice }}</p>
+                <div v-if="pc.relation.tips?.length" class="tips">
+                  <h6>小技巧</h6>
+                  <ul>
+                    <li v-for="(tip, i) in pc.relation.tips" :key="i">{{ tip }}</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -350,6 +408,39 @@ function handleMansionClick(m: CompatibleMansion) {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   margin: 0 0 var(--space-sm);
+}
+
+.detail-toggle {
+  display: inline-block;
+  padding: 0;
+  margin-bottom: var(--space-sm);
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.detail-toggle:hover {
+  opacity: 0.8;
+}
+
+.detail-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.relation-detailed {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.2s ease;
 }
 
 .mansion-chips {
@@ -731,6 +822,11 @@ function handleMansionClick(m: CompatibleMansion) {
   gap: var(--space-sm);
 }
 
+.partner-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
 .partner-card {
   display: flex;
   align-items: center;
@@ -738,6 +834,29 @@ function handleMansionClick(m: CompatibleMansion) {
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.partner-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+}
+
+.partner-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.partner-card.expanded {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-color: var(--accent);
+  background: var(--bg-elevated);
 }
 
 .partner-card.excellent { border-left: 3px solid var(--success); }
@@ -762,6 +881,10 @@ function handleMansionClick(m: CompatibleMansion) {
 }
 
 .partner-relation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
   padding: 0 var(--space-md);
 }
 
@@ -774,6 +897,35 @@ function handleMansionClick(m: CompatibleMansion) {
   font-size: var(--font-xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.partner-detail {
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  animation: slideDown 0.2s ease;
+}
+
+.partner-detail .compat-detail {
+  margin-bottom: var(--space-md);
+}
+
+.partner-detail .compat-aspects {
+  margin-bottom: var(--space-md);
+}
+
+.partner-detail .compat-advice {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .loading-state {

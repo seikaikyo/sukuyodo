@@ -218,7 +218,8 @@ function formatDate(dateStr: string) {
 
           <div v-if="monthlyFortune.theme" class="theme-box">
             <h4>{{ monthlyFortune.theme.title }}</h4>
-            <p>{{ monthlyFortune.theme.focus }}</p>
+            <p class="theme-focus">{{ monthlyFortune.theme.focus }}</p>
+            <p v-if="monthlyFortune.theme.description" class="theme-desc">{{ monthlyFortune.theme.description }}</p>
           </div>
 
           <div class="score-bars">
@@ -592,10 +593,17 @@ function formatDate(dateStr: string) {
   margin: 0 0 var(--space-xs);
 }
 
-.theme-box p {
+.theme-box .theme-focus {
   color: var(--text-secondary);
   font-size: var(--font-sm);
   margin: 0;
+}
+
+.theme-box .theme-desc {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: var(--space-sm) 0 0;
 }
 
 .daily-overview,

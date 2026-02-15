@@ -266,6 +266,7 @@ export interface CompatibilityCategory {
   reading: string
   score: number
   description: string
+  detailed?: string
   mansions: CompatibleMansion[]
 }
 
@@ -463,13 +464,14 @@ export interface PartnerCompatibility {
     reading: string
     element: string
   }
-  relation: {
-    type: string
-    name: string
-    reading: string
-    description: string
-  }
+  relation: Relation
   score: number
+  element_bonus: number
+  summary: string
+  calculation: {
+    distance: number
+    element_relation: string
+  }
 }
 
 export interface KeyConcept {
@@ -681,8 +683,9 @@ export function useSukuyodo() {
         if (data.success) {
           mansion.value = data.data
           showQueryDialog.value = false
-          // 儲存生日到 localStorage
-          if (birthDate.value) {
+          // 只在非對象日期時儲存（避免覆蓋自己的生日）
+          const isPartnerDate = profile.value.partners.some(p => p.birthDate === birthDate.value)
+          if (!isPartnerDate) {
             profile.value.birthDate = birthDate.value
           }
           fetchCompatibleMansions()
@@ -1030,13 +1033,14 @@ export function useSukuyodo() {
                 reading: compat.person2.reading,
                 element: compat.person2.element
               },
-              relation: {
-                type: compat.relation.type,
-                name: compat.relation.name,
-                reading: compat.relation.reading,
-                description: compat.relation.description
-              },
-              score: compat.score
+              relation: compat.relation,
+              score: compat.score,
+              element_bonus: compat.element_bonus,
+              summary: compat.summary,
+              calculation: {
+                distance: compat.calculation.distance,
+                element_relation: compat.calculation.element_relation
+              }
             })
           }
         }

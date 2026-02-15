@@ -177,16 +177,19 @@ const selectedPartner = computed(() => {
             >
               <h4 class="category-name">{{ item.name }}</h4>
 
-              <div v-if="item.lucky_days.length > 0" class="day-chips">
+              <div v-if="item.lucky_days.length > 0" class="day-cards">
                 <div
                   v-for="day in item.lucky_days"
                   :key="day.date"
-                  class="day-chip"
+                  class="day-card"
                   :class="getScoreClass(day.score)"
                 >
-                  <span class="chip-date">{{ formatDate(day.date) }}</span>
-                  <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                  <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                  <div class="day-card-header">
+                    <span class="chip-date">{{ formatDate(day.date) }}</span>
+                    <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+                    <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                  </div>
+                  <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
                 </div>
               </div>
               <div v-else class="no-lucky-days">
@@ -639,6 +642,37 @@ const selectedPartner = computed(() => {
 .day-chip.good { border-left: 3px solid var(--accent); }
 .day-chip.fair { border-left: 3px solid var(--info); }
 .day-chip.caution { border-left: 3px solid #eab308; }
+
+.day-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.day-card {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.day-card.excellent { border-left: 3px solid var(--success); }
+.day-card.good { border-left: 3px solid var(--accent); }
+.day-card.fair { border-left: 3px solid var(--info); }
+.day-card.caution { border-left: 3px solid #eab308; }
+
+.day-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--font-sm);
+}
+
+.day-reason {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
 
 .chip-date {
   font-variant-numeric: tabular-nums;

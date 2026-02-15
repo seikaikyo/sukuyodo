@@ -113,7 +113,7 @@ onMounted(() => {
       :open.prop="showQueryDialog"
       label="查詢本命宿"
       class="query-dialog"
-      @sl-hide="showQueryDialog = false"
+      @sl-after-hide="showQueryDialog = false"
     >
       <div class="query-content">
         <p class="query-desc">輸入西曆生日，系統會自動轉換為農曆並計算你的本命宿</p>
