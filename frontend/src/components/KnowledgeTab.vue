@@ -181,11 +181,13 @@ function handleWheelSelect(m: WheelMansion) {
           v-for="el in allElements"
           :key="el.name"
           class="element-card"
+          :class="{ 'my-element': mansion?.element === el.name }"
           :style="{ borderColor: elementColors[el.name] }"
         >
           <div class="element-header" :style="{ background: elementColors[el.name] }">
             <span class="element-name">{{ el.name }}曜</span>
             <span class="element-reading">{{ el.reading }}</span>
+            <span v-if="mansion?.element === el.name" class="my-element-tag">你的元素</span>
           </div>
           <div class="element-body">
             <p class="planet">{{ el.planet }}</p>
@@ -484,6 +486,12 @@ function handleWheelSelect(m: WheelMansion) {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.element-card.my-element {
+  border-width: 2px;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb, 100, 100, 255), 0.3);
 }
 
 .element-header {
@@ -499,6 +507,15 @@ function handleWheelSelect(m: WheelMansion) {
 .element-reading {
   font-size: var(--font-sm);
   opacity: 0.8;
+}
+
+.my-element-tag {
+  margin-left: auto;
+  font-size: var(--font-xs);
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
 }
 
 .element-body {
