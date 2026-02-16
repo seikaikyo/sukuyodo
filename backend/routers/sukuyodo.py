@@ -584,7 +584,7 @@ def get_lucky_days_summary(
         {"category": "travel", "action": "abroad", "name": "出遊出國"},
         # 美容
         {"category": "beauty", "action": "haircut", "name": "理髮"},
-        {"category": "beauty", "action": "hair_coloring", "name": "染燙髮"},
+        {"category": "beauty", "action": "hair_coloring", "name": "美容"},
         # 購物
         {"category": "shopping", "action": "big_purchase", "name": "大額消費"},
     ]
