@@ -775,6 +775,57 @@ class SukuyodoService:
         "ankai": "凶"
     }
 
+    # 甘露日/金剛峯日/羅刹日（宿曜經卷五）
+    # key: (jp_weekday, day_mansion_index) → special_day_type
+    # jp_weekday: 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+    SPECIAL_DAY_MAP = {
+        # 甘露日（大吉）
+        (0, 26): "kanro",   # 日曜 + 軫宿
+        (1, 17): "kanro",   # 月曜 + 畢宿
+        (2, 5): "kanro",    # 火曜 + 尾宿
+        (3, 22): "kanro",   # 水曜 + 柳宿
+        (4, 21): "kanro",   # 木曜 + 鬼宿
+        (5, 3): "kanro",    # 金曜 + 房宿
+        (6, 23): "kanro",   # 土曜 + 星宿
+        # 金剛峯日（吉）
+        (0, 5): "kongou",   # 日曜 + 尾宿
+        (1, 8): "kongou",   # 月曜 + 女宿
+        (2, 12): "kongou",  # 火曜 + 壁宿
+        (3, 16): "kongou",  # 水曜 + 昴宿
+        (4, 20): "kongou",  # 木曜 + 井宿
+        (5, 24): "kongou",  # 金曜 + 張宿
+        (6, 1): "kongou",   # 土曜 + 亢宿
+        # 羅刹日（凶）
+        (0, 15): "rasetsu",  # 日曜 + 胃宿
+        (1, 21): "rasetsu",  # 月曜 + 鬼宿
+        (2, 25): "rasetsu",  # 火曜 + 翼宿
+        (3, 19): "rasetsu",  # 水曜 + 参宿
+        (4, 2): "rasetsu",   # 木曜 + 氐宿
+        (5, 13): "rasetsu",  # 金曜 + 奎宿
+        (6, 22): "rasetsu",  # 土曜 + 柳宿
+    }
+
+    SPECIAL_DAY_INFO = {
+        "kanro": {
+            "name": "甘露日",
+            "reading": "かんろび",
+            "level": "大吉",
+            "description": "宿曜經記載的大吉日。七曜與當日宿的能量完全調和，萬事順遂。適合開始新計畫、簽約、搬遷、結婚等重要行動。"
+        },
+        "kongou": {
+            "name": "金剛峯日",
+            "reading": "こんごうぶび",
+            "level": "吉",
+            "description": "宿曜經記載的吉日。七曜與當日宿形成堅固的守護能量，做事容易成就。適合修行、學習、面試、提案等需要毅力的行動。"
+        },
+        "rasetsu": {
+            "name": "羅刹日",
+            "reading": "らせつび",
+            "level": "凶",
+            "description": "宿曜經記載的凶日。七曜與當日宿的能量產生衝突，容易遇到阻礙。避免開始新事業、簽約、遠行。適合靜養、整理、反省。"
+        }
+    }
+
     # 月運勢專用描述
     MONTHLY_FORTUNE_DESCRIPTIONS = {
         "eishin": [
@@ -1292,6 +1343,19 @@ class SukuyodoService:
 
         advice = random.choice(advice_list)
 
+        # === 甘露日/金剛峯日/羅刹日判定 ===
+        special_day_key = (jp_weekday, day_mansion_index)
+        special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
+        special_day = None
+        if special_day_type:
+            special_day = dict(self.SPECIAL_DAY_INFO[special_day_type])
+            special_day["type"] = special_day_type
+            # 甘露日加分、羅刹日減分
+            if special_day_type == "kanro":
+                overall_score = min(100, overall_score + 10)
+            elif special_day_type == "rasetsu":
+                overall_score = max(30, overall_score - 10)
+
         # === 幸運物品（每日動態計算） ===
         lucky = fortune_data["lucky_items"]
 
@@ -1359,7 +1423,8 @@ class SukuyodoService:
                 "color_reading": lucky_color["reading"],
                 "color_hex": lucky_color["hex"],
                 "numbers": lucky_numbers
-            }
+            },
+            "special_day": special_day
         }
 
     def calculate_monthly_fortune(self, birth_date: date, year: int, month: int) -> dict:
@@ -1642,9 +1707,79 @@ class SukuyodoService:
             }
         }
 
+    # 九曜流年法（宿曜經）：9 年循環
+    # 數え年 1 歲 = 羅喉星，每年順推
+    KUYOU_STARS = [
+        {
+            "name": "羅喉星", "reading": "らごうせい",
+            "level": "大凶", "fortune_name": "潜運",
+            "element": None, "base_score": 48,
+            "buddha": "不動明王",
+            "description": "八方受阻的一年。氣力旺盛、想挑戰新事物的衝動很強，但運氣不站在你這邊。衝動行事容易招來失敗，越急越容易出差錯。這一年的功課是學會「等待」。把想做的事寫下來但先不動手，用這段時間觀察局勢、蒐集情報、養好體力。忍住不出手反而比亂出手更需要實力。"
+        },
+        {
+            "name": "土曜星", "reading": "どようせい",
+            "level": "半吉", "fortune_name": "開運",
+            "element": "土", "base_score": 62,
+            "buddha": "聖觀音",
+            "description": "從低谷緩慢爬升的一年。身體容易出小狀況，心情也不太爽快，但整體趨勢是往上走的。夏秋之間注意健康管理，土地和不動產相關的事情要謹慎處理。不是大展拳腳的時機，但可以開始規劃下一步。穩紮穩打比什麼都重要。"
+        },
+        {
+            "name": "水曜星", "reading": "すいようせい",
+            "level": "吉", "fortune_name": "喜運",
+            "element": "水", "base_score": 68,
+            "buddha": "彌勒菩薩",
+            "description": "心裡的煩惱比實際的困難多。運氣本身不差，但你會因為想太多而覺得不順。春夏保持低調、減少不必要的社交，秋冬之後萬事轉好。長輩和貴人的建議在今年特別值得參考，遇到猶豫的事找有經驗的人聊聊。"
+        },
+        {
+            "name": "金曜星", "reading": "きんようせい",
+            "level": "半吉", "fortune_name": "平運",
+            "element": "金", "base_score": 63,
+            "buddha": "阿彌陀如來",
+            "description": "吉凶參半、好壞交織的一年。人際關係是今年最需要花心思的課題，工作上也可能出現讓你措手不及的變化。但壞事裡藏著好事，困難的處境反而能讓你遇到真正幫你的人。聽從專業人士的建議，不要只靠自己的判斷。"
+        },
+        {
+            "name": "日曜星", "reading": "にちようせい",
+            "level": "大吉", "fortune_name": "盛運",
+            "element": "日", "base_score": 82,
+            "buddha": "千手觀音",
+            "description": "如順風滿帆的一年。財運旺、做事有利、地位和聲望都在上升。積極行動會帶來超出預期的回報。但越是順利越要保持謙虛，驕傲自滿的瞬間就是運勢反轉的起點。把今年的成果轉化為長期資產，別揮霍在虛榮上。"
+        },
+        {
+            "name": "火曜星", "reading": "かようせい",
+            "level": "大凶", "fortune_name": "休運",
+            "element": "火", "base_score": 42,
+            "buddha": "虛空藏菩薩",
+            "description": "需要格外謹慎的一年。人際衝突頻繁、事業上容易遇到挫折、健康也需要留心。家庭關係和工作關係都可能因為一句話、一個誤會而產生裂痕。控制情緒是今年最重要的課題。遇到讓你想發火的事情，先離開現場冷靜十分鐘再回應。"
+        },
+        {
+            "name": "計都星", "reading": "けいとせい",
+            "level": "大凶", "fortune_name": "滞運",
+            "element": None, "base_score": 45,
+            "buddha": "釋迦如來",
+            "description": "努力得不到回報、計畫被迫中斷的一年。春季三個月特別要注意，到秋天才會稍微好轉。這不是你的問題，是時運的週期。你能做的是降低期望值、減少冒險、把精力放在守住現有的成果上。忍耐是唯一的策略，忍過去之後你會更強。"
+        },
+        {
+            "name": "月曜星", "reading": "げつようせい",
+            "level": "吉", "fortune_name": "進運",
+            "element": "月", "base_score": 75,
+            "buddha": "勢至菩薩",
+            "description": "穩步前進、漸入佳境的一年。工作上會遇到對你有幫助的人脈，喜事可能不只一件。適合拓展交際圈、接受新的挑戰。但不要因為看到機會就盲目衝刺，穩健推進比急躁冒進更能把好運留住。"
+        },
+        {
+            "name": "木曜星", "reading": "もくようせい",
+            "level": "大吉", "fortune_name": "吉運",
+            "element": "木", "base_score": 80,
+            "buddha": "藥師如來",
+            "description": "如春天發芽般，做什麼都容易成長的一年。婚姻運好、家庭安泰、私人生活充實。不管是開始一段新關係、搬家、還是轉換跑道，今年的選擇都容易帶來好結果。但好運不等於不用努力，鬆懈是吉年最大的浪費。"
+        }
+    ]
+
     def calculate_yearly_fortune(self, birth_date: date, year: int) -> dict:
         """
-        計算每年運勢
+        計算每年運勢（九曜流年法）
+
+        根據數え年計算當年的九曜星，結合本命宿元素推導年運。
 
         Args:
             birth_date: 出生日期
@@ -1660,40 +1795,21 @@ class SukuyodoService:
         user_index = mansion["index"]
         user_element = mansion["element"]
 
-        # 取得該年的天干地支
-        year_info = None
-        for yc in fortune_data["year_cycle"]:
-            if yc["year"] == year:
-                year_info = yc
-                break
+        # === 九曜流年法 ===
+        kazoe_age = year - birth_date.year + 1
+        star_index = (kazoe_age - 1) % 9
+        star = self.KUYOU_STARS[star_index]
+        star_element = star["element"]
 
-        # 如果找不到，計算
-        if not year_info:
-            stems = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
-            branches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
-            stem_idx = (year - 4) % 10
-            branch_idx = (year - 4) % 12
-            year_info = {
-                "year": year,
-                "stem": stems[stem_idx],
-                "branch": branches[branch_idx]
-            }
+        # 九曜星與本命元素的關係
+        if star_element:
+            star_relation, star_bonus = self._calc_fortune_element_relation(user_element, star_element)
+        else:
+            # 羅喉星/計都星無元素，使用 conflicting 作為預設
+            star_relation = "conflicting"
+            star_bonus = -10
 
-        stem = year_info["stem"]
-        branch = year_info["branch"]
-
-        stem_data = fortune_data["heavenly_stems"].get(stem, {})
-        zodiac_data = fortune_data["yearly_zodiac"].get(branch, {})
-
-        # 計算年運基礎分數
-        year_element = stem_data.get("element", "土")
-        zodiac_element = zodiac_data.get("element", "土")
-
-        # 元素關係
-        stem_relation, stem_bonus = self._calc_fortune_element_relation(user_element, year_element)
-        _, zodiac_bonus = self._calc_fortune_element_relation(user_element, zodiac_element)
-
-        base_score = 70 + (stem_bonus + zodiac_bonus) // 2
+        base_score = star["base_score"] + star_bonus // 2
 
         warnings = []
 
@@ -1737,39 +1853,33 @@ class SukuyodoService:
             if wm["score"] < 55:
                 warnings.append(f"{wm['month']}月運勢較低（{wm['score']}分），避免重大投資或簽約")
 
-        base_score = max(50, base_score)
+        base_score = max(35, min(95, base_score))
 
         # 各項運勢
         random.seed(f"{birth_date.isoformat()}{year}categories")
+        star_element_for_cat = star_element if star_element else "土"
 
         def calc_yearly_category(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
             cat_bonus = 10 if user_element in cat_data["favorable_elements"] else 0
-            year_boost = 5 if year_element in cat_data["favorable_elements"] else 0
+            year_boost = 5 if star_element_for_cat in cat_data["favorable_elements"] else 0
             variation = random.randint(-12, 12)
             return max(35, min(100, base_score + cat_bonus + year_boost + variation))
 
-        # 年度建議（根據天干元素與本命元素的關係）
-        advice_key = stem_relation if stem_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
+        # 年度建議（根據九曜星元素與本命元素的關係）
+        advice_key = star_relation if star_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
         random.seed(f"{birth_date.isoformat()}{year}advice")
         advice = random.choice(self.YEARLY_FORTUNE_ADVICE[advice_key])
 
-        # 年度主題敘事
-        theme_key = stem_relation if stem_relation in self.YEARLY_THEME_DESCRIPTIONS else "neutral"
+        # 年度主題：使用九曜星的 fortune_name 作為標題
+        theme_key = star_relation if star_relation in self.YEARLY_THEME_DESCRIPTIONS else "neutral"
         random.seed(f"{birth_date.isoformat()}{year}theme")
-        theme_titles = {
-            "same": "自我深耕之年",
-            "generating": "順勢擴張之年",
-            "weakening": "精簡蓄力之年",
-            "conflicting": "突破成長之年",
-            "neutral": "穩健自主之年"
-        }
         theme_description = random.choice(self.YEARLY_THEME_DESCRIPTIONS[theme_key])
 
         # 各項分述
         category_descriptions = {}
         for cat in ["career", "love", "health", "wealth"]:
-            cat_key = stem_relation if stem_relation in self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}) else "neutral"
+            cat_key = star_relation if star_relation in self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}) else "neutral"
             random.seed(f"{birth_date.isoformat()}{year}catdesc_{cat}")
             cat_descs = self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}).get(cat_key, [""])
             category_descriptions[cat] = random.choice(cat_descs)
@@ -1794,17 +1904,15 @@ class SukuyodoService:
 
         return {
             "year": year,
-            "stem": {
-                "character": stem,
-                "reading": stem_data.get("reading", ""),
-                "element": year_element,
-                "yin_yang": stem_data.get("yin_yang", "")
-            },
-            "branch": {
-                "character": branch,
-                "name": zodiac_data.get("name", ""),
-                "reading": zodiac_data.get("reading", ""),
-                "element": zodiac_element
+            "kuyou_star": {
+                "name": star["name"],
+                "reading": star["reading"],
+                "level": star["level"],
+                "fortune_name": star["fortune_name"],
+                "element": star_element,
+                "buddha": star["buddha"],
+                "description": star["description"],
+                "kazoe_age": kazoe_age
             },
             "your_mansion": {
                 "name_jp": mansion["name_jp"],
@@ -1820,7 +1928,7 @@ class SukuyodoService:
                 "wealth": calc_yearly_category("wealth")
             },
             "theme": {
-                "title": theme_titles.get(theme_key, "穩健自主之年"),
+                "title": f"{star['fortune_name']}之年",
                 "description": theme_description
             },
             "category_descriptions": category_descriptions,
@@ -2411,10 +2519,11 @@ class SukuyodoService:
         return advice_templates.get(category, {}).get(action, "選擇運勢良好的日子進行，有助於事半功倍。")
 
     def _is_generating(self, elem1: str, elem2: str) -> bool:
-        """檢查是否為相生關係"""
+        """檢查是否為相生關係（含日/月特殊元素）"""
         GENERATING_PAIRS = [
             ("木", "火"), ("火", "土"), ("土", "金"),
-            ("金", "水"), ("水", "木")
+            ("金", "水"), ("水", "木"),
+            ("日", "火"), ("月", "水")
         ]
         return (elem1, elem2) in GENERATING_PAIRS or (elem2, elem1) in GENERATING_PAIRS
 

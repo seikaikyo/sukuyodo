@@ -65,9 +65,6 @@ const {
   pairLuckyDays,
   pairLuckyDaysLoading,
 
-  // Knowledge
-  expandedRelation,
-
   // Computed
   elementColors,
   mansionElementColor,
@@ -80,7 +77,6 @@ const {
   fetchDailyFortuneForDate,
 
   // Event Handlers
-  toggleRelation,
   quickSelect,
   toggleMonthlyWeek,
 
@@ -267,12 +263,10 @@ onMounted(() => {
         :all-mansions="allMansions"
         :selected-wheel-mansion="selectedWheelMansion"
         :all-relations="allRelations"
-        :expanded-relation="expandedRelation"
         :all-elements="allElements"
         :metadata="metadata"
         :element-colors="elementColors"
         @update:selected-wheel-mansion="selectedWheelMansion = $event"
-        @toggle-relation="toggleRelation"
       />
     </main>
   </div>

@@ -25,6 +25,13 @@ function getScoreClass(score: number) {
   return 'warning'
 }
 
+function getKuyouLevelClass(level: string) {
+  if (level === '大吉') return 'level-great'
+  if (level === '吉') return 'level-good'
+  if (level === '半吉') return 'level-half'
+  return 'level-bad'
+}
+
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
@@ -113,6 +120,12 @@ function formatDate(dateStr: string) {
               </div>
               <span class="score-value">{{ dailyFortune.fortune.wealth }}</span>
             </div>
+          </div>
+
+          <div v-if="dailyFortune.special_day" class="special-day-banner" :class="dailyFortune.special_day.type">
+            <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
+            <span class="special-day-name">{{ dailyFortune.special_day.name }}</span>
+            <p class="special-day-desc">{{ dailyFortune.special_day.description }}</p>
           </div>
 
           <div class="lucky-info">
@@ -360,8 +373,18 @@ function formatDate(dateStr: string) {
         <div class="fortune-card">
           <h3 class="fortune-title">
             {{ yearlyFortune.year }} 年運勢
-            <span class="year-info">({{ yearlyFortune.stem.character }}{{ yearlyFortune.branch.character }}年)</span>
           </h3>
+
+          <div v-if="yearlyFortune.kuyou_star" class="kuyou-star-box">
+            <div class="kuyou-header">
+              <span class="kuyou-name">{{ yearlyFortune.kuyou_star.name }}</span>
+              <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
+              <span class="kuyou-fortune-name">{{ yearlyFortune.kuyou_star.fortune_name }}</span>
+            </div>
+            <p class="kuyou-age">數え年 {{ yearlyFortune.kuyou_star.kazoe_age }} 歲</p>
+            <p class="kuyou-desc">{{ yearlyFortune.kuyou_star.description }}</p>
+            <p class="kuyou-buddha">本地佛：{{ yearlyFortune.kuyou_star.buddha }}</p>
+          </div>
 
           <div v-if="yearlyFortune.theme" class="theme-box">
             <h4>{{ yearlyFortune.theme.title }}</h4>
@@ -586,6 +609,68 @@ function formatDate(dateStr: string) {
   height: 10px;
 }
 
+.special-day-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--border);
+}
+
+.special-day-banner.kanro {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 183, 0, 0.08));
+  border-color: rgba(255, 183, 0, 0.4);
+}
+
+.special-day-banner.kongou {
+  background: linear-gradient(135deg, rgba(100, 200, 100, 0.12), rgba(80, 180, 80, 0.08));
+  border-color: rgba(80, 180, 80, 0.4);
+}
+
+.special-day-banner.rasetsu {
+  background: linear-gradient(135deg, rgba(220, 80, 80, 0.12), rgba(200, 60, 60, 0.08));
+  border-color: rgba(200, 60, 60, 0.4);
+}
+
+.special-day-level {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.kanro .special-day-level {
+  background: rgba(255, 183, 0, 0.25);
+  color: #b8860b;
+}
+
+.kongou .special-day-level {
+  background: rgba(80, 180, 80, 0.25);
+  color: #2e7d32;
+}
+
+.rasetsu .special-day-level {
+  background: rgba(200, 60, 60, 0.25);
+  color: #c62828;
+}
+
+.special-day-name {
+  font-weight: 600;
+  font-size: var(--font-base);
+}
+
+.special-day-desc {
+  width: 100%;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
 .lucky-info {
   display: flex;
   flex-wrap: wrap;
@@ -695,6 +780,78 @@ function formatDate(dateStr: string) {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   line-height: 1.6;
+}
+
+.kuyou-star-box {
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+}
+
+.kuyou-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.kuyou-name {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+
+.kuyou-level {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.kuyou-level.level-great {
+  background: rgba(255, 183, 0, 0.2);
+  color: #b8860b;
+}
+
+.kuyou-level.level-good {
+  background: rgba(80, 180, 80, 0.2);
+  color: #2e7d32;
+}
+
+.kuyou-level.level-half {
+  background: rgba(100, 150, 220, 0.2);
+  color: #1565c0;
+}
+
+.kuyou-level.level-bad {
+  background: rgba(200, 60, 60, 0.2);
+  color: #c62828;
+}
+
+.kuyou-fortune-name {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.kuyou-age {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: var(--space-xs) 0 0;
+}
+
+.kuyou-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--space-sm) 0 0;
+}
+
+.kuyou-buddha {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  margin: var(--space-sm) 0 0;
+  font-style: italic;
 }
 
 .theme-box {

@@ -9,7 +9,6 @@ const props = defineProps<{
   allMansions: WheelMansion[]
   selectedWheelMansion: WheelMansion | null
   allRelations: RelationType[]
-  expandedRelation: string | null
   allElements: ElementType[]
   metadata: Metadata | null
   elementColors: Record<string, string>
@@ -18,7 +17,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:activeTab': [value: 'mansion' | 'wheel' | 'relations' | 'elements' | 'calendar' | 'history']
   'update:selectedWheelMansion': [value: WheelMansion | null]
-  toggleRelation: [type: string]
 }>()
 
 function handleWheelSelect(m: WheelMansion) {
@@ -167,19 +165,13 @@ function handleWheelSelect(m: WheelMansion) {
         <div
           v-for="rel in allRelations"
           :key="rel.type"
-          class="relation-item"
-          :class="{ expanded: expandedRelation === rel.type }"
+          class="relation-item expanded"
         >
-          <button
-            class="relation-header"
-            :aria-expanded="expandedRelation === rel.type"
-            @click="emit('toggleRelation', rel.type)"
-          >
+          <div class="relation-header-static">
             <span class="relation-name">{{ rel.name }}（{{ rel.reading }}）</span>
             <span class="relation-score">{{ rel.score }} 分</span>
-            <sl-icon :name="expandedRelation === rel.type ? 'chevron-up' : 'chevron-down'" aria-hidden="true"></sl-icon>
-          </button>
-          <div v-if="expandedRelation === rel.type" class="relation-body">
+          </div>
+          <div class="relation-body">
             <p>{{ rel.description }}</p>
             <p>{{ rel.detailed }}</p>
             <div v-if="rel.good_for?.length" class="good-for">
@@ -452,33 +444,20 @@ function handleWheelSelect(m: WheelMansion) {
   overflow: hidden;
 }
 
-.relation-header {
+.relation-header-static {
   display: flex;
   align-items: center;
-  width: 100%;
   padding: var(--space-md);
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  min-height: 44px;
 }
 
-.relation-header:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.relation-header .relation-name {
+.relation-header-static .relation-name {
   flex: 1;
-  text-align: left;
   font-weight: 600;
 }
 
-.relation-header .relation-score {
+.relation-header-static .relation-score {
   color: var(--text-secondary);
   font-size: var(--font-sm);
-  margin-right: var(--space-sm);
   font-variant-numeric: tabular-nums;
 }
 

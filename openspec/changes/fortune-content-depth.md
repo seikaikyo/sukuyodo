@@ -1,7 +1,7 @@
 ---
 title: 運勢內容深度增強（年運/週運/吉日/選日）
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

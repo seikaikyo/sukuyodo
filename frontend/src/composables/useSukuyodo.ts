@@ -130,6 +130,13 @@ export interface DailyFortune {
     color_hex: string
     numbers: number[]
   }
+  special_day?: {
+    type: string
+    name: string
+    reading: string
+    level: string
+    description: string
+  } | null
 }
 
 export interface WeeklyFortune {
@@ -220,17 +227,15 @@ export interface MonthlyFortune {
 
 export interface YearlyFortune {
   year: number
-  stem: {
-    character: string
-    reading: string
-    element: string
-    yin_yang: string
-  }
-  branch: {
-    character: string
+  kuyou_star: {
     name: string
     reading: string
-    element: string
+    level: string
+    fortune_name: string
+    element: string | null
+    buddha: string
+    description: string
+    kazoe_age: number
   }
   your_mansion: {
     name_jp: string
@@ -1258,9 +1263,6 @@ export function useSukuyodo() {
     pairLuckyDays,
     pairLuckyDaysLoading,
 
-    // Knowledge
-    expandedRelation,
-
     // Computed
     elementColors,
     mansionElementColor,
@@ -1289,7 +1291,6 @@ export function useSukuyodo() {
     selectLuckyCategory,
     selectLuckyAction,
     handleWheelSelect,
-    toggleRelation,
     quickSelect,
     toggleMonthlyWeek,
 
