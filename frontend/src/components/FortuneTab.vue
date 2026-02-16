@@ -260,6 +260,14 @@ function getKuyouLevelClass(level: string) {
             </div>
           </div>
 
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+          </div>
+
           <div v-if="weeklyFortune.lucky" class="lucky-info">
             <div class="lucky-item">
               <span class="lucky-label">幸運色</span>
@@ -391,6 +399,14 @@ function getKuyouLevelClass(level: string) {
               </div>
               <span class="score-value">{{ monthlyFortune.fortune.wealth }}</span>
             </div>
+          </div>
+
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
           </div>
 
           <div class="weekly-overview">
@@ -528,6 +544,14 @@ function getKuyouLevelClass(level: string) {
               </div>
               <span class="score-value">{{ yearlyFortune.fortune.wealth }}</span>
             </div>
+          </div>
+
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
           </div>
 
           <div v-if="yearlyFortune.monthly_trend?.length" class="monthly-trend">
@@ -1217,6 +1241,10 @@ function getKuyouLevelClass(level: string) {
   gap: var(--space-sm);
   overflow-x: auto;
   padding-bottom: var(--space-sm);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
 }
 
 .daily-item {

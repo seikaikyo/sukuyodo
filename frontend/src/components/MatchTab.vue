@@ -881,6 +881,7 @@ function handleMansionClick(m: CompatibleMansion) {
 .direction-desc {
   font-size: var(--font-sm);
   color: var(--text-secondary);
+  word-break: break-word;
 }
 
 /* Element Relation */
@@ -970,6 +971,7 @@ function handleMansionClick(m: CompatibleMansion) {
   font-size: var(--font-sm);
   line-height: 1.6;
   margin: 0 0 var(--space-sm);
+  word-break: break-word;
 }
 
 .compat-aspects {

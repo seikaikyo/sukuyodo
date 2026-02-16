@@ -761,6 +761,10 @@ function getKuyouRowClass(level: string) {
 
 .calendar-table {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
 }
 
 .calendar-table table {
