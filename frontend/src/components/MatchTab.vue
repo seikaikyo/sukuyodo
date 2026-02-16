@@ -7,9 +7,11 @@ import type {
   PartnerCompatibility
 } from '../composables/useSukuyodo'
 import { getScoreClass, getScoreLevel } from '../utils/fortune-helpers'
-import { generateCompatReport } from '../utils/report-generator'
+import { generateCompatReport, generatePairedDecadeReport } from '../utils/report-generator'
+import { getApiUrl } from '../config/api'
 
 const expandedPartnerId = ref<string | null>(null)
+const pairedReportLoading = ref(false)
 
 function togglePartner(id: string) {
   const isExpanding = expandedPartnerId.value !== id
@@ -35,7 +37,48 @@ const props = defineProps<{
   partnerCompatLoading: boolean
   partnersWithBirthDate: { id: string; nickname: string; birthDate?: string }[]
   elementColors: Record<string, string>
+  birthDate: string
 }>()
+
+async function handleExportPairedReport() {
+  if (!props.compatibility || !props.birthDate || !props.date2) return
+  pairedReportLoading.value = true
+  try {
+    const c = props.compatibility
+    const p2Match = props.partnersWithBirthDate.find(p => p.birthDate === props.date2)
+    const p2Name = p2Match?.nickname || '對方'
+    await generatePairedDecadeReport({
+      person1: {
+        mansion: c.person1.mansion,
+        reading: c.person1.reading,
+        element: c.person1.element,
+        date: props.birthDate,
+        name: '你'
+      },
+      person2: {
+        mansion: c.person2.mansion,
+        reading: c.person2.reading,
+        element: c.person2.element,
+        date: props.date2,
+        name: p2Name
+      },
+      compat: {
+        score: c.score,
+        relationName: c.relation.name,
+        reading: c.relation.reading,
+        distanceTypeName: c.relation.distance_type_name,
+        elementRelation: c.calculation?.element_relation || '',
+        direction: c.relation.direction,
+        summary: c.summary
+      },
+      apiUrl: getApiUrl('')
+    })
+  } catch (e) {
+    console.error('匯出雙人流年報告失敗', e)
+  } finally {
+    pairedReportLoading.value = false
+  }
+}
 
 const emit = defineEmits<{
   'update:activeTab': [value: 'finder' | 'compat' | 'partners']
@@ -240,7 +283,17 @@ function handleMansionClick(m: CompatibleMansion) {
             <span class="score-num">{{ compatibility.score }}</span>
             <span class="score-text">{{ getScoreLevel(compatibility.score).text }}</span>
           </div>
-          <button class="export-btn" @click="generateCompatReport(compatibility!)">匯出報告</button>
+          <div class="export-btns">
+            <button class="export-btn" @click="generateCompatReport(compatibility!)">匯出報告</button>
+            <button
+              class="export-btn"
+              :disabled="pairedReportLoading || !birthDate"
+              @click="handleExportPairedReport"
+            >
+              <sl-spinner v-if="pairedReportLoading"></sl-spinner>
+              <span v-else>匯出雙人流年</span>
+            </button>
+          </div>
         </div>
 
         <div class="compat-persons">
@@ -758,10 +811,15 @@ function handleMansionClick(m: CompatibleMansion) {
   margin-bottom: 0;
 }
 
-.compat-result-header .export-btn {
+.export-btns {
   position: absolute;
   right: 0;
   top: 0;
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.compat-result-header .export-btn {
   padding: var(--space-xs) var(--space-md);
   min-height: 36px;
   background: transparent;
@@ -772,6 +830,9 @@ function handleMansionClick(m: CompatibleMansion) {
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .compat-result-header .export-btn:hover {
@@ -782,6 +843,11 @@ function handleMansionClick(m: CompatibleMansion) {
 .compat-result-header .export-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.compat-result-header .export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .compat-score {
@@ -1246,6 +1312,16 @@ function handleMansionClick(m: CompatibleMansion) {
 }
 
 @media (max-width: 767px) {
+  .compat-result-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .export-btns {
+    position: static;
+    justify-content: center;
+  }
+
   .compat-form {
     flex-direction: column;
   }

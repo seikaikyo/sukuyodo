@@ -592,3 +592,396 @@ ${adviceSection}
 
   downloadHtml(html, `report-compat-${person1.mansion}-${person2.mansion}.html`)
 }
+
+// --- 雙人流年報告 ---
+
+interface PairedDecadeReportOptions {
+  person1: { mansion: string; reading: string; element: string; date: string; name: string }
+  person2: { mansion: string; reading: string; element: string; date: string; name: string }
+  compat: {
+    score: number
+    relationName: string
+    reading: string
+    distanceTypeName?: string
+    elementRelation: string
+    direction?: string
+    summary: string
+  }
+  apiUrl: string
+}
+
+function buildDualLineSvg(
+  p1Data: YearlyFortune[],
+  p2Data: YearlyFortune[],
+  p1Name: string,
+  p2Name: string,
+  field: 'overall' | 'career' | 'wealth' = 'overall'
+): string {
+  if (p1Data.length < 2) return ''
+  const w = 700, h = 240
+  const pl = 55, pr = 35, pt = 30, pb = 28
+  const cw = w - pl - pr, ch = h - pt - pb
+  const minS = 30, maxS = 100
+  const toY = (s: number) => pt + ch - ((s - minS) / (maxS - minS)) * ch
+  const toX = (i: number) => pl + (i / (p1Data.length - 1)) * cw
+
+  const gridLines = [40, 55, 70, 85, 100].map(s => {
+    const y = toY(s).toFixed(1)
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="${s === 55 || s === 70 ? '0' : '3,3'}"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="10" dominant-baseline="middle">${s}</text>`
+  }).join('')
+
+  const bgTop = `<rect x="${pl}" y="${toY(100).toFixed(1)}" width="${cw}" height="${(toY(75) - toY(100)).toFixed(1)}" fill="rgba(74,155,107,0.06)" rx="2"/>`
+  const bgBot = `<rect x="${pl}" y="${toY(55).toFixed(1)}" width="${cw}" height="${(toY(minS) - toY(55)).toFixed(1)}" fill="rgba(239,68,68,0.06)" rx="2"/>`
+
+  const getScore = (y: YearlyFortune) => {
+    if (field === 'career') return y.fortune.career
+    if (field === 'wealth') return y.fortune.wealth
+    return y.fortune.overall
+  }
+
+  const path1 = p1Data.map((y, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(getScore(y)).toFixed(1)}`).join(' ')
+  const path2 = p2Data.map((y, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(getScore(y)).toFixed(1)}`).join(' ')
+
+  const dots1 = p1Data.map((y, i) => {
+    const x = toX(i).toFixed(1), yp = toY(getScore(y)).toFixed(1)
+    return `<circle cx="${x}" cy="${yp}" r="4" fill="#f59e0b" stroke="#1c1917" stroke-width="2"/>
+      <text x="${x}" y="${(parseFloat(yp) - 10).toFixed(1)}" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">${getScore(y)}</text>`
+  }).join('')
+
+  const dots2 = p2Data.map((y, i) => {
+    const x = toX(i).toFixed(1), yp = toY(getScore(y)).toFixed(1)
+    return `<circle cx="${x}" cy="${yp}" r="4" fill="#7CB3D9" stroke="#1c1917" stroke-width="2"/>
+      <text x="${x}" y="${(parseFloat(yp) + 18).toFixed(1)}" text-anchor="middle" fill="#7CB3D9" font-size="11" font-weight="600">${getScore(y)}</text>`
+  }).join('')
+
+  const xLabels = p1Data.map((y, i) =>
+    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="11">${y.year}</text>`
+  ).join('')
+
+  return `<div class="chart-container">
+    <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+      ${bgTop}${bgBot}${gridLines}
+      <path d="${path1}" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="${path2}" fill="none" stroke="#7CB3D9" stroke-width="2.5" stroke-linejoin="round"/>
+      ${dots1}${dots2}${xLabels}
+    </svg>
+  </div>`
+}
+
+function buildDualMonthlyChart(p1Monthly: { month: number; score: number }[], p2Monthly: { month: number; score: number }[]): string {
+  const w = 700, h = 180
+  const pl = 55, pr = 35, pt = 25, pb = 28
+  const cw = w - pl - pr, ch = h - pt - pb
+  const minS = 30, maxS = 100
+  const toY = (s: number) => pt + ch - ((s - minS) / (maxS - minS)) * ch
+  const toX = (i: number) => pl + (i / 11) * cw
+
+  const gridLines = [40, 60, 80, 100].map(s => {
+    const y = toY(s).toFixed(1)
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="9" dominant-baseline="middle">${s}</text>`
+  }).join('')
+
+  const path1 = p1Monthly.map((m, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(m.score).toFixed(1)}`).join(' ')
+  const path2 = p2Monthly.map((m, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(m.score).toFixed(1)}`).join(' ')
+
+  const xLabels = p1Monthly.map((m, i) =>
+    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="10">${m.month}月</text>`
+  ).join('')
+
+  return `<div class="chart-container">
+    <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+      ${gridLines}
+      <path d="${path1}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${path2}" fill="none" stroke="#7CB3D9" stroke-width="2" stroke-linejoin="round"/>
+      ${xLabels}
+    </svg>
+  </div>`
+}
+
+function getPairedReportCSS(): string {
+  return `
+    .profile-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .profile-card {
+      flex: 1; padding: 16px; background: #292524; border: 1px solid #57534e;
+      border-radius: 12px; text-align: center;
+    }
+    .profile-card .name { font-size: 18px; font-weight: 700; }
+    .profile-card .mansion { font-size: 24px; font-weight: 700; margin: 8px 0 4px; }
+    .profile-card .detail { font-size: 13px; color: #a8a29e; }
+    .profile-card .element-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      color: #1c1917; font-weight: 600; font-size: 13px; margin-top: 4px;
+    }
+    .compat-box {
+      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      padding: 16px; text-align: center; margin-bottom: 24px;
+    }
+    .compat-score-big { font-size: 48px; font-weight: 700; }
+    .compat-label { font-size: 14px; color: #a8a29e; }
+    .legend {
+      display: flex; gap: 24px; justify-content: center; margin: 12px 0 20px;
+      font-size: 13px; color: #a8a29e; flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-line { display: inline-block; width: 24px; height: 3px; border-radius: 2px; }
+    .insight-box {
+      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      padding: 20px; margin: 20px 0;
+    }
+    .insight-box h3 { margin-top: 0; color: #f59e0b; }
+    .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+    .insight-card { background: #44403c; border-radius: 8px; padding: 12px; text-align: center; }
+    .insight-card .ic-label { font-size: 12px; color: #a8a29e; }
+    .insight-card .ic-value { font-size: 20px; font-weight: 700; margin: 4px 0; }
+    .insight-card .ic-desc { font-size: 12px; color: #d6d3d1; }
+    .year-section {
+      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      padding: 20px; margin-bottom: 20px;
+    }
+    .year-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
+    }
+    .year-title { font-size: 18px; font-weight: 700; }
+    .year-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag-gold { background: #d4a017; color: #1c1917; }
+    .tag-green { background: #4a9b6b; color: #1c1917; }
+    .tag-blue { background: #3b82f6; color: #fff; }
+    .tag-red { background: #ef4444; color: #fff; }
+    .tag-gray { background: #57534e; color: #fafaf9; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+    th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #44403c; }
+    th { color: #a8a29e; font-weight: 600; font-size: 12px; }
+    td { color: #d6d3d1; }
+    .score-great { color: #d4a017; font-weight: 700; }
+    .score-good { color: #4a9b6b; font-weight: 600; }
+    .score-fair { color: #3b82f6; }
+    .score-bad { color: #ef4444; font-weight: 700; }
+    .row-highlight { background: rgba(245, 158, 11, 0.08); }
+    .year-advice {
+      margin-top: 12px; padding: 12px 16px;
+      background: #44403c; border-radius: 8px; border-left: 3px solid #57534e;
+    }
+    .year-advice p { margin-bottom: 4px; }
+    @media (max-width: 600px) {
+      .profile-row { flex-direction: column; }
+      .compat-score-big { font-size: 36px; }
+      table { font-size: 11px; }
+      th, td { padding: 6px 4px; }
+      .year-header { flex-direction: column; align-items: flex-start; }
+      .insight-grid { grid-template-columns: 1fr; }
+    }
+    @media print {
+      .profile-card { background: #fff; border-color: #d6d3d1; }
+      .compat-box { background: #fff; border-color: #d6d3d1; }
+      .insight-box { background: #fff; border-color: #d6d3d1; }
+      .insight-card { background: #f5f5f4; }
+      .year-section { background: #fff; border-color: #d6d3d1; page-break-inside: avoid; }
+      .year-advice { background: #f5f5f4; }
+      th { border-bottom-color: #d6d3d1; }
+      td { border-bottom-color: #e7e5e4; }
+    }
+  `
+}
+
+function kuyouTagClass(level: string): string {
+  if (level === '大吉') return 'tag-gold'
+  if (level === '吉') return 'tag-green'
+  if (level === '半吉') return 'tag-blue'
+  return 'tag-red'
+}
+
+function tableScoreClass(score: number): string {
+  if (score >= 90) return 'score-great'
+  if (score >= 70) return 'score-good'
+  if (score >= 55) return 'score-fair'
+  return 'score-bad'
+}
+
+export async function generatePairedDecadeReport(options: PairedDecadeReportOptions): Promise<void> {
+  const { person1, person2, compat, apiUrl } = options
+
+  const currentYear = new Date().getFullYear()
+  const startYear = currentYear - 2
+  const endYear = currentYear + 7
+
+  // 平行呼叫兩人 yearly-range API
+  const [res1, res2] = await Promise.all([
+    fetch(`${apiUrl}/fortune/yearly-range?date=${person1.date}&start_year=${startYear}&end_year=${endYear}`),
+    fetch(`${apiUrl}/fortune/yearly-range?date=${person2.date}&start_year=${startYear}&end_year=${endYear}`)
+  ])
+  if (!res1.ok || !res2.ok) throw new Error('API 呼叫失敗')
+  const p1Data: YearlyFortune[] = await res1.json()
+  const p2Data: YearlyFortune[] = await res2.json()
+
+  // 互補分析
+  const lowThreshold = 55
+  const highThreshold = 70
+  const p1LowYears = p1Data.filter(y => y.fortune.overall < lowThreshold).map(y => y.year)
+  const p2LowYears = p2Data.filter(y => y.fortune.overall < lowThreshold).map(y => y.year)
+  const bothLowYears = p1LowYears.filter(y => p2LowYears.includes(y))
+  const p1CarriedYears: number[] = []
+  const p2CarriedYears: number[] = []
+  p1Data.forEach((y1, i) => {
+    const y2 = p2Data[i]
+    if (y1.fortune.overall < lowThreshold && y2.fortune.overall >= highThreshold) p2CarriedYears.push(y1.year)
+    if (y2.fortune.overall < lowThreshold && y1.fortune.overall >= highThreshold) p1CarriedYears.push(y1.year)
+  })
+
+  // 封面
+  const cover = `<div class="cover">
+    <h1>宿曜道 雙人十年流年報告</h1>
+    <p class="subtitle">${startYear} - ${endYear} | 生成日期：${todayStr()}</p>
+  </div>`
+
+  // 雙方 profile
+  const profiles = `<div class="profile-row">
+    <div class="profile-card">
+      <div class="name" style="color:#f59e0b;">${escHtml(person1.name)}</div>
+      <div class="mansion">${escHtml(person1.mansion)}</div>
+      <div class="detail">${escHtml(person1.reading)} | ${escHtml(person1.date)}</div>
+      <span class="element-badge" style="background:${elementColorMap[person1.element] || '#a8a29e'}">${escHtml(person1.element)}</span>
+    </div>
+    <div class="profile-card">
+      <div class="name" style="color:#7CB3D9;">${escHtml(person2.name)}</div>
+      <div class="mansion">${escHtml(person2.mansion)}</div>
+      <div class="detail">${escHtml(person2.reading)} | ${escHtml(person2.date)}</div>
+      <span class="element-badge" style="background:${elementColorMap[person2.element] || '#a8a29e'}">${escHtml(person2.element)}</span>
+    </div>
+  </div>`
+
+  // 相性摘要
+  const compatBox = `<div class="compat-box">
+    <div class="compat-score-big" style="color:${scoreColor(compat.score)}">${compat.score}</div>
+    <div class="compat-label">${escHtml(compat.relationName)}（${escHtml(compat.reading)}）${compat.distanceTypeName ? ' | ' + escHtml(compat.distanceTypeName) : ''}</div>
+    <div style="margin-top:8px;">
+      <span class="tag ${compat.elementRelation.includes('生') ? 'tag-green' : compat.elementRelation.includes('剋') ? 'tag-red' : 'tag-gray'}">${escHtml(compat.elementRelation)}</span>
+      ${compat.direction ? `<span class="tag tag-blue">${escHtml(person1.name)}→${escHtml(person2.name)}: ${escHtml(compat.direction)}</span>` : ''}
+    </div>
+    <p style="margin-top:12px; font-size:13px;">${escHtml(compat.summary)}</p>
+  </div>`
+
+  // 雙線走勢圖
+  const legend = `<div class="legend">
+    <span class="legend-item"><span class="legend-line" style="background:#f59e0b;"></span> ${escHtml(person1.name)}（${escHtml(person1.mansion)}）</span>
+    <span class="legend-item"><span class="legend-line" style="background:#7CB3D9;"></span> ${escHtml(person2.name)}（${escHtml(person2.mansion)}）</span>
+    <span class="legend-item" style="font-size:11px; color:#78716c;">綠底 = 順運區(>75) | 紅底 = 警戒區(<55)</span>
+  </div>`
+  const mainChart = buildDualLineSvg(p1Data, p2Data, person1.name, person2.name)
+
+  // 分數對照表
+  let tableRows = ''
+  p1Data.forEach((y1, i) => {
+    const y2 = p2Data[i]
+    const isHighlight = y1.fortune.overall >= 75 || y2.fortune.overall >= 75 || bothLowYears.includes(y1.year)
+    tableRows += `<tr${isHighlight ? ' class="row-highlight"' : ''}>
+      <td><strong>${y1.year}</strong></td>
+      <td><span class="tag ${kuyouTagClass(y1.kuyou_star.level)}">${escHtml(y1.kuyou_star.name.replace('曜星', ''))}</span></td>
+      <td class="${tableScoreClass(y1.fortune.overall)}">${y1.fortune.overall}</td>
+      <td class="${tableScoreClass(y1.fortune.career)}">${y1.fortune.career}</td>
+      <td class="${tableScoreClass(y1.fortune.wealth)}">${y1.fortune.wealth}</td>
+      <td><span class="tag ${kuyouTagClass(y2.kuyou_star.level)}">${escHtml(y2.kuyou_star.name.replace('曜星', ''))}</span></td>
+      <td class="${tableScoreClass(y2.fortune.overall)}">${y2.fortune.overall}</td>
+      <td class="${tableScoreClass(y2.fortune.career)}">${y2.fortune.career}</td>
+      <td class="${tableScoreClass(y2.fortune.wealth)}">${y2.fortune.wealth}</td>
+    </tr>`
+  })
+  const scoreTable = `<table>
+    <thead><tr>
+      <th>年</th>
+      <th>${escHtml(person1.name)} / 九曜</th><th>總運</th><th>事業</th><th>財運</th>
+      <th>${escHtml(person2.name)} / 九曜</th><th>總運</th><th>事業</th><th>財運</th>
+    </tr></thead>
+    <tbody>${tableRows}</tbody>
+  </table>`
+
+  // 互補分析
+  const insightBox = `<div class="insight-box">
+    <h3>互補結構分析</h3>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <div class="ic-label">${escHtml(person1.name)} 扛 ${escHtml(person2.name)}</div>
+        <div class="ic-value" style="color:#f59e0b;">${p1CarriedYears.length} 年</div>
+        <div class="ic-desc">${p1CarriedYears.length > 0 ? p1CarriedYears.join(', ') : '無'}</div>
+      </div>
+      <div class="insight-card">
+        <div class="ic-label">${escHtml(person2.name)} 扛 ${escHtml(person1.name)}</div>
+        <div class="ic-value" style="color:#7CB3D9;">${p2CarriedYears.length} 年</div>
+        <div class="ic-desc">${p2CarriedYears.length > 0 ? p2CarriedYears.join(', ') : '無'}</div>
+      </div>
+      <div class="insight-card">
+        <div class="ic-label">同時低谷</div>
+        <div class="ic-value" style="color:${bothLowYears.length > 0 ? '#ef4444' : '#4a9b6b'};">${bothLowYears.length} 年</div>
+        <div class="ic-desc">${bothLowYears.length > 0 ? bothLowYears.join(', ') : '無'}</div>
+      </div>
+    </div>
+  </div>`
+
+  // 逐年區塊
+  const yearSections = p1Data.map((y1, i) => {
+    const y2 = p2Data[i]
+
+    const monthlyChart = buildDualMonthlyChart(
+      y1.monthly_trend,
+      y2.monthly_trend
+    )
+
+    let adviceHtml = ''
+    if (y1.theme || y2.theme) {
+      adviceHtml = '<div class="year-advice">'
+      if (y1.theme) adviceHtml += `<p><strong style="color:#f59e0b;">${escHtml(person1.name)}</strong>：${escHtml(y1.theme.title)} — ${escHtml(y1.theme.description)}</p>`
+      if (y2.theme) adviceHtml += `<p><strong style="color:#7CB3D9;">${escHtml(person2.name)}</strong>：${escHtml(y2.theme.title)} — ${escHtml(y2.theme.description)}</p>`
+      adviceHtml += '</div>'
+    }
+
+    let yearAdvice = ''
+    if (y1.advice || y2.advice) {
+      yearAdvice = '<div class="year-advice" style="border-left-color:#4a9b6b;">'
+      if (y1.advice) yearAdvice += `<p><strong style="color:#f59e0b;">${escHtml(person1.name)}</strong>：${escHtml(y1.advice)}</p>`
+      if (y2.advice) yearAdvice += `<p><strong style="color:#7CB3D9;">${escHtml(person2.name)}</strong>：${escHtml(y2.advice)}</p>`
+      yearAdvice += '</div>'
+    }
+
+    return `<div class="year-section">
+      <div class="year-header">
+        <span class="year-title">${y1.year}</span>
+        <div class="year-tags">
+          <span class="tag ${kuyouTagClass(y1.kuyou_star.level)}">${escHtml(person1.name)}: ${escHtml(y1.kuyou_star.name)} (${escHtml(y1.kuyou_star.level)})</span>
+          <span class="tag ${kuyouTagClass(y2.kuyou_star.level)}">${escHtml(person2.name)}: ${escHtml(y2.kuyou_star.name)} (${escHtml(y2.kuyou_star.level)})</span>
+        </div>
+      </div>
+      <h4 style="color:#a8a29e; font-size:13px;">月運走勢</h4>
+      ${monthlyChart}
+      ${adviceHtml}
+      ${yearAdvice}
+    </div>`
+  }).join('')
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>宿曜道雙人流年報告 ${startYear}-${endYear}</title>
+<style>${getReportCSS()}${getPairedReportCSS()}</style>
+</head>
+<body>
+${cover}
+${profiles}
+${compatBox}
+<h2>十年總運走勢</h2>
+${legend}
+${mainChart}
+${scoreTable}
+${insightBox}
+<hr class="section-divider">
+<h2>逐年詳情</h2>
+${yearSections}
+<div class="footer">宿曜道 | ${todayStr()} 生成</div>
+</body>
+</html>`
+
+  downloadHtml(html, `report-paired-${startYear}-${endYear}.html`)
+}

@@ -246,6 +246,7 @@ onMounted(() => {
         :partner-compat-loading="partnerCompatLoading"
         :partners-with-birth-date="partnersWithBirthDate"
         :element-colors="elementColors"
+        :birth-date="birthDate"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @calculate-compatibility="calculateCompatibility"
