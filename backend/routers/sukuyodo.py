@@ -636,9 +636,10 @@ def get_lucky_days_summary(
         {"category": "medical", "action": "surgery", "name": "手術開刀"},
         # 旅行
         {"category": "travel", "action": "abroad", "name": "出遊出國"},
+        # 剃髮
+        {"category": "grooming", "action": "teihatsu", "name": "剃髮"},
         # 美容
-        {"category": "beauty", "action": "haircut", "name": "理髮"},
-        {"category": "beauty", "action": "hair_coloring", "name": "美容"},
+        {"category": "beauty", "action": "hair_coloring", "name": "染髮造型"},
         # 購物
         {"category": "shopping", "action": "big_purchase", "name": "大額消費"},
     ]

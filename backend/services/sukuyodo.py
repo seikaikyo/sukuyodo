@@ -2016,10 +2016,10 @@ class SukuyodoService:
         },
         {
             "name": "水曜星", "reading": "すいようせい",
-            "level": "吉", "fortune_name": "喜運",
-            "element": "水", "base_score": 68,
+            "level": "末吉", "fortune_name": "喜運",
+            "element": "水", "base_score": 58,
             "buddha": "彌勒菩薩",
-            "description": "心裡的煩惱比實際的困難多。運氣本身不差，但你會因為想太多而覺得不順。春夏保持低調、減少不必要的社交，秋冬之後萬事轉好。長輩和貴人的建議在今年特別值得參考，遇到猶豫的事找有經驗的人聊聊。"
+            "description": "表面平靜、暗流湧動的一年。運勢不算差，但你的心思會比實際狀況更紛亂，容易自己嚇自己。春夏低調行事、減少不必要的社交和承諾，秋冬之後才會明顯好轉。貴人和長輩的建議今年格外受用，遇到拿不定主意的事不要自己悶著想，找有經驗的人聊一聊。"
         },
         {
             "name": "金曜星", "reading": "きんようせい",
@@ -2051,10 +2051,10 @@ class SukuyodoService:
         },
         {
             "name": "月曜星", "reading": "げつようせい",
-            "level": "吉", "fortune_name": "進運",
-            "element": "月", "base_score": 75,
+            "level": "大吉", "fortune_name": "進運",
+            "element": "月", "base_score": 80,
             "buddha": "勢至菩薩",
-            "description": "穩步前進、漸入佳境的一年。工作上會遇到對你有幫助的人脈，喜事可能不只一件。適合拓展交際圈、接受新的挑戰。但不要因為看到機會就盲目衝刺，穩健推進比急躁冒進更能把好運留住。"
+            "description": "如龍得水、萬事亨通的一年。人脈和機運同時到來，工作上有貴人拉拔、生活中喜事接連不斷。信仰虔誠者今年的修行功德加倍，適合發願、拓展格局、承擔更大的責任。好運會持續整年，但越順利越要保持感恩和謙遜，把這一年的成果轉化為長期的根基。"
         },
         {
             "name": "木曜星", "reading": "もくようせい",
@@ -3021,11 +3021,25 @@ class SukuyodoService:
                 "trip": {"name": "旅遊出發", "favor_relations": ["eishin", "yusui"], "favor_score": 70}
             }
         },
+        "grooming": {
+            "name": "剃髮",
+            "icon": "sparkles",
+            "actions": {
+                "teihatsu": {
+                    "name": "剃髮",
+                    "favor_relations": ["eishin", "mei", "gyotai"],
+                    "avoid_relations": ["ankai"],
+                    "favor_weekdays": [2, 4],
+                    "avoid_weekdays": [1],
+                    "avoid_birth_mansion": True,
+                    "favor_score": 70
+                }
+            }
+        },
         "beauty": {
-            "name": "美容",
+            "name": "美容造型",
             "icon": "scissors",
             "actions": {
-                "haircut": {"name": "剪頭髮", "favor_relations": ["eishin", "yusui"], "favor_weekdays": [1, 3, 5], "favor_score": 70},
                 "hair_coloring": {"name": "染髮", "favor_relations": ["eishin"], "favor_score": 65},
                 "perm": {"name": "燙髮", "favor_relations": ["eishin", "gyotai"], "favor_score": 65},
                 "nail": {"name": "美甲", "favor_relations": ["eishin", "yusui"], "favor_score": 60},
@@ -3135,6 +3149,29 @@ class SukuyodoService:
                         "weekday": day_name,
                         "score": score,
                         "reason": f"{relation['name']}日，不宜{action_config['name']}"
+                    })
+                continue
+
+            # 檢查避開的星期（如火曜日忌剃髮）
+            avoid_weekdays = action_config.get("avoid_weekdays", None)
+            if avoid_weekdays and weekday in avoid_weekdays:
+                if len(avoid_days) < 5:
+                    avoid_days.append({
+                        "date": check_date.isoformat(),
+                        "weekday": day_name,
+                        "score": score,
+                        "reason": f"{day_name}不宜{action_config['name']}"
+                    })
+                continue
+
+            # 檢查本命宿日（剃髮忌本命宿日）
+            if action_config.get("avoid_birth_mansion") and day_mansion_index == user_index:
+                if len(avoid_days) < 5:
+                    avoid_days.append({
+                        "date": check_date.isoformat(),
+                        "weekday": day_name,
+                        "score": score,
+                        "reason": "本命宿日，不宜剃髮"
                     })
                 continue
 
@@ -3263,9 +3300,15 @@ class SukuyodoService:
             "mei": "適合一個人或少數好友的深度旅行。你的感受力在今天特別敏銳，能從旅行中獲得比平時更多的感悟",
             "yusui": "旅途平順、不容易遇到延誤或意外。適合需要穩定行程的出差旅行，或者帶長輩出遊"
         },
+        "grooming": {
+            "eishin": "淨身修儀的最佳時機。剃髮時心念清明，身心調和。宿曜榮親之力加持，當日行法功德倍增",
+            "gyotai": "業胎之日的淨身，能深化自身與宿曜的連結。剃髮後身輕意淨，直覺敏銳，適合接續行法或誦經",
+            "mei": "本命宿能量最強之日。身儀端正本身即是修行的體現，今天的剃髮能強化本命宿的守護力",
+            "yusui": "穩定安寧之日，適合從容淨身。不急不躁地完成剃髮，保持平常心即是最好的狀態"
+        },
         "beauty": {
-            "eishin": "美容運極佳。今天去做造型的效果特別好，設計師能準確抓到你想要的感覺。不管是剪髮、染髮還是護膚，成品都會讓你滿意",
-            "gyotai": "你對自己適合什麼造型的直覺今天特別準。如果一直在猶豫要不要嘗試新風格，今天是最好的時機。跟著感覺選不會錯",
+            "eishin": "美容運極佳。今天去做造型的效果特別好，設計師能準確抓到你想要的感覺。染髮、護膚的成品都會讓你滿意",
+            "gyotai": "你對自己適合什麼造型的直覺今天特別準。如果一直在猶豫要不要嘗試新風格，今天是最好的時機",
             "mei": "今天做出的造型改變最能展現你的個人特色。適合做比較大幅度的形象改造，效果會比你想像中自然",
             "yusui": "穩定的日子，適合做維護型的美容。染髮補色、定期護膚、修剪整理，今天做的效果持久穩定"
         },
@@ -3341,8 +3384,10 @@ class SukuyodoService:
                 "abroad": f"{element}性本命宿者，出國前兩天把行李清單核對一次、把重要證件拍照備份在手機裡。到了當地先確認緊急聯絡方式和最近的醫療機構。準備做好了，剩下的就放心享受。",
                 "trip": f"{element}性本命宿者，旅遊的精髓在於體驗而非打卡。不用把行程塞滿，留一些空白時間隨性探索。有時候迷路的那條小巷，反而藏著整趟旅行最美的風景。"
             },
+            "grooming": {
+                "teihatsu": f"{element}性本命宿者，剃髮前先沐浴淨身，以清晨或上午為佳。水曜日（水星之力，清淨智慧）和金曜日（金星之力，莊嚴身儀）是傳統上最適合剃髮的日子。火曜日災厄最重，務必避開。羅刹日和暗黒の一週間（破壊の週 distance 9-15）期間也應避免。剃髮後端坐片刻，收攝身心。"
+            },
             "beauty": {
-                "haircut": f"{element}性本命宿者，剪髮前先收集三到五張你喜歡的參考圖給設計師。比起口頭描述，圖片能更準確地傳達你的想法。下午兩點到四點是設計師手感最穩的時段。",
                 "hair_coloring": f"{element}性本命宿者，染髮前一天不要洗頭，頭皮的天然油脂能保護髮質。選色的時候考慮你平時的穿著風格和膚色，百搭的色調比流行色更實用。",
                 "perm": f"{element}性本命宿者，燙髮是比較大的造型改變，選擇跟你合作過的設計師最安心。提前一週把頭髮養好，避免在髮質受損的時候燙。",
                 "nail": f"{element}性本命宿者，美甲選色搭配你本週的穿搭計畫會更實用。如果是第一次做凝膠甲，選有口碑的店家比選便宜的重要。",
