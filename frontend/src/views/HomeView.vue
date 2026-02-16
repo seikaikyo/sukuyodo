@@ -346,6 +346,7 @@ onMounted(() => {
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -405,7 +406,8 @@ onMounted(() => {
 }
 
 .quick-btn {
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -471,11 +473,19 @@ onMounted(() => {
 
 .empty-state p {
   color: var(--text-secondary);
-  margin: 0 0 var(--space-lg);
+  margin: 0 0 var(--space-sm);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.empty-state .empty-sub {
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-lg);
 }
 
 .btn-primary {
   padding: var(--space-sm) var(--space-lg);
+  min-height: 44px;
   background: var(--accent);
   border: none;
   border-radius: var(--radius-md);

@@ -172,10 +172,15 @@ const emit = defineEmits<{
     flex-direction: column;
     text-align: center;
     gap: var(--space-md);
+    padding: var(--space-md);
   }
 
   .summary-mansion {
     justify-content: center;
+  }
+
+  .fortune-score {
+    font-size: 36px;
   }
 
   .mansion-relation {
