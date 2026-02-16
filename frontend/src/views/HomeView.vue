@@ -172,8 +172,9 @@ onMounted(() => {
     <section v-if="!mansion" class="empty-state">
       <sl-icon name="stars" aria-hidden="true"></sl-icon>
       <h2>探索你的本命宿</h2>
-      <p>了解你的命宿特質與每日運勢</p>
-      <button class="btn-primary" @click="showQueryDialog = true">開始查詢</button>
+      <p>宿曜道源自密教經典《宿曜經》，以農曆生日對應二十七宿，分析個人特質、每日運勢、人際相性與吉凶擇日。</p>
+      <p class="empty-sub">輸入西曆生日即可開始</p>
+      <button class="btn-primary" @click="showQueryDialog = true">查詢本命宿</button>
     </section>
 
     <!-- Main Tabs -->

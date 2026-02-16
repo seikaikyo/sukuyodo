@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import MansionWheel from './MansionWheel.vue'
 import type { Mansion, WheelMansion, RelationType, ElementType, Metadata } from '../composables/useSukuyodo'
 
@@ -21,6 +22,41 @@ const emit = defineEmits<{
   'update:selectedWheelMansion': [value: WheelMansion | null]
 }>()
 
+// 六種關係手風琴
+const expandedRelation = ref<string | null>(null)
+
+function toggleRelation(type: string) {
+  expandedRelation.value = expandedRelation.value === type ? null : type
+}
+
+const tabGroups = [
+  {
+    label: '基礎',
+    tabs: [
+      { key: 'mansion' as KnowledgeActiveTab, name: '本命宿' },
+      { key: 'wheel' as KnowledgeActiveTab, name: '二十七宿' },
+      { key: 'relations' as KnowledgeActiveTab, name: '六種關係' },
+      { key: 'elements' as KnowledgeActiveTab, name: '五行七曜' }
+    ]
+  },
+  {
+    label: '曆法',
+    tabs: [
+      { key: 'special-days' as KnowledgeActiveTab, name: '特殊日' },
+      { key: 'kuyou' as KnowledgeActiveTab, name: '九曜' },
+      { key: 'ryouhan' as KnowledgeActiveTab, name: '凌犯逆轉' },
+      { key: 'sanki' as KnowledgeActiveTab, name: '三九秘曆' },
+      { key: 'calendar' as KnowledgeActiveTab, name: '傍通曆' }
+    ]
+  },
+  {
+    label: '背景',
+    tabs: [
+      { key: 'history' as KnowledgeActiveTab, name: '歷史' }
+    ]
+  }
+]
+
 function handleWheelSelect(m: WheelMansion) {
   if (props.selectedWheelMansion?.index === m.index) {
     emit('update:selectedWheelMansion', null)
@@ -42,89 +78,22 @@ function getKuyouRowClass(level: string) {
 
 <template>
   <section class="knowledge-tab">
-    <div class="sub-tabs-wrapper">
-    <div class="sub-tabs scrollable" role="tablist" aria-label="知識類別選擇">
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'mansion' }"
-        role="tab"
-        :aria-selected="activeTab === 'mansion'"
-        aria-controls="panel-knowledge-mansion"
-        @click="emit('update:activeTab', 'mansion')"
-      >本命宿</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'wheel' }"
-        role="tab"
-        :aria-selected="activeTab === 'wheel'"
-        aria-controls="panel-knowledge-wheel"
-        @click="emit('update:activeTab', 'wheel')"
-      >二十七宿</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'relations' }"
-        role="tab"
-        :aria-selected="activeTab === 'relations'"
-        aria-controls="panel-knowledge-relations"
-        @click="emit('update:activeTab', 'relations')"
-      >六種關係</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'elements' }"
-        role="tab"
-        :aria-selected="activeTab === 'elements'"
-        aria-controls="panel-knowledge-elements"
-        @click="emit('update:activeTab', 'elements')"
-      >五行七曜</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'special-days' }"
-        role="tab"
-        :aria-selected="activeTab === 'special-days'"
-        aria-controls="panel-knowledge-special-days"
-        @click="emit('update:activeTab', 'special-days')"
-      >特殊日</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'kuyou' }"
-        role="tab"
-        :aria-selected="activeTab === 'kuyou'"
-        aria-controls="panel-knowledge-kuyou"
-        @click="emit('update:activeTab', 'kuyou')"
-      >九曜</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'ryouhan' }"
-        role="tab"
-        :aria-selected="activeTab === 'ryouhan'"
-        aria-controls="panel-knowledge-ryouhan"
-        @click="emit('update:activeTab', 'ryouhan')"
-      >凌犯逆轉</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'sanki' }"
-        role="tab"
-        :aria-selected="activeTab === 'sanki'"
-        aria-controls="panel-knowledge-sanki"
-        @click="emit('update:activeTab', 'sanki')"
-      >三九秘曆</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'calendar' }"
-        role="tab"
-        :aria-selected="activeTab === 'calendar'"
-        aria-controls="panel-knowledge-calendar"
-        @click="emit('update:activeTab', 'calendar')"
-      >傍通曆</button>
-      <button
-        class="pill-btn"
-        :class="{ active: activeTab === 'history' }"
-        role="tab"
-        :aria-selected="activeTab === 'history'"
-        aria-controls="panel-knowledge-history"
-        @click="emit('update:activeTab', 'history')"
-      >歷史</button>
-    </div>
+    <div class="sub-tabs-grouped" role="tablist" aria-label="知識類別選擇">
+      <div v-for="group in tabGroups" :key="group.label" class="tab-group">
+        <span class="tab-group-label">{{ group.label }}</span>
+        <div class="tab-group-pills">
+          <button
+            v-for="tab in group.tabs"
+            :key="tab.key"
+            class="pill-btn"
+            :class="{ active: activeTab === tab.key }"
+            role="tab"
+            :aria-selected="activeTab === tab.key"
+            :aria-controls="`panel-knowledge-${tab.key}`"
+            @click="emit('update:activeTab', tab.key)"
+          >{{ tab.name }}</button>
+        </div>
+      </div>
     </div>
 
     <!-- My Mansion -->
@@ -211,13 +180,19 @@ function getKuyouRowClass(level: string) {
         <div
           v-for="rel in allRelations"
           :key="rel.type"
-          class="relation-item expanded"
+          class="relation-item"
+          :class="{ expanded: expandedRelation === rel.type }"
         >
-          <div class="relation-header-static">
+          <button
+            class="relation-header"
+            :aria-expanded="expandedRelation === rel.type"
+            @click="toggleRelation(rel.type)"
+          >
             <span class="relation-name">{{ rel.name }}（{{ rel.reading }}）</span>
             <span class="relation-score">{{ rel.score }} 分</span>
-          </div>
-          <div class="relation-body">
+            <span class="relation-toggle" aria-hidden="true">{{ expandedRelation === rel.type ? '▲' : '▼' }}</span>
+          </button>
+          <div v-if="expandedRelation === rel.type" class="relation-body">
             <p>{{ rel.description }}</p>
             <p>{{ rel.detailed }}</p>
             <div v-if="rel.good_for?.length" class="good-for">
@@ -448,36 +423,31 @@ function getKuyouRowClass(level: string) {
 </template>
 
 <style scoped>
-.sub-tabs {
+.sub-tabs-grouped {
   display: flex;
+  flex-direction: column;
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
 }
 
-.sub-tabs-wrapper {
-  position: relative;
+.tab-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.sub-tabs-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 32px;
-  height: 100%;
-  background: linear-gradient(to right, transparent, var(--bg-primary));
-  pointer-events: none;
-  z-index: 1;
+.tab-group-label {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  min-width: 36px;
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
-.sub-tabs.scrollable {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.sub-tabs.scrollable::-webkit-scrollbar {
-  display: none;
+.tab-group-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
 .pill-btn {
@@ -611,21 +581,44 @@ function getKuyouRowClass(level: string) {
   overflow: hidden;
 }
 
-.relation-header-static {
+.relation-header {
   display: flex;
   align-items: center;
   padding: var(--space-md);
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background-color 0.2s;
 }
 
-.relation-header-static .relation-name {
+.relation-header:hover {
+  background: var(--bg-elevated);
+}
+
+.relation-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.relation-header .relation-name {
   flex: 1;
   font-weight: 600;
 }
 
-.relation-header-static .relation-score {
+.relation-header .relation-score {
   color: var(--text-secondary);
   font-size: var(--font-sm);
   font-variant-numeric: tabular-nums;
+  margin-right: var(--space-sm);
+}
+
+.relation-toggle {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
 }
 
 .relation-body {
