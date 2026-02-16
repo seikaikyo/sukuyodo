@@ -66,6 +66,59 @@ const roleLabels: Record<string, string> = {
   family: '家人'
 }
 
+// 方向白話解釋
+const directionDesc: Record<string, string> = {
+  '栄': '帶來好運和正能量的一方',
+  '親': '親近感強、主動靠近的一方',
+  '友': '主動給予、照顧的一方',
+  '成': '被借力、提供價值的一方',
+  '命': '本命共鳴',
+  '衰': '被照顧、被影響的一方',
+  '危': '帶來變化和風險的一方',
+  '壊': '破壞既有模式的一方',
+  '安': '被穩定、接受安撫的一方',
+  '胎': '孕育可能性的一方',
+  '業': '因果牽連深的一方'
+}
+
+// 方向配對：direction → 反方向
+const directionPairs: Record<string, string> = {
+  '栄': '親', '親': '栄',
+  '友': '衰', '衰': '友',
+  '安': '壊', '壊': '安',
+  '危': '成', '成': '危',
+  '命': '命',
+  '業': '胎', '胎': '業'
+}
+
+function getInverseDirection(dir: string): string {
+  return directionPairs[dir] || dir
+}
+
+// 元素關係白話解釋
+function getElementDesc(el1: string, el2: string, calcRelation: string): string {
+  if (el1 === el2) return `同為${el1}元素，能量共鳴互相增強`
+  if (calcRelation.includes('生')) {
+    // 判斷誰生誰
+    const genMap: Record<string, string> = {
+      '木': '火', '火': '土', '土': '金', '金': '水', '水': '木'
+    }
+    if (genMap[el2] === el1) return `${el2}生${el1} — 對方的能量自然滋養你`
+    if (genMap[el1] === el2) return `${el1}生${el2} — 你的能量自然滋養對方`
+  }
+  if (calcRelation.includes('剋')) {
+    const keMap: Record<string, string> = {
+      '木': '土', '火': '金', '土': '水', '金': '木', '水': '火'
+    }
+    if (keMap[el1] === el2) return `${el1}剋${el2} — 你的能量壓制對方`
+    if (keMap[el2] === el1) return `${el2}剋${el1} — 對方的能量壓制你`
+  }
+  if (calcRelation.includes('洩')) {
+    return `能量有洩散傾向，長期相處需要刻意補充`
+  }
+  return calcRelation.replace(/[+\-]\d+\s*分/, '').trim()
+}
+
 function handleMansionClick(m: CompatibleMansion) {
   emit('update:selectedMansion', props.selectedMansion?.index === m.index ? null : m)
 }
@@ -203,9 +256,39 @@ function handleMansionClick(m: CompatibleMansion) {
           </div>
         </div>
 
+        <!-- 方向解釋 -->
+        <div v-if="compatibility.relation.direction" class="direction-box">
+          <div class="direction-row">
+            <span class="direction-label">你→對方</span>
+            <span class="direction-value">{{ compatibility.relation.direction }}</span>
+            <span class="direction-desc">{{ directionDesc[compatibility.relation.direction] || '' }}</span>
+          </div>
+          <div class="direction-row">
+            <span class="direction-label">對方→你</span>
+            <span class="direction-value">{{ getInverseDirection(compatibility.relation.direction) }}</span>
+            <span class="direction-desc">{{ directionDesc[getInverseDirection(compatibility.relation.direction)] || '' }}</span>
+          </div>
+        </div>
+
+        <!-- 元素關係 -->
+        <div v-if="compatibility.calculation" class="element-relation-box">
+          <span class="element-tag" :style="{ background: elementColors[compatibility.person1.element] }">{{ compatibility.person1.element }}</span>
+          <span class="element-arrow">→</span>
+          <span class="element-tag" :style="{ background: elementColors[compatibility.person2.element] }">{{ compatibility.person2.element }}</span>
+          <span class="element-desc">{{ getElementDesc(compatibility.person1.element, compatibility.person2.element, compatibility.calculation.element_relation) }}</span>
+        </div>
+
         <div class="compat-detail">
           <p>{{ compatibility.relation.description }}</p>
           <p>{{ compatibility.summary }}</p>
+        </div>
+
+        <!-- 適合場景 -->
+        <div v-if="compatibility.relation.good_for?.length" class="good-for-section">
+          <h5>適合場景</h5>
+          <div class="good-for-tags">
+            <span v-for="(gf, i) in compatibility.relation.good_for" :key="i" class="good-for-tag">{{ gf }}</span>
+          </div>
         </div>
 
         <div v-if="compatibility.relation.love || compatibility.relation.career" class="compat-aspects">
@@ -240,6 +323,12 @@ function handleMansionClick(m: CompatibleMansion) {
             <h6>小技巧</h6>
             <ul>
               <li v-for="(tip, i) in compatibility.relation.tips" :key="i">{{ tip }}</li>
+            </ul>
+          </div>
+          <div v-if="compatibility.relation.avoid?.length" class="avoid-list">
+            <h6>避免事項</h6>
+            <ul>
+              <li v-for="(a, i) in compatibility.relation.avoid" :key="i">{{ a }}</li>
             </ul>
           </div>
         </div>
@@ -286,9 +375,39 @@ function handleMansionClick(m: CompatibleMansion) {
             </button>
 
             <div v-if="expandedPartnerId === pc.partnerId" class="partner-detail">
+              <!-- 方向解釋 -->
+              <div v-if="pc.relation.direction" class="direction-box">
+                <div class="direction-row">
+                  <span class="direction-label">你→{{ pc.nickname }}</span>
+                  <span class="direction-value">{{ pc.relation.direction }}</span>
+                  <span class="direction-desc">{{ directionDesc[pc.relation.direction] || '' }}</span>
+                </div>
+                <div class="direction-row">
+                  <span class="direction-label">{{ pc.nickname }}→你</span>
+                  <span class="direction-value">{{ getInverseDirection(pc.relation.direction) }}</span>
+                  <span class="direction-desc">{{ directionDesc[getInverseDirection(pc.relation.direction)] || '' }}</span>
+                </div>
+              </div>
+
+              <!-- 元素關係 -->
+              <div v-if="pc.calculation" class="element-relation-box">
+                <span class="element-tag" :style="{ background: elementColors[pc.calculation.person1_element || ''] }">{{ pc.calculation.person1_element || '' }}</span>
+                <span class="element-arrow">→</span>
+                <span class="element-tag" :style="{ background: elementColors[pc.calculation.person2_element || ''] }">{{ pc.calculation.person2_element || '' }}</span>
+                <span class="element-desc">{{ getElementDesc(pc.calculation.person1_element || '', pc.calculation.person2_element || '', pc.calculation.element_relation || '') }}</span>
+              </div>
+
               <div class="compat-detail">
                 <p>{{ pc.relation.description }}</p>
                 <p v-if="pc.summary">{{ pc.summary }}</p>
+              </div>
+
+              <!-- 適合場景 -->
+              <div v-if="pc.relation.good_for?.length" class="good-for-section">
+                <h5>適合場景</h5>
+                <div class="good-for-tags">
+                  <span v-for="(gf, i) in pc.relation.good_for" :key="i" class="good-for-tag">{{ gf }}</span>
+                </div>
               </div>
 
               <div v-if="pc.relation.love || pc.relation.career" class="compat-aspects">
@@ -323,6 +442,12 @@ function handleMansionClick(m: CompatibleMansion) {
                   <h6>小技巧</h6>
                   <ul>
                     <li v-for="(tip, i) in pc.relation.tips" :key="i">{{ tip }}</li>
+                  </ul>
+                </div>
+                <div v-if="pc.relation.avoid?.length" class="avoid-list">
+                  <h6>避免事項</h6>
+                  <ul>
+                    <li v-for="(a, i) in pc.relation.avoid" :key="i">{{ a }}</li>
                   </ul>
                 </div>
               </div>
@@ -666,6 +791,118 @@ function handleMansionClick(m: CompatibleMansion) {
 .distance-tag.far {
   background: var(--text-secondary);
   color: var(--bg-primary);
+}
+
+/* Direction Box */
+.direction-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.direction-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.direction-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  min-width: 80px;
+}
+
+.direction-value {
+  font-weight: 600;
+  font-size: var(--font-base);
+  color: var(--accent);
+  min-width: 24px;
+}
+
+.direction-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+/* Element Relation */
+.element-relation-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.element-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  font-weight: 500;
+  color: var(--bg-primary);
+}
+
+.element-arrow {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+.element-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+/* Good For */
+.good-for-section {
+  margin-bottom: var(--space-lg);
+}
+
+.good-for-section h5 {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.good-for-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.good-for-tag {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+/* Avoid List */
+.avoid-list {
+  margin-top: var(--space-md);
+}
+
+.avoid-list h6 {
+  color: var(--warning);
+  font-size: var(--font-sm);
+  margin: 0 0 var(--space-xs);
+}
+
+.avoid-list ul {
+  margin: 0;
+  padding-left: var(--space-lg);
+}
+
+.avoid-list li {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  margin-bottom: var(--space-xs);
 }
 
 .compat-detail {

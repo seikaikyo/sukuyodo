@@ -560,6 +560,8 @@ export interface PartnerCompatibility {
   calculation: {
     distance: number
     element_relation: string
+    person1_element?: string
+    person2_element?: string
   }
 }
 
@@ -1196,7 +1198,9 @@ export function useSukuyodo() {
               summary: compat.summary,
               calculation: {
                 distance: compat.calculation.distance,
-                element_relation: compat.calculation.element_relation
+                element_relation: compat.calculation.element_relation,
+                person1_element: compat.person1.element,
+                person2_element: compat.person2.element
               }
             })
           }
