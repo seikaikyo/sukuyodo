@@ -1202,6 +1202,18 @@ function handleMansionClick(m: CompatibleMansion) {
 }
 
 @media (max-width: 767px) {
+  .compat-form {
+    flex-direction: column;
+  }
+
+  .compat-result {
+    padding: var(--space-md);
+  }
+
+  .compat-score .score-num {
+    font-size: 48px;
+  }
+
   .compat-persons {
     flex-direction: column;
   }
@@ -1209,6 +1221,30 @@ function handleMansionClick(m: CompatibleMansion) {
   .relation-arrow {
     transform: rotate(90deg);
     margin: var(--space-sm) 0;
+  }
+
+  .mansion-detail {
+    padding: var(--space-md);
+  }
+
+  .partner-card {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .partner-relation {
+    padding: 0 var(--space-sm);
+  }
+
+  .partner-detail {
+    padding: var(--space-sm);
+  }
+
+  .direction-label {
+    min-width: 60px;
+  }
+
+  .relation-section {
+    padding: var(--space-sm);
   }
 }
 
