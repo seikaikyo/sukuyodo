@@ -300,6 +300,29 @@ export interface YearlyFortune {
   opportunities: string[]
   warnings: string[]
   advice: string
+  shingon?: {
+    practice_name: string
+    practice_level: string
+    description: string
+    core_teaching: string
+    practice_focus: string
+    recommended_practices: string[]
+    mantra: {
+      buddha: string
+      name: string
+      text: string
+      reading: string
+    }
+    homa_type: string
+    homa_description: string
+    theme: { title: string; description: string }
+    category_practice: { career: string; love: string; health: string; wealth: string }
+    category_labels: { career: string; love: string; health: string; wealth: string }
+    advice: string
+    monthly_tips: Record<string, string>
+    warnings: string[]
+    opportunities: string[]
+  }
 }
 
 export interface LunarDate {

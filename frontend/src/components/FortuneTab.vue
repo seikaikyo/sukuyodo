@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+
 import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune } from '../composables/useSukuyodo'
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 
@@ -28,6 +29,17 @@ function getKuyouLevelClass(level: string) {
   if (level === '半吉') return 'level-half'
   return 'level-bad'
 }
+
+function getPracticeLevelClass(level: string) {
+  if (level === '弘法') return 'level-dharma'
+  if (level === '增上') return 'level-growth'
+  if (level === '調和') return 'level-harmony'
+  return 'level-diligent'
+}
+
+// 修行者觀 / 世俗觀 切換
+const decadePerspective = ref<'secular' | 'practitioner'>('secular')
+const isPractitioner = computed(() => decadePerspective.value === 'practitioner')
 
 // 流年相關
 const currentYear = new Date().getFullYear()
@@ -715,6 +727,24 @@ function shortStarName(name: string): string {
           <button class="decade-nav-btn" @click="nextDecade" aria-label="後十年">後十年 &gt;</button>
         </div>
 
+        <!-- 視角切換 -->
+        <div class="perspective-toggle" role="radiogroup" aria-label="觀點切換">
+          <button
+            class="perspective-btn"
+            :class="{ active: decadePerspective === 'secular' }"
+            role="radio"
+            :aria-checked="decadePerspective === 'secular'"
+            @click="decadePerspective = 'secular'"
+          >世俗觀</button>
+          <button
+            class="perspective-btn"
+            :class="{ active: decadePerspective === 'practitioner' }"
+            role="radio"
+            :aria-checked="decadePerspective === 'practitioner'"
+            @click="decadePerspective = 'practitioner'"
+          >修行者觀</button>
+        </div>
+
         <template v-if="yearlyRangeLoading">
           <div class="loading-state">
             <sl-spinner></sl-spinner>
@@ -734,7 +764,12 @@ function shortStarName(name: string): string {
               >
                 <span class="cycle-year">'{{ String(y.year).slice(-2) }}</span>
                 <span class="cycle-star">{{ shortStarName(y.kuyou_star.name) }}</span>
-                <span class="cycle-level kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+                <template v-if="isPractitioner && y.shingon">
+                  <span class="cycle-level practice-level" :class="getPracticeLevelClass(y.shingon.practice_level)">{{ y.shingon.practice_name.replace('期', '') }}</span>
+                </template>
+                <template v-else>
+                  <span class="cycle-level kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+                </template>
               </div>
             </div>
           </div>
@@ -756,7 +791,7 @@ function shortStarName(name: string): string {
                 />
                 <rect
                   :x="padLeft" :y="scoreToY(55)" :width="chartWidth" :height="scoreToY(minScore) - scoreToY(55)"
-                  fill="rgba(220, 80, 80, 0.08)"
+                  :fill="isPractitioner ? 'rgba(123, 31, 162, 0.08)' : 'rgba(220, 80, 80, 0.08)'"
                 />
 
                 <!-- 格線 -->
@@ -825,7 +860,12 @@ function shortStarName(name: string): string {
                 <div class="card-header-left">
                   <span class="card-year">{{ y.year }}</span>
                   <span class="card-star">{{ y.kuyou_star.name }}</span>
-                  <span class="kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+                  <template v-if="isPractitioner && y.shingon">
+                    <span class="practice-level" :class="getPracticeLevelClass(y.shingon.practice_level)">{{ y.shingon.practice_name }}</span>
+                  </template>
+                  <template v-else>
+                    <span class="kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+                  </template>
                 </div>
                 <div class="card-header-right">
                   <div class="card-mini-scores">
@@ -843,32 +883,95 @@ function shortStarName(name: string): string {
                     <span class="score-value">{{ y.fortune.overall }}</span>
                   </div>
                   <div class="score-row">
-                    <span class="score-label">事業</span>
+                    <span class="score-label">{{ isPractitioner && y.shingon ? y.shingon.category_labels.career : '事業' }}</span>
                     <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.career)" :style="{ width: y.fortune.career + '%' }"></div></div>
                     <span class="score-value">{{ y.fortune.career }}</span>
                   </div>
                   <div class="score-row">
-                    <span class="score-label">感情</span>
+                    <span class="score-label">{{ isPractitioner && y.shingon ? y.shingon.category_labels.love : '感情' }}</span>
                     <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.love)" :style="{ width: y.fortune.love + '%' }"></div></div>
                     <span class="score-value">{{ y.fortune.love }}</span>
                   </div>
                   <div class="score-row">
-                    <span class="score-label">健康</span>
+                    <span class="score-label">{{ isPractitioner && y.shingon ? y.shingon.category_labels.health : '健康' }}</span>
                     <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.health)" :style="{ width: y.fortune.health + '%' }"></div></div>
                     <span class="score-value">{{ y.fortune.health }}</span>
                   </div>
                   <div class="score-row">
-                    <span class="score-label">財運</span>
+                    <span class="score-label">{{ isPractitioner && y.shingon ? y.shingon.category_labels.wealth : '財運' }}</span>
                     <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.wealth)" :style="{ width: y.fortune.wealth + '%' }"></div></div>
                     <span class="score-value">{{ y.fortune.wealth }}</span>
                   </div>
                 </div>
-                <p class="card-buddha">守護佛：{{ y.kuyou_star.buddha }}</p>
-                <div v-if="y.theme" class="card-theme">
-                  <strong>{{ y.theme.title }}</strong>
-                  <p>{{ y.theme.description }}</p>
-                </div>
-                <p v-if="y.advice" class="card-advice">{{ y.advice }}</p>
+
+                <!-- 修行者觀：詳細修行資訊 -->
+                <template v-if="isPractitioner && y.shingon">
+                  <p class="card-buddha">本尊：{{ y.shingon.mantra.buddha }}</p>
+                  <div class="shingon-mantra-box">
+                    <p class="mantra-label">真言</p>
+                    <p class="mantra-text">{{ y.shingon.mantra.text }}</p>
+                    <p class="mantra-reading">{{ y.shingon.mantra.reading }}</p>
+                  </div>
+                  <div class="shingon-homa-box">
+                    <span class="homa-type">{{ y.shingon.homa_type }}</span>
+                    <span class="homa-desc">{{ y.shingon.homa_description }}</span>
+                  </div>
+                  <p class="practice-focus-text">修行重心：{{ y.shingon.practice_focus }}</p>
+                  <div v-if="y.shingon.theme" class="card-theme">
+                    <strong>{{ y.shingon.theme.title }}</strong>
+                    <p>{{ y.shingon.theme.description }}</p>
+                  </div>
+                  <div v-if="y.shingon.core_teaching" class="core-teaching-box">
+                    <p>{{ y.shingon.core_teaching }}</p>
+                  </div>
+                  <div v-if="y.shingon.recommended_practices?.length" class="recommended-practices">
+                    <h5>推薦修法</h5>
+                    <div class="practice-tags">
+                      <span v-for="(p, i) in y.shingon.recommended_practices" :key="i" class="practice-tag">{{ p }}</span>
+                    </div>
+                  </div>
+                  <div v-if="y.shingon.category_practice" class="category-descriptions">
+                    <div v-if="y.shingon.category_practice.career" class="category-desc-item">
+                      <h4>{{ y.shingon.category_labels.career }}</h4>
+                      <p>{{ y.shingon.category_practice.career }}</p>
+                    </div>
+                    <div v-if="y.shingon.category_practice.love" class="category-desc-item">
+                      <h4>{{ y.shingon.category_labels.love }}</h4>
+                      <p>{{ y.shingon.category_practice.love }}</p>
+                    </div>
+                    <div v-if="y.shingon.category_practice.health" class="category-desc-item">
+                      <h4>{{ y.shingon.category_labels.health }}</h4>
+                      <p>{{ y.shingon.category_practice.health }}</p>
+                    </div>
+                    <div v-if="y.shingon.category_practice.wealth" class="category-desc-item">
+                      <h4>{{ y.shingon.category_labels.wealth }}</h4>
+                      <p>{{ y.shingon.category_practice.wealth }}</p>
+                    </div>
+                  </div>
+                  <div v-if="y.shingon.opportunities?.length" class="opportunities">
+                    <h4>修行好時機</h4>
+                    <ul>
+                      <li v-for="(opp, i) in y.shingon.opportunities" :key="i">{{ opp }}</li>
+                    </ul>
+                  </div>
+                  <div v-if="y.shingon.warnings?.length" class="warnings">
+                    <h4>修行注意事項</h4>
+                    <ul>
+                      <li v-for="(warn, i) in y.shingon.warnings" :key="i">{{ warn }}</li>
+                    </ul>
+                  </div>
+                  <p v-if="y.shingon.advice" class="card-advice">{{ y.shingon.advice }}</p>
+                </template>
+
+                <!-- 世俗觀：原有內容 -->
+                <template v-else>
+                  <p class="card-buddha">守護佛：{{ y.kuyou_star.buddha }}</p>
+                  <div v-if="y.theme" class="card-theme">
+                    <strong>{{ y.theme.title }}</strong>
+                    <p>{{ y.theme.description }}</p>
+                  </div>
+                  <p v-if="y.advice" class="card-advice">{{ y.advice }}</p>
+                </template>
               </div>
             </div>
           </div>
@@ -2252,6 +2355,178 @@ function shortStarName(name: string): string {
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--accent);
+}
+
+/* 視角切換 */
+.perspective-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.perspective-btn {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.perspective-btn:hover {
+  color: var(--text-primary);
+}
+
+.perspective-btn.active {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.perspective-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 修行者觀色標 */
+.practice-level {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.practice-level.level-dharma {
+  background: rgba(255, 183, 0, 0.2);
+  color: #b8860b;
+}
+
+.practice-level.level-growth {
+  background: rgba(80, 180, 80, 0.2);
+  color: #2e7d32;
+}
+
+.practice-level.level-harmony {
+  background: rgba(100, 150, 220, 0.2);
+  color: #1565c0;
+}
+
+.practice-level.level-diligent {
+  background: rgba(123, 31, 162, 0.2);
+  color: #7b1fa2;
+}
+
+/* 真言宗修行資料 */
+.shingon-mantra-box {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  border-left: 3px solid #7b1fa2;
+}
+
+.mantra-label {
+  font-size: var(--font-xs);
+  color: #7b1fa2;
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+}
+
+.mantra-text {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin: 0 0 var(--space-xs);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.mantra-reading {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  margin: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.shingon-homa-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.homa-type {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(123, 31, 162, 0.15);
+  color: #7b1fa2;
+  white-space: nowrap;
+}
+
+.homa-desc {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.practice-focus-text {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+  font-style: italic;
+}
+
+.core-teaching-box {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(123, 31, 162, 0.06);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  border-left: 3px solid rgba(123, 31, 162, 0.3);
+}
+
+.core-teaching-box p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+.recommended-practices {
+  margin-bottom: var(--space-sm);
+}
+
+.recommended-practices h5 {
+  font-size: var(--font-xs);
+  color: #7b1fa2;
+  margin: 0 0 var(--space-xs);
+}
+
+.practice-tags {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.practice-tag {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(123, 31, 162, 0.1);
+  color: #7b1fa2;
 }
 
 /* Responsive */
