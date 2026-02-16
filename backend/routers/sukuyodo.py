@@ -404,6 +404,60 @@ def get_yearly_fortune(
     }
 
 
+@router.get("/fortune/yearly-range")
+def get_yearly_fortune_range(
+    birth_date: str,
+    start_year: int,
+    end_year: int = 0,
+    session: Session = Depends(get_session)
+):
+    """
+    取得多年運勢（九曜流年法批次查詢）
+
+    Args:
+        birth_date: 出生日期，格式 YYYY-MM-DD（Query parameter）
+        start_year: 起始年份
+        end_year: 結束年份（預設 start_year + 9）
+    """
+    if end_year == 0:
+        end_year = start_year + 9
+
+    if start_year < 1900 or end_year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    if end_year - start_year > 9:
+        raise HTTPException(
+            status_code=400,
+            detail="最多查詢 10 年（end_year - start_year <= 9）"
+        )
+
+    if end_year < start_year:
+        raise HTTPException(
+            status_code=400,
+            detail="end_year 不可小於 start_year"
+        )
+
+    try:
+        birth = date.fromisoformat(birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    results = sukuyodo_service.calculate_yearly_fortune_range(birth, start_year, end_year)
+
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": results
+    }
+
+
 @router.get("/formula")
 async def get_formula_explanation():
     """

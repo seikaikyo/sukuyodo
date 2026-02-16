@@ -37,6 +37,8 @@ const {
   weeklyFortune,
   monthlyFortune,
   yearlyFortune,
+  yearlyRange,
+  yearlyRangeLoading,
   expandedMonthlyWeek,
   currentWeekNumber,
 
@@ -77,6 +79,7 @@ const {
   fetchPairLuckyDays,
   clearPairSelection,
   fetchDailyFortuneForDate,
+  fetchYearlyRange,
   fetchSpecialDays,
 
   // Event Handlers
@@ -218,10 +221,13 @@ onMounted(() => {
         :weekly-fortune="weeklyFortune"
         :monthly-fortune="monthlyFortune"
         :yearly-fortune="yearlyFortune"
+        :yearly-range="yearlyRange"
+        :yearly-range-loading="yearlyRangeLoading"
         :expanded-monthly-week="expandedMonthlyWeek"
         :current-week-number="currentWeekNumber"
         @toggle-week="toggleMonthlyWeek"
         @select-day="fetchDailyFortuneForDate"
+        @fetch-yearly-range="(s: number, e: number) => fetchYearlyRange(s, e)"
       />
 
       <MatchTab

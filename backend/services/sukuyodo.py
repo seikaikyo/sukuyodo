@@ -2228,6 +2228,25 @@ class SukuyodoService:
             "advice": advice
         }
 
+    def calculate_yearly_fortune_range(self, birth_date: date, start_year: int, end_year: int) -> list:
+        """
+        批次計算多年運勢（九曜流年法）
+
+        復用既有 calculate_yearly_fortune，逐年計算後彙整。
+
+        Args:
+            birth_date: 出生日期
+            start_year: 起始年份
+            end_year: 結束年份（含）
+
+        Returns:
+            多年運勢資料列表
+        """
+        results = []
+        for year in range(start_year, end_year + 1):
+            results.append(self.calculate_yearly_fortune(birth_date, year))
+        return results
+
     # 職業類型資料
     CAREER_BY_ELEMENT = {
         "日": {

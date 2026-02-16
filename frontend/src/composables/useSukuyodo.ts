@@ -652,7 +652,7 @@ export function useSukuyodo() {
 
   // Tab Navigation
   const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
-  const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
+  const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
   const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
 
@@ -675,6 +675,10 @@ export function useSukuyodo() {
   const weeklyFortune = ref<WeeklyFortune | null>(null)
   const monthlyFortune = ref<MonthlyFortune | null>(null)
   const yearlyFortune = ref<YearlyFortune | null>(null)
+
+  // Decade Fortune (流年)
+  const yearlyRange = ref<YearlyFortune[]>([])
+  const yearlyRangeLoading = ref(false)
 
   // Monthly Week Expansion
   const expandedMonthlyWeek = ref<number | null>(null)
@@ -769,6 +773,7 @@ export function useSukuyodo() {
     weeklyFortune.value = null
     monthlyFortune.value = null
     yearlyFortune.value = null
+    yearlyRange.value = []
     luckyDayResult.value = null
 
     try {
@@ -919,6 +924,26 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch yearly fortune')
+    }
+  }
+
+  async function fetchYearlyRange(startYear: number, endYear: number) {
+    if (!birthDate.value) return
+    yearlyRangeLoading.value = true
+    try {
+      const res = await fetch(
+        getApiUrl(`/fortune/yearly-range?birth_date=${birthDate.value}&start_year=${startYear}&end_year=${endYear}`)
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          yearlyRange.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch yearly range')
+    } finally {
+      yearlyRangeLoading.value = false
     }
   }
 
@@ -1300,6 +1325,8 @@ export function useSukuyodo() {
     weeklyFortune,
     monthlyFortune,
     yearlyFortune,
+    yearlyRange,
+    yearlyRangeLoading,
     expandedMonthlyWeek,
     currentWeekNumber,
 
@@ -1358,6 +1385,7 @@ export function useSukuyodo() {
     calculateCompatibility,
     fetchPartnerCompatibilities,
     fetchDailyFortuneForDate,
+    fetchYearlyRange,
 
     // Event Handlers
     selectLuckyCategory,

@@ -1,21 +1,25 @@
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue'
 import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune } from '../composables/useSukuyodo'
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 
 const props = defineProps<{
-  activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly'
+  activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'
   dailyFortune: DailyFortune | null
   weeklyFortune: WeeklyFortune | null
   monthlyFortune: MonthlyFortune | null
   yearlyFortune: YearlyFortune | null
+  yearlyRange: YearlyFortune[]
+  yearlyRangeLoading: boolean
   expandedMonthlyWeek: number | null
   currentWeekNumber: number
 }>()
 
 const emit = defineEmits<{
-  'update:activeTab': [value: 'daily' | 'weekly' | 'monthly' | 'yearly']
+  'update:activeTab': [value: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade']
   'toggleWeek': [week: number]
   'selectDay': [date: string]
+  'fetchYearlyRange': [startYear: number, endYear: number]
 }>()
 
 function getKuyouLevelClass(level: string) {
@@ -23,6 +27,84 @@ function getKuyouLevelClass(level: string) {
   if (level === '吉') return 'level-good'
   if (level === '半吉') return 'level-half'
   return 'level-bad'
+}
+
+// 流年相關
+const currentYear = new Date().getFullYear()
+const decadeStartYear = ref(currentYear - 2)
+const expandedDecadeYear = ref<number | null>(null)
+
+const decadeEndYear = computed(() => decadeStartYear.value + 9)
+
+function loadDecade() {
+  emit('fetchYearlyRange', decadeStartYear.value, decadeEndYear.value)
+}
+
+function prevDecade() {
+  decadeStartYear.value -= 10
+  expandedDecadeYear.value = null
+  loadDecade()
+}
+
+function nextDecade() {
+  decadeStartYear.value += 10
+  expandedDecadeYear.value = null
+  loadDecade()
+}
+
+function toggleDecadeYear(year: number) {
+  expandedDecadeYear.value = expandedDecadeYear.value === year ? null : year
+}
+
+// 首次切到流年 tab 時自動載入
+watch(() => props.activeTab, (tab) => {
+  if (tab === 'decade' && props.yearlyRange.length === 0 && !props.yearlyRangeLoading) {
+    loadDecade()
+  }
+})
+
+// SVG 圖表計算
+const svgWidth = 620
+const svgHeight = 220
+const padLeft = 55
+const padRight = 35
+const padTop = 25
+const padBottom = 25
+const chartWidth = svgWidth - padLeft - padRight
+const chartHeight = svgHeight - padTop - padBottom
+const minScore = 30
+const maxScore = 100
+
+function scoreToY(score: number): number {
+  return padTop + chartHeight - ((score - minScore) / (maxScore - minScore)) * chartHeight
+}
+
+function yearToX(index: number): number {
+  if (props.yearlyRange.length <= 1) return padLeft
+  return padLeft + (index / (props.yearlyRange.length - 1)) * chartWidth
+}
+
+// 折線圖路徑
+const overallPath = computed(() => {
+  if (props.yearlyRange.length === 0) return ''
+  return props.yearlyRange
+    .map((y, i) => `${i === 0 ? 'M' : 'L'}${yearToX(i).toFixed(1)},${scoreToY(y.fortune.overall).toFixed(1)}`)
+    .join(' ')
+})
+
+// Y 軸格線
+const yGridLines = computed(() => {
+  const lines = []
+  for (let s = 40; s <= 100; s += 10) {
+    lines.push({ score: s, y: scoreToY(s) })
+  }
+  return lines
+})
+
+// 短星名（2 字）
+function shortStarName(name: string): string {
+  if (name.length <= 2) return name
+  return name.replace('曜星', '').replace('星', '')
 }
 </script>
 
@@ -61,6 +143,14 @@ function getKuyouLevelClass(level: string) {
         aria-controls="panel-fortune-yearly"
         @click="emit('update:activeTab', 'yearly')"
       >本年</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'decade' }"
+        role="tab"
+        :aria-selected="activeTab === 'decade'"
+        aria-controls="panel-fortune-decade"
+        @click="emit('update:activeTab', 'decade')"
+      >流年</button>
     </div>
 
     <!-- Daily Fortune -->
@@ -612,6 +702,177 @@ function getKuyouLevelClass(level: string) {
       </template>
       <div v-else class="loading-state">
         <sl-spinner></sl-spinner>
+      </div>
+    </div>
+
+    <!-- Decade Fortune (流年) -->
+    <div v-if="activeTab === 'decade'" id="panel-fortune-decade" class="fortune-content" role="tabpanel">
+      <div class="fortune-card">
+        <!-- 年份範圍導覽 -->
+        <div class="decade-nav">
+          <button class="decade-nav-btn" @click="prevDecade" aria-label="前十年">&lt; 前十年</button>
+          <span class="decade-range">{{ decadeStartYear }}-{{ decadeEndYear }}</span>
+          <button class="decade-nav-btn" @click="nextDecade" aria-label="後十年">後十年 &gt;</button>
+        </div>
+
+        <template v-if="yearlyRangeLoading">
+          <div class="loading-state">
+            <sl-spinner></sl-spinner>
+          </div>
+        </template>
+
+        <template v-else-if="yearlyRange.length > 0">
+          <!-- 九曜循環總覽 -->
+          <div class="kuyou-cycle">
+            <h4 class="kuyou-cycle-title">九曜循環總覽</h4>
+            <div class="kuyou-cycle-grid">
+              <div
+                v-for="y in yearlyRange"
+                :key="y.year"
+                class="kuyou-cycle-cell"
+                :class="{ 'is-current-year': y.year === currentYear }"
+              >
+                <span class="cycle-year">'{{ String(y.year).slice(-2) }}</span>
+                <span class="cycle-star">{{ shortStarName(y.kuyou_star.name) }}</span>
+                <span class="cycle-level kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SVG 折線圖 -->
+          <div class="decade-chart-wrapper">
+            <h4 class="chart-title">十年整體運勢趨勢</h4>
+            <div class="chart-scroll-container">
+              <svg
+                :viewBox="`0 0 ${svgWidth} ${svgHeight}`"
+                class="decade-chart"
+                role="img"
+                aria-label="十年運勢折線圖"
+              >
+                <!-- 背景帶 -->
+                <rect
+                  :x="padLeft" :y="scoreToY(100)" :width="chartWidth" :height="scoreToY(75) - scoreToY(100)"
+                  fill="rgba(80, 180, 80, 0.08)"
+                />
+                <rect
+                  :x="padLeft" :y="scoreToY(55)" :width="chartWidth" :height="scoreToY(minScore) - scoreToY(55)"
+                  fill="rgba(220, 80, 80, 0.08)"
+                />
+
+                <!-- 格線 -->
+                <g v-for="line in yGridLines" :key="line.score">
+                  <line
+                    :x1="padLeft" :y1="line.y" :x2="padLeft + chartWidth" :y2="line.y"
+                    stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4,4"
+                  />
+                  <text
+                    :x="padLeft - 8" :y="line.y + 4"
+                    text-anchor="end" fill="var(--text-secondary)" font-size="11"
+                  >{{ line.score }}</text>
+                </g>
+
+                <!-- 折線 -->
+                <path
+                  :d="overallPath"
+                  fill="none" stroke="var(--accent)" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round"
+                />
+
+                <!-- 節點 -->
+                <g v-for="(y, i) in yearlyRange" :key="'dot-' + y.year">
+                  <circle
+                    :cx="yearToX(i)" :cy="scoreToY(y.fortune.overall)" r="4"
+                    :fill="y.year === currentYear ? 'var(--accent)' : 'var(--bg-surface)'"
+                    stroke="var(--accent)" stroke-width="2"
+                  />
+                  <!-- 分數標註 -->
+                  <text
+                    :x="yearToX(i)" :y="scoreToY(y.fortune.overall) - 10"
+                    text-anchor="middle" fill="var(--text-primary)" font-size="11" font-weight="600"
+                  >{{ y.fortune.overall }}</text>
+                  <!-- X 軸年份 -->
+                  <text
+                    :x="yearToX(i)" :y="svgHeight - 4"
+                    text-anchor="middle" fill="var(--text-secondary)" font-size="11"
+                    :font-weight="y.year === currentYear ? '700' : '400'"
+                  >{{ String(y.year).slice(-2) }}</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+          </div>
+
+          <!-- 年度卡片列表 -->
+          <div class="decade-cards">
+            <div
+              v-for="y in yearlyRange"
+              :key="'card-' + y.year"
+              class="decade-card"
+              :class="{ 'is-current-year': y.year === currentYear }"
+            >
+              <button
+                class="decade-card-header"
+                :aria-expanded="expandedDecadeYear === y.year"
+                @click="toggleDecadeYear(y.year)"
+              >
+                <div class="card-header-left">
+                  <span class="card-year">{{ y.year }}</span>
+                  <span class="card-star">{{ y.kuyou_star.name }}</span>
+                  <span class="kuyou-level" :class="getKuyouLevelClass(y.kuyou_star.level)">{{ y.kuyou_star.level }}</span>
+                </div>
+                <div class="card-header-right">
+                  <div class="card-mini-scores">
+                    <span class="mini-score" :class="getScoreClass(y.fortune.overall)">{{ y.fortune.overall }}</span>
+                  </div>
+                  <span class="card-toggle" aria-hidden="true">{{ expandedDecadeYear === y.year ? '▼' : '▶' }}</span>
+                </div>
+              </button>
+
+              <div v-if="expandedDecadeYear === y.year" class="decade-card-detail">
+                <div class="card-scores">
+                  <div class="score-row">
+                    <span class="score-label">整體</span>
+                    <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.overall)" :style="{ width: y.fortune.overall + '%' }"></div></div>
+                    <span class="score-value">{{ y.fortune.overall }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">事業</span>
+                    <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.career)" :style="{ width: y.fortune.career + '%' }"></div></div>
+                    <span class="score-value">{{ y.fortune.career }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">感情</span>
+                    <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.love)" :style="{ width: y.fortune.love + '%' }"></div></div>
+                    <span class="score-value">{{ y.fortune.love }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">健康</span>
+                    <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.health)" :style="{ width: y.fortune.health + '%' }"></div></div>
+                    <span class="score-value">{{ y.fortune.health }}</span>
+                  </div>
+                  <div class="score-row">
+                    <span class="score-label">財運</span>
+                    <div class="score-bar"><div class="score-fill" :class="getScoreClass(y.fortune.wealth)" :style="{ width: y.fortune.wealth + '%' }"></div></div>
+                    <span class="score-value">{{ y.fortune.wealth }}</span>
+                  </div>
+                </div>
+                <p class="card-buddha">守護佛：{{ y.kuyou_star.buddha }}</p>
+                <div v-if="y.theme" class="card-theme">
+                  <strong>{{ y.theme.title }}</strong>
+                  <p>{{ y.theme.description }}</p>
+                </div>
+                <p v-if="y.advice" class="card-advice">{{ y.advice }}</p>
+              </div>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </section>
@@ -1742,6 +2003,265 @@ function getKuyouLevelClass(level: string) {
   padding: var(--space-2xl);
 }
 
+/* ============================================================
+   Decade (流年) Tab
+   ============================================================ */
+.decade-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.decade-nav-btn {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 44px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.decade-nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.decade-nav-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.decade-range {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* 九曜循環 */
+.kuyou-cycle {
+  margin-bottom: var(--space-md);
+}
+
+.kuyou-cycle-title {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.kuyou-cycle-grid {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: var(--space-xs);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.kuyou-cycle-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-elevated);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.kuyou-cycle-cell.is-current-year {
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.cycle-year {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cycle-star {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cycle-level {
+  font-size: 11px;
+}
+
+/* SVG 圖表 */
+.decade-chart-wrapper {
+  margin-bottom: var(--space-md);
+}
+
+.chart-title {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.chart-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.decade-chart {
+  width: 100%;
+  min-width: 480px;
+  height: auto;
+  display: block;
+}
+
+/* 年度卡片 */
+.decade-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.decade-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.decade-card.is-current-year {
+  border-color: var(--accent);
+}
+
+.decade-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: background-color 0.2s;
+  min-height: 44px;
+}
+
+.decade-card-header:hover {
+  background: var(--bg-primary);
+}
+
+.decade-card-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.card-year {
+  font-weight: 700;
+  font-size: var(--font-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-star {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.mini-score {
+  font-size: var(--font-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-score.excellent { color: var(--stellar); }
+.mini-score.good { color: var(--success); }
+.mini-score.fair { color: var(--info); }
+.mini-score.caution { color: #eab308; }
+.mini-score.warning { color: var(--warning); }
+
+.card-toggle {
+  width: 16px;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.decade-card-detail {
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  animation: slideDown 0.2s ease;
+}
+
+.card-scores {
+  margin-bottom: var(--space-md);
+}
+
+.card-buddha {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0 0 var(--space-sm);
+}
+
+.card-theme {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
+.card-theme strong {
+  display: block;
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin-bottom: var(--space-xs);
+}
+
+.card-theme p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.card-advice {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+}
+
+/* Responsive */
+@media (min-width: 1024px) {
+  .decade-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 767px) {
   .fortune-card {
     padding: var(--space-sm);
@@ -1789,6 +2309,29 @@ function getKuyouLevelClass(level: string) {
   .kuyou-star-box {
     padding: var(--space-sm);
   }
+
+  .kuyou-cycle-grid {
+    mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+  }
+
+  .decade-chart {
+    min-width: 520px;
+  }
+
+  .chart-scroll-container {
+    mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8px, black calc(100% - 24px), transparent);
+  }
+
+  .decade-nav-btn {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-xs);
+  }
+
+  .decade-range {
+    font-size: var(--font-base);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1798,6 +2341,10 @@ function getKuyouLevelClass(level: string) {
 
   .score-fill {
     transition: none;
+  }
+
+  .decade-card-detail {
+    animation: none;
   }
 }
 </style>
