@@ -127,6 +127,61 @@ function getLabelClass(label: string) {
   return classMap[label] || ''
 }
 
+// 圖例展開狀態
+const expandedLegend = ref<string | null>(null)
+
+function toggleLegend(type: string) {
+  expandedLegend.value = expandedLegend.value === type ? null : type
+}
+
+const legendItems = computed(() => {
+  const descs = props.japaneseCalendar?.day_type_descriptions
+  return [
+    {
+      type: 'tensya',
+      dotClass: 'tensya',
+      name: descs?.tensya?.name || '天赦日',
+      short: descs?.tensya?.short || '年間最大吉日',
+      description: descs?.tensya?.description || ''
+    },
+    {
+      type: 'ichiryumanbai',
+      dotClass: 'ichiryumanbai',
+      name: descs?.ichiryumanbai?.name || '一粒萬倍日',
+      short: descs?.ichiryumanbai?.short || '開始新事物吉',
+      description: descs?.ichiryumanbai?.description || ''
+    },
+    {
+      type: 'tora_no_hi',
+      dotClass: 'tora',
+      name: descs?.tora_no_hi?.name || '寅の日',
+      short: descs?.tora_no_hi?.short || '財運、旅行吉',
+      description: descs?.tora_no_hi?.description || ''
+    },
+    {
+      type: 'mi_no_hi',
+      dotClass: 'mi',
+      name: descs?.mi_no_hi?.name || '巳の日',
+      short: descs?.mi_no_hi?.short || '金運、藝術吉',
+      description: descs?.mi_no_hi?.description || ''
+    },
+    {
+      type: 'tsuchinoto_mi',
+      dotClass: 'tsuchinoto-mi',
+      name: descs?.tsuchinoto_mi?.name || '己巳の日',
+      short: descs?.tsuchinoto_mi?.short || '最強金運日',
+      description: descs?.tsuchinoto_mi?.description || ''
+    },
+    {
+      type: 'fujoubyou',
+      dotClass: 'fujoubyou',
+      name: descs?.fujoubyou?.name || '不成就日',
+      short: descs?.fujoubyou?.short || '萬事不成之日',
+      description: descs?.fujoubyou?.description || ''
+    }
+  ]
+})
+
 const selectedPartner = computed(() => {
   if (!props.selectedPartnerId) return null
   return profile.value.partners.find(p => p.id === props.selectedPartnerId) || null
@@ -259,22 +314,23 @@ const selectedPartner = computed(() => {
 
           <!-- 圖例說明 -->
           <div class="senjitsu-legend">
-            <div class="legend-item">
-              <span class="legend-dot tensya"></span>
-              <span>天赦日：年間最大吉日</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot ichiryumanbai"></span>
-              <span>一粒萬倍日：開始新事物吉</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot tora"></span>
-              <span>寅の日：財運、旅行吉</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-dot mi"></span>
-              <span>巳の日：金運、藝術吉</span>
-            </div>
+            <button
+              v-for="item in legendItems"
+              :key="item.type"
+              class="legend-card"
+              :class="{ expanded: expandedLegend === item.type }"
+              @click="toggleLegend(item.type)"
+            >
+              <div class="legend-card-header">
+                <span class="legend-dot" :class="item.dotClass"></span>
+                <span class="legend-card-title">{{ item.name }}</span>
+                <span class="legend-card-short">{{ item.short }}</span>
+                <span class="legend-toggle" aria-hidden="true">{{ expandedLegend === item.type ? '▲' : '▼' }}</span>
+              </div>
+              <div v-if="expandedLegend === item.type && item.description" class="legend-card-body">
+                <p>{{ item.description }}</p>
+              </div>
+            </button>
           </div>
         </div>
         <div v-else-if="japaneseCalendarLoading" class="loading-state small">
@@ -860,25 +916,74 @@ const selectedPartner = computed(() => {
 /* 圖例說明 */
 .senjitsu-legend {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-md);
+  flex-direction: column;
+  gap: var(--space-xs);
   margin-top: var(--space-lg);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
 }
 
-.legend-item {
+.legend-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.legend-card:hover {
+  background: var(--bg-hover);
+}
+
+.legend-card.expanded {
+  background: var(--bg-elevated);
+}
+
+.legend-card-header {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+}
+
+.legend-card-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legend-card-short {
   font-size: var(--font-xs);
   color: var(--text-secondary);
+  flex: 1;
+}
+
+.legend-toggle {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+}
+
+.legend-card-body {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.legend-card-body p {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .legend-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .legend-dot.tensya {
@@ -895,6 +1000,14 @@ const selectedPartner = computed(() => {
 
 .legend-dot.mi {
   background: #22c55e;
+}
+
+.legend-dot.tsuchinoto-mi {
+  background: linear-gradient(135deg, #22c55e, #eab308);
+}
+
+.legend-dot.fujoubyou {
+  background: #6b7280;
 }
 
 /* 雙人吉日 */

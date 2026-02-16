@@ -99,6 +99,46 @@ class JapaneseCalendarService:
         12: [6, 14, 22, 30],
     }
 
+    # 各類吉日/凶日的說明
+    DAY_TYPE_DESCRIPTIONS = {
+        "tensya": {
+            "name": "天赦日",
+            "reading": "てんしゃにち",
+            "short": "年間最大吉日",
+            "description": "一年之中最吉祥的日子，日文寫作「天が万物の罪を赦す日」，意為天赦萬物之罪。一年大約只有五到六天，適合開始任何新事物、做重大決定、處理過去遺留的問題。如果跟一粒萬倍日重疊，被稱為最強開運日。"
+        },
+        "ichiryumanbai": {
+            "name": "一粒萬倍日",
+            "reading": "いちりゅうまんばいび",
+            "short": "開始新事物吉",
+            "description": "字面意思是「一粒種子可收穫萬倍」。在這天開始的事情、投入的金錢、建立的關係，都有可能以倍數的方式成長回報。適合開業、存錢、學習、種植等「播種型」的行動。但反過來說，這天借錢或開始壞習慣也會加倍放大，需要注意。每月約有四到六天。"
+        },
+        "tora_no_hi": {
+            "name": "寅の日",
+            "reading": "とらのひ",
+            "short": "財運、旅行吉",
+            "description": "寅（虎）是毘沙門天的使者，毘沙門天掌管財運和武運。虎有「千里行って千里帰る」（千里來回）的說法，代表出去的錢會回來。適合投資理財、開始新的收入來源、出差旅行。每十二天出現一次。不適合婚禮（虎會把新娘帶回娘家的迷信）。"
+        },
+        "mi_no_hi": {
+            "name": "巳の日",
+            "reading": "みのひ",
+            "short": "金運、藝術吉",
+            "description": "巳（蛇）是弁財天的使者，弁財天掌管財運、藝術和智慧。每十二天出現一次。這天適合存錢到弁財天相關的銀行帳戶、購買彩券、開始藝術創作、求取才藝方面的進步。"
+        },
+        "tsuchinoto_mi": {
+            "name": "己巳の日",
+            "reading": "つちのとみのひ",
+            "short": "最強金運日",
+            "description": "己巳之日是巳の日之中特別吉祥的版本，被認為是最強的金運日。六十天才出現一次。除了巳の日的所有好處之外，己巳日的財運加成更強。很多人會在這天開新的存款帳戶或錢包。"
+        },
+        "fujoubyou": {
+            "name": "不成就日",
+            "reading": "ふじょうじゅび",
+            "short": "萬事不成之日",
+            "description": "日文寫作「何事も成就しない日」，意為這天開始的任何事情都不容易有結果。應避免開業、簽約、結婚、搬家等重大決定。如果跟一粒萬倍日或天赦日重疊，吉凶相消，效果會打折。每月約有四天。"
+        }
+    }
+
     def __init__(self):
         pass
 
@@ -359,22 +399,28 @@ class JapaneseCalendarService:
         # 收集類型和標籤
         types = []
         labels = []
+        descriptions = []
 
         if is_ten:
             types.append("tensya")
             labels.append("天赦日")
+            descriptions.append(self.DAY_TYPE_DESCRIPTIONS["tensya"]["description"])
         if is_ichiryu:
             types.append("ichiryumanbai")
             labels.append("一粒萬倍日")
+            descriptions.append(self.DAY_TYPE_DESCRIPTIONS["ichiryumanbai"]["description"])
         if is_tsuchi_mi:
             types.append("tsuchinoto_mi")
             labels.append("己巳の日")
+            descriptions.append(self.DAY_TYPE_DESCRIPTIONS["tsuchinoto_mi"]["description"])
         elif is_mi:
             types.append("mi_no_hi")
             labels.append("巳の日")
+            descriptions.append(self.DAY_TYPE_DESCRIPTIONS["mi_no_hi"]["description"])
         if is_tora:
             types.append("tora_no_hi")
             labels.append("寅の日")
+            descriptions.append(self.DAY_TYPE_DESCRIPTIONS["tora_no_hi"]["description"])
 
         # 判斷是否為超吉日（多重吉日重疊）
         lucky_count = len(types)
@@ -395,8 +441,10 @@ class JapaneseCalendarService:
             "rokuyo": rokuyo,
             "types": types,
             "labels": labels,
+            "descriptions": descriptions,
             "is_super_lucky": is_super_lucky,
-            "is_fujoubyou": is_fujo
+            "is_fujoubyou": is_fujo,
+            "fujoubyou_description": self.DAY_TYPE_DESCRIPTIONS["fujoubyou"]["description"] if is_fujo else None
         }
 
     def get_calendar_days(self, year: int, month: int) -> dict:
@@ -432,6 +480,7 @@ class JapaneseCalendarService:
                     "weekday": day_info["weekday"],
                     "types": day_info["types"],
                     "labels": day_info["labels"],
+                    "descriptions": day_info["descriptions"],
                     "is_super_lucky": day_info["is_super_lucky"],
                     "stem_branch": day_info["stem_branch"]["full"],
                     "rokuyo": day_info["rokuyo"]["name"]
@@ -462,6 +511,10 @@ class JapaneseCalendarService:
                 "fujoubyou_count": len(unlucky_days)
             }
         }
+
+    def get_day_type_descriptions(self) -> dict:
+        """取得所有吉日/凶日類型的說明"""
+        return self.DAY_TYPE_DESCRIPTIONS
 
     def get_upcoming_lucky_days(self, days_ahead: int = 30) -> dict:
         """

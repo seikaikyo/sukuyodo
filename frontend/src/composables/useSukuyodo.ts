@@ -162,6 +162,11 @@ export interface WeeklyFortune {
   }[]
   advice: string
   focus?: string
+  category_tips?: {
+    career: string
+    love: string
+    health: string
+  }
   lucky: {
     direction: string
     direction_reading: string
@@ -234,9 +239,20 @@ export interface YearlyFortune {
     index: number
   }
   fortune: FortuneScores
+  theme?: {
+    title: string
+    description: string
+  }
+  category_descriptions?: {
+    career: string
+    love: string
+    health: string
+    wealth: string
+  }
   monthly_trend: {
     month: number
     score: number
+    tip?: string
   }[]
   opportunities: string[]
   warnings: string[]
@@ -351,6 +367,7 @@ export interface JapaneseLuckyDay {
   weekday: string
   types: string[]
   labels: string[]
+  descriptions?: string[]
   is_super_lucky: boolean
   stem_branch: string
   rokuyo: string
@@ -374,12 +391,20 @@ export interface JapaneseCalendarSummary {
   fujoubyou_count: number
 }
 
+export interface DayTypeDescription {
+  name: string
+  reading: string
+  short: string
+  description: string
+}
+
 export interface JapaneseCalendarResult {
   year: number
   month: number
   days: JapaneseLuckyDay[]
   unlucky_days: JapaneseUnluckyDay[]
   summary: JapaneseCalendarSummary
+  day_type_descriptions?: Record<string, DayTypeDescription>
 }
 
 export interface PairLuckyDaysResult {

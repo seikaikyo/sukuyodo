@@ -197,6 +197,21 @@ function formatDate(dateStr: string) {
             <p>{{ weeklyFortune.focus }}</p>
           </div>
 
+          <div v-if="weeklyFortune.category_tips" class="category-descriptions">
+            <div v-if="weeklyFortune.category_tips.career" class="category-desc-item">
+              <h4>事業</h4>
+              <p>{{ weeklyFortune.category_tips.career }}</p>
+            </div>
+            <div v-if="weeklyFortune.category_tips.love" class="category-desc-item">
+              <h4>感情</h4>
+              <p>{{ weeklyFortune.category_tips.love }}</p>
+            </div>
+            <div v-if="weeklyFortune.category_tips.health" class="category-desc-item">
+              <h4>健康</h4>
+              <p>{{ weeklyFortune.category_tips.health }}</p>
+            </div>
+          </div>
+
           <div class="daily-overview">
             <h4>每日概覽（點擊查看詳情）</h4>
             <div class="daily-list">
@@ -348,6 +363,11 @@ function formatDate(dateStr: string) {
             <span class="year-info">({{ yearlyFortune.stem.character }}{{ yearlyFortune.branch.character }}年)</span>
           </h3>
 
+          <div v-if="yearlyFortune.theme" class="theme-box">
+            <h4>{{ yearlyFortune.theme.title }}</h4>
+            <p class="theme-desc">{{ yearlyFortune.theme.description }}</p>
+          </div>
+
           <div class="score-bars">
             <div class="score-row">
               <span class="score-label">整體</span>
@@ -383,6 +403,25 @@ function formatDate(dateStr: string) {
                 <div class="score-fill" :class="getScoreClass(yearlyFortune.fortune.wealth)" :style="{ width: yearlyFortune.fortune.wealth + '%' }"></div>
               </div>
               <span class="score-value">{{ yearlyFortune.fortune.wealth }}</span>
+            </div>
+          </div>
+
+          <div v-if="yearlyFortune.category_descriptions" class="category-descriptions">
+            <div v-if="yearlyFortune.category_descriptions.career" class="category-desc-item">
+              <h4>事業</h4>
+              <p>{{ yearlyFortune.category_descriptions.career }}</p>
+            </div>
+            <div v-if="yearlyFortune.category_descriptions.love" class="category-desc-item">
+              <h4>感情</h4>
+              <p>{{ yearlyFortune.category_descriptions.love }}</p>
+            </div>
+            <div v-if="yearlyFortune.category_descriptions.health" class="category-desc-item">
+              <h4>健康</h4>
+              <p>{{ yearlyFortune.category_descriptions.health }}</p>
+            </div>
+            <div v-if="yearlyFortune.category_descriptions.wealth" class="category-desc-item">
+              <h4>財運</h4>
+              <p>{{ yearlyFortune.category_descriptions.wealth }}</p>
             </div>
           </div>
 
@@ -1086,6 +1125,30 @@ function formatDate(dateStr: string) {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   margin-bottom: var(--space-xs);
+}
+
+.category-descriptions {
+  margin-bottom: var(--space-md);
+}
+
+.category-desc-item {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+}
+
+.category-desc-item h4 {
+  color: var(--accent);
+  font-size: var(--font-sm);
+  margin: 0 0 var(--space-xs);
+}
+
+.category-desc-item p {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+  margin: 0;
 }
 
 .loading-state {

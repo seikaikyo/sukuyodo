@@ -705,6 +705,7 @@ def get_japanese_calendar_lucky_days(
         )
 
     result = japanese_calendar_service.get_calendar_days(year, month)
+    result["day_type_descriptions"] = japanese_calendar_service.get_day_type_descriptions()
 
     stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
 
