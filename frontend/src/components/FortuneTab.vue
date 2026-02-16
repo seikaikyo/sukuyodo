@@ -384,7 +384,7 @@ function formatDate(dateStr: string) {
             <p class="kuyou-age">數え年 {{ yearlyFortune.kuyou_star.kazoe_age }} 歲</p>
             <p class="kuyou-desc">{{ yearlyFortune.kuyou_star.description }}</p>
             <p class="kuyou-buddha">守護佛：{{ yearlyFortune.kuyou_star.buddha }}</p>
-            <p class="kuyou-buddha-note">九曜星各自對應的佛尊，為今年的守護力量</p>
+            <p class="kuyou-buddha-note">九曜星各自對應的佛菩薩，為今年的守護力量</p>
           </div>
 
           <div v-if="yearlyFortune.theme" class="theme-box">
