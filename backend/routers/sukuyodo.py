@@ -777,6 +777,49 @@ def get_upcoming_japanese_lucky_days(
     }
 
 
+@router.get("/special-days/{year}/{month}")
+def get_special_days(
+    year: int,
+    month: int,
+):
+    """
+    取得指定月份的宿曜特殊日（甘露日/金剛峯日/羅刹日）
+
+    特殊日是全域的（非個人），由七曜與當日宿的組合決定。
+
+    Args:
+        year: 年份
+        month: 月份 (1-12)
+    """
+    if month < 1 or month > 12:
+        raise HTTPException(
+            status_code=400,
+            detail="月份必須在 1-12 之間"
+        )
+
+    if year < 1900 or year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    days = sukuyodo_service.get_special_days_for_month(year, month)
+
+    return {
+        "success": True,
+        "data": {
+            "year": year,
+            "month": month,
+            "days": days,
+            "summary": {
+                "kanro_count": sum(1 for d in days if d["type"] == "kanro"),
+                "kongou_count": sum(1 for d in days if d["type"] == "kongou"),
+                "rasetsu_count": sum(1 for d in days if d["type"] == "rasetsu"),
+            }
+        }
+    }
+
+
 @router.get("/lucky-days/pair/{date1}/{date2}")
 def get_pair_lucky_days(
     date1: str,

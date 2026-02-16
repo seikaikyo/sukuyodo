@@ -383,7 +383,8 @@ function formatDate(dateStr: string) {
             </div>
             <p class="kuyou-age">數え年 {{ yearlyFortune.kuyou_star.kazoe_age }} 歲</p>
             <p class="kuyou-desc">{{ yearlyFortune.kuyou_star.description }}</p>
-            <p class="kuyou-buddha">本地佛：{{ yearlyFortune.kuyou_star.buddha }}</p>
+            <p class="kuyou-buddha">守護佛：{{ yearlyFortune.kuyou_star.buddha }}</p>
+            <p class="kuyou-buddha-note">九曜星各自對應的佛尊，為今年的守護力量</p>
           </div>
 
           <div v-if="yearlyFortune.theme" class="theme-box">
@@ -852,6 +853,13 @@ function formatDate(dateStr: string) {
   color: var(--text-secondary);
   margin: var(--space-sm) 0 0;
   font-style: italic;
+}
+
+.kuyou-buddha-note {
+  font-size: 11px;
+  color: var(--text-tertiary, var(--text-secondary));
+  margin: 2px 0 0;
+  opacity: 0.7;
 }
 
 .theme-box {

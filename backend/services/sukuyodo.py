@@ -2823,5 +2823,65 @@ class SukuyodoService:
         }
 
 
+    def get_special_days_for_month(self, year: int, month: int) -> list[dict]:
+        """
+        取得指定月份的所有特殊日（甘露日/金剛峯日/羅刹日）
+
+        特殊日是全域的，由 (七曜, 當日宿) 決定，不需要個人生日。
+
+        Args:
+            year: 西曆年份
+            month: 西曆月份 (1-12)
+
+        Returns:
+            特殊日列表
+        """
+        import calendar
+
+        fortune_data = self._load_fortune_data()
+        weekday_elements = fortune_data["weekday_elements"]
+
+        days_in_month = calendar.monthrange(year, month)[1]
+        results = []
+
+        for day in range(1, days_in_month + 1):
+            target_date = date(year, month, day)
+
+            # 農曆轉換
+            try:
+                _, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
+            except Exception:
+                continue
+
+            # 當日宿
+            day_mansion_index = self.get_mansion_index(lunar_m, lunar_d)
+            day_mansion = self.mansions_data[day_mansion_index]
+
+            # 七曜
+            weekday = target_date.weekday()
+            jp_weekday = (weekday + 1) % 7
+            day_info = weekday_elements[str(jp_weekday)]
+
+            # 查特殊日
+            special_day_key = (jp_weekday, day_mansion_index)
+            special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
+
+            if special_day_type:
+                info = self.SPECIAL_DAY_INFO[special_day_type]
+                results.append({
+                    "date": target_date.isoformat(),
+                    "weekday": day_info["name"].replace("曜日", ""),
+                    "type": special_day_type,
+                    "name": info["name"],
+                    "reading": info["reading"],
+                    "level": info["level"],
+                    "mansion": day_mansion["name_jp"],
+                    "mansion_reading": day_mansion["reading"],
+                    "description": info["description"]
+                })
+
+        return results
+
+
 # 全域實例
 sukuyodo_service = SukuyodoService()

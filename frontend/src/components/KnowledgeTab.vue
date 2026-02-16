@@ -3,7 +3,7 @@ import MansionWheel from './MansionWheel.vue'
 import type { Mansion, WheelMansion, RelationType, ElementType, Metadata } from '../composables/useSukuyodo'
 
 const props = defineProps<{
-  activeTab: 'mansion' | 'wheel' | 'relations' | 'elements' | 'calendar' | 'history'
+  activeTab: 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history'
   mansion: Mansion | null
   mansionElementColor: string
   allMansions: WheelMansion[]
@@ -15,7 +15,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:activeTab': [value: 'mansion' | 'wheel' | 'relations' | 'elements' | 'calendar' | 'history']
+  'update:activeTab': [value: 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history']
   'update:selectedWheelMansion': [value: WheelMansion | null]
 }>()
 
@@ -25,6 +25,16 @@ function handleWheelSelect(m: WheelMansion) {
   } else {
     emit('update:selectedWheelMansion', m)
   }
+}
+
+function getKuyouRowClass(level: string) {
+  const classMap: Record<string, string> = {
+    '大吉': 'kuyou-row-great',
+    '吉': 'kuyou-row-good',
+    '半吉': 'kuyou-row-half',
+    '大凶': 'kuyou-row-bad'
+  }
+  return classMap[level] || ''
 }
 </script>
 
@@ -63,6 +73,22 @@ function handleWheelSelect(m: WheelMansion) {
         aria-controls="panel-knowledge-elements"
         @click="emit('update:activeTab', 'elements')"
       >七曜</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'special-days' }"
+        role="tab"
+        :aria-selected="activeTab === 'special-days'"
+        aria-controls="panel-knowledge-special-days"
+        @click="emit('update:activeTab', 'special-days')"
+      >特殊日</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'kuyou' }"
+        role="tab"
+        :aria-selected="activeTab === 'kuyou'"
+        aria-controls="panel-knowledge-kuyou"
+        @click="emit('update:activeTab', 'kuyou')"
+      >九曜</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'calendar' }"
@@ -214,6 +240,67 @@ function handleWheelSelect(m: WheelMansion) {
             <p v-if="el.detailed_traits" class="element-extra">{{ el.detailed_traits }}</p>
             <p v-if="el.interactions" class="element-extra">{{ el.interactions }}</p>
             <p v-if="el.life_advice" class="element-extra element-advice">{{ el.life_advice }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Days -->
+    <div v-if="activeTab === 'special-days'" id="panel-knowledge-special-days" class="knowledge-content" role="tabpanel">
+      <div class="calendar-info" v-if="metadata?.special_days_knowledge">
+        <h3>{{ metadata.special_days_knowledge.title }}</h3>
+        <div class="history-sections">
+          <div v-for="(section, i) in metadata.special_days_knowledge.sections" :key="'sd-' + i" class="history-item">
+            <h4>{{ section.title }}</h4>
+            <p>{{ section.content }}</p>
+          </div>
+        </div>
+        <div v-if="metadata.special_days_knowledge.day_map_table" class="knowledge-table-section">
+          <h4 class="table-subtitle">{{ metadata.special_days_knowledge.day_map_table.description }}</h4>
+          <div class="calendar-table">
+            <table>
+              <thead>
+                <tr>
+                  <th v-for="h in metadata.special_days_knowledge.day_map_table.headers" :key="h">{{ h }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in metadata.special_days_knowledge.day_map_table.rows" :key="'sdrow-' + i">
+                  <td v-for="(cell, j) in row" :key="'sdcell-' + j" :class="{ 'cell-kanro': j === 1, 'cell-kongou': j === 2, 'cell-rasetsu': j === 3 }">{{ cell }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kuyou -->
+    <div v-if="activeTab === 'kuyou'" id="panel-knowledge-kuyou" class="knowledge-content" role="tabpanel">
+      <div class="calendar-info" v-if="metadata?.kuyou_knowledge">
+        <h3>{{ metadata.kuyou_knowledge.title }}</h3>
+        <div class="history-sections">
+          <div v-for="(section, i) in metadata.kuyou_knowledge.sections" :key="'ky-' + i" class="history-item">
+            <h4>{{ section.title }}</h4>
+            <p>{{ section.content }}</p>
+          </div>
+        </div>
+        <div v-if="metadata.kuyou_knowledge.stars_table" class="knowledge-table-section">
+          <h4 class="table-subtitle">{{ metadata.kuyou_knowledge.stars_table.description }}</h4>
+          <div class="calendar-table">
+            <table>
+              <thead>
+                <tr>
+                  <th v-for="h in metadata.kuyou_knowledge.stars_table.headers" :key="h">{{ h }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in metadata.kuyou_knowledge.stars_table.rows" :key="'kyrow-' + i"
+                  :class="getKuyouRowClass(row[2])">
+                  <td v-for="(cell, j) in row" :key="'kycell-' + j">{{ cell }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -706,6 +793,27 @@ function handleWheelSelect(m: WheelMansion) {
   font-style: italic;
   margin-top: var(--space-sm);
 }
+
+.knowledge-table-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+}
+
+.table-subtitle {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-md);
+}
+
+.cell-kanro { color: #C4A052; font-weight: 600; }
+.cell-kongou { color: #5B8FA8; font-weight: 600; }
+.cell-rasetsu { color: #E85D4C; font-weight: 600; }
+
+.kuyou-row-great td { background: rgba(196, 160, 82, 0.08); }
+.kuyou-row-good td { background: rgba(91, 143, 168, 0.08); }
+.kuyou-row-half td { background: rgba(168, 162, 158, 0.08); }
+.kuyou-row-bad td { background: rgba(232, 93, 76, 0.08); }
 
 @media (max-width: 767px) {
   .elements-grid {

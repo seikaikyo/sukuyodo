@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult } from '../composables/useSukuyodo'
+import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
 
 const props = defineProps<{
@@ -8,6 +8,8 @@ const props = defineProps<{
   luckyDaySummaryLoading: boolean
   japaneseCalendar: JapaneseCalendarResult | null
   japaneseCalendarLoading: boolean
+  specialDays: SpecialDaysResult | null
+  specialDaysLoading: boolean
   activeLuckyTab: 'personal' | 'pair'
   selectedPartnerId: string | null
   pairLuckyDays: PairLuckyDaysResult | null
@@ -19,6 +21,7 @@ const emit = defineEmits<{
   (e: 'selectPartner', partnerId: string): void
   (e: 'clearPartner'): void
   (e: 'refreshPartner', partnerId: string): void
+  (e: 'fetchSpecialDays', year: number, month: number): void
 }>()
 
 const { profile, addPartner, updatePartner, removePartner } = useProfile()
@@ -186,6 +189,39 @@ const selectedPartner = computed(() => {
   if (!props.selectedPartnerId) return null
   return profile.value.partners.find(p => p.id === props.selectedPartnerId) || null
 })
+
+// 特殊日月份切換
+const specialDaysMonth = ref<{ year: number; month: number }>({
+  year: new Date().getFullYear(),
+  month: new Date().getMonth() + 1
+})
+
+const specialDaysMonthLabel = computed(() => {
+  return `${specialDaysMonth.value.year} 年 ${specialDaysMonth.value.month} 月`
+})
+
+function changeSpecialDaysMonth(delta: number) {
+  let { year, month } = specialDaysMonth.value
+  month += delta
+  if (month > 12) { month = 1; year++ }
+  if (month < 1) { month = 12; year-- }
+  specialDaysMonth.value = { year, month }
+  emit('fetchSpecialDays', year, month)
+}
+
+function getSpecialDayTypeClass(type: string) {
+  const classMap: Record<string, string> = {
+    kanro: 'kanro',
+    kongou: 'kongou',
+    rasetsu: 'rasetsu'
+  }
+  return classMap[type] || ''
+}
+
+function formatSpecialDate(dateStr: string) {
+  const d = new Date(dateStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
 </script>
 
 <template>
@@ -216,6 +252,48 @@ const selectedPartner = computed(() => {
       </div>
 
       <template v-else>
+        <!-- 本月特殊日區塊 -->
+        <div class="special-days-section">
+          <h3 class="section-title">
+            <sl-icon name="calendar2-check"></sl-icon>
+            本月特殊日
+          </h3>
+          <p class="section-desc">宿曜經記載的全域吉凶日，由七曜與當日宿決定</p>
+
+          <div class="special-days-nav">
+            <button class="nav-btn" @click="changeSpecialDaysMonth(-1)">
+              <sl-icon name="chevron-left"></sl-icon>
+            </button>
+            <span class="nav-label">{{ specialDaysMonthLabel }}</span>
+            <button class="nav-btn" @click="changeSpecialDaysMonth(1)">
+              <sl-icon name="chevron-right"></sl-icon>
+            </button>
+          </div>
+
+          <div v-if="specialDaysLoading" class="loading-state">
+            <sl-spinner></sl-spinner>
+          </div>
+          <div v-else-if="specialDays && specialDays.days.length > 0" class="special-days-list">
+            <div
+              v-for="day in specialDays.days"
+              :key="day.date"
+              class="special-day-card"
+              :class="getSpecialDayTypeClass(day.type)"
+            >
+              <div class="special-day-header">
+                <span class="special-day-date">{{ formatSpecialDate(day.date) }}</span>
+                <span class="special-day-weekday">{{ day.weekday }}</span>
+                <span class="special-day-type-badge" :class="getSpecialDayTypeClass(day.type)">{{ day.name }}</span>
+                <span class="special-day-level" :class="getSpecialDayTypeClass(day.type)">{{ day.level }}</span>
+              </div>
+              <div class="special-day-mansion">{{ day.mansion }}（{{ day.mansion_reading }}）</div>
+            </div>
+          </div>
+          <div v-else class="no-lucky-days">
+            <span>本月無特殊日</span>
+          </div>
+        </div>
+
         <!-- 宿曜吉日區塊 -->
         <div v-if="luckyDaySummary" class="lucky-summary sukuyodo-section">
           <h3 class="section-title">
@@ -1342,6 +1420,128 @@ const selectedPartner = computed(() => {
   justify-content: flex-end;
   gap: var(--space-sm);
   margin-top: var(--space-md);
+}
+
+/* 特殊日區塊 */
+.special-days-section {
+  margin-bottom: var(--space-xl);
+}
+
+.special-days-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.nav-label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 100px;
+  text-align: center;
+}
+
+.special-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.special-day-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  transition: border-color 0.2s;
+}
+
+.special-day-card.kanro {
+  border-left: 3px solid #C4A052;
+}
+
+.special-day-card.kongou {
+  border-left: 3px solid #5B8FA8;
+}
+
+.special-day-card.rasetsu {
+  border-left: 3px solid #E85D4C;
+}
+
+.special-day-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.special-day-date {
+  font-weight: 600;
+  font-size: var(--font-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.special-day-weekday {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.special-day-type-badge {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.special-day-type-badge.kanro {
+  background: rgba(196, 160, 82, 0.2);
+  color: #C4A052;
+}
+
+.special-day-type-badge.kongou {
+  background: rgba(91, 143, 168, 0.2);
+  color: #5B8FA8;
+}
+
+.special-day-type-badge.rasetsu {
+  background: rgba(232, 93, 76, 0.2);
+  color: #E85D4C;
+}
+
+.special-day-level {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.special-day-level.kanro { color: #C4A052; }
+.special-day-level.kongou { color: #5B8FA8; }
+.special-day-level.rasetsu { color: #E85D4C; }
+
+.special-day-mansion {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
 }
 
 @media (prefers-reduced-motion: reduce) {

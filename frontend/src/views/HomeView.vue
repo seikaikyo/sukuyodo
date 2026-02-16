@@ -60,6 +60,8 @@ const {
   luckyDaySummaryLoading,
   japaneseCalendar,
   japaneseCalendarLoading,
+  specialDays,
+  specialDaysLoading,
   activeLuckyTab,
   selectedPartnerId,
   pairLuckyDays,
@@ -75,6 +77,7 @@ const {
   fetchPairLuckyDays,
   clearPairSelection,
   fetchDailyFortuneForDate,
+  fetchSpecialDays,
 
   // Event Handlers
   quickSelect,
@@ -245,6 +248,8 @@ onMounted(() => {
         :lucky-day-summary-loading="luckyDaySummaryLoading"
         :japanese-calendar="japaneseCalendar"
         :japanese-calendar-loading="japaneseCalendarLoading"
+        :special-days="specialDays"
+        :special-days-loading="specialDaysLoading"
         :active-lucky-tab="activeLuckyTab"
         :selected-partner-id="selectedPartnerId"
         :pair-lucky-days="pairLuckyDays"
@@ -253,6 +258,7 @@ onMounted(() => {
         @select-partner="fetchPairLuckyDays"
         @clear-partner="clearPairSelection"
         @refresh-partner="fetchPairLuckyDays"
+        @fetch-special-days="fetchSpecialDays"
       />
 
       <KnowledgeTab

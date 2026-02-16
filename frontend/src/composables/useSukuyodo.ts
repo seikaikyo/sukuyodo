@@ -436,6 +436,29 @@ export interface PairLuckyDaysResult {
   actions: PairLuckyAction[]
 }
 
+export interface SpecialDay {
+  date: string
+  weekday: string
+  type: string
+  name: string
+  reading: string
+  level: string
+  mansion: string
+  mansion_reading: string
+  description: string
+}
+
+export interface SpecialDaysResult {
+  year: number
+  month: number
+  days: SpecialDay[]
+  summary: {
+    kanro_count: number
+    kongou_count: number
+    rasetsu_count: number
+  }
+}
+
 export interface WheelMansion {
   index: number
   name_jp: string
@@ -519,6 +542,29 @@ export interface PracticalGuide {
   content: string
 }
 
+export interface KnowledgeSection {
+  title: string
+  content: string
+}
+
+export interface KnowledgeTable {
+  description: string
+  headers: string[]
+  rows: string[][]
+}
+
+export interface SpecialDaysKnowledge {
+  title: string
+  sections: KnowledgeSection[]
+  day_map_table: KnowledgeTable
+}
+
+export interface KuyouKnowledge {
+  title: string
+  sections: KnowledgeSection[]
+  stars_table: KnowledgeTable
+}
+
 export interface Metadata {
   name: string
   reading: string
@@ -533,6 +579,8 @@ export interface Metadata {
   history?: HistoryEntry[]
   key_concepts?: KeyConcept[]
   practical_guide?: PracticalGuide[]
+  special_days_knowledge?: SpecialDaysKnowledge
+  kuyou_knowledge?: KuyouKnowledge
   month_mansion_table?: MonthMansionTable
 }
 
@@ -552,7 +600,7 @@ export function useSukuyodo() {
   const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
   const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
-  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'calendar' | 'history'>('mansion')
+  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history'>('mansion')
 
   // Query UI
   const showQueryDialog = ref(false)
@@ -611,6 +659,10 @@ export function useSukuyodo() {
   // Japanese Calendar (選日曆注)
   const japaneseCalendar = ref<JapaneseCalendarResult | null>(null)
   const japaneseCalendarLoading = ref(false)
+
+  // Special Days (宿曜特殊日)
+  const specialDays = ref<SpecialDaysResult | null>(null)
+  const specialDaysLoading = ref(false)
 
   // Knowledge
   const expandedRelation = ref<string | null>(null)
@@ -726,6 +778,7 @@ export function useSukuyodo() {
           fetchAllFortunes()
           fetchLuckyDaySummary()
           fetchJapaneseCalendar()
+          fetchSpecialDays()
         } else {
           lookupError.value = data.error || '查詢失敗'
         }
@@ -965,6 +1018,28 @@ export function useSukuyodo() {
       console.error('Failed to fetch Japanese calendar')
     } finally {
       japaneseCalendarLoading.value = false
+    }
+  }
+
+  async function fetchSpecialDays(year?: number, month?: number) {
+    const now = new Date()
+    const targetYear = year ?? now.getFullYear()
+    const targetMonth = month ?? now.getMonth() + 1
+
+    specialDaysLoading.value = true
+
+    try {
+      const res = await fetch(getApiUrl(`/special-days/${targetYear}/${targetMonth}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          specialDays.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch special days')
+    } finally {
+      specialDaysLoading.value = false
     }
   }
 
@@ -1258,6 +1333,8 @@ export function useSukuyodo() {
     luckyDaySummaryLoading,
     japaneseCalendar,
     japaneseCalendarLoading,
+    specialDays,
+    specialDaysLoading,
     activeLuckyTab,
     selectedPartnerId,
     pairLuckyDays,
@@ -1281,6 +1358,7 @@ export function useSukuyodo() {
     fetchLuckyDays,
     fetchLuckyDaySummary,
     fetchJapaneseCalendar,
+    fetchSpecialDays,
     fetchPairLuckyDays,
     clearPairSelection,
     calculateCompatibility,
