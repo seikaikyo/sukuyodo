@@ -247,6 +247,7 @@ onMounted(() => {
         :partners-with-birth-date="partnersWithBirthDate"
         :element-colors="elementColors"
         :birth-date="birthDate"
+        :mansion="mansion"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @calculate-compatibility="calculateCompatibility"

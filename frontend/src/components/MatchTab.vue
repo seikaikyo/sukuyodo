@@ -12,6 +12,7 @@ import { getApiUrl } from '../config/api'
 
 const expandedPartnerId = ref<string | null>(null)
 const pairedReportLoading = ref(false)
+const partnerPairedLoading = ref<string | null>(null)
 
 function togglePartner(id: string) {
   const isExpanding = expandedPartnerId.value !== id
@@ -38,6 +39,7 @@ const props = defineProps<{
   partnersWithBirthDate: { id: string; nickname: string; birthDate?: string }[]
   elementColors: Record<string, string>
   birthDate: string
+  mansion: { name_jp: string; reading: string; element: string } | null
 }>()
 
 async function handleExportPairedReport() {
@@ -77,6 +79,43 @@ async function handleExportPairedReport() {
     console.error('匯出雙人流年報告失敗', e)
   } finally {
     pairedReportLoading.value = false
+  }
+}
+
+async function handlePartnerPairedReport(pc: PartnerCompatibility) {
+  if (!props.birthDate || !props.mansion || !pc.birthDate) return
+  partnerPairedLoading.value = pc.partnerId
+  try {
+    await generatePairedDecadeReport({
+      person1: {
+        mansion: props.mansion.name_jp,
+        reading: props.mansion.reading,
+        element: props.mansion.element,
+        date: props.birthDate,
+        name: '你'
+      },
+      person2: {
+        mansion: pc.mansion.name_jp,
+        reading: pc.mansion.reading,
+        element: pc.mansion.element,
+        date: pc.birthDate,
+        name: pc.nickname
+      },
+      compat: {
+        score: pc.score,
+        relationName: pc.relation.name,
+        reading: pc.relation.reading,
+        distanceTypeName: pc.relation.distance_type_name,
+        elementRelation: pc.calculation?.element_relation || '',
+        direction: pc.relation.direction,
+        summary: pc.summary
+      },
+      apiUrl: getApiUrl('')
+    })
+  } catch (e) {
+    console.error('匯出雙人流年報告失敗', e)
+  } finally {
+    partnerPairedLoading.value = null
   }
 }
 
@@ -517,6 +556,17 @@ function handleMansionClick(m: CompatibleMansion) {
                     <li v-for="(a, i) in pc.relation.avoid" :key="i">{{ a }}</li>
                   </ul>
                 </div>
+              </div>
+
+              <div class="partner-export-row">
+                <button
+                  class="export-btn"
+                  :disabled="partnerPairedLoading === pc.partnerId || !birthDate || !mansion"
+                  @click="handlePartnerPairedReport(pc)"
+                >
+                  <sl-spinner v-if="partnerPairedLoading === pc.partnerId"></sl-spinner>
+                  <span v-else>匯出雙人流年</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1297,6 +1347,38 @@ function handleMansionClick(m: CompatibleMansion) {
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--accent);
+}
+
+.partner-export-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-md);
+}
+
+.partner-export-row .export-btn {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.partner-export-row .export-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.partner-export-row .export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @keyframes slideDown {
