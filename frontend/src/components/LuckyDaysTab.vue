@@ -222,6 +222,15 @@ function formatSpecialDate(dateStr: string) {
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
+
+function getSpecialDayAdvice(type: string): string {
+  const adviceMap: Record<string, string> = {
+    kanro: '適合簽約、搬家、結婚、開業等重要行動',
+    kongou: '適合面試、考試、提案等需要毅力的行動',
+    rasetsu: '避免簽約、遠行、開始新計畫。適合休息和整理'
+  }
+  return adviceMap[type] || ''
+}
 </script>
 
 <template>
@@ -258,7 +267,7 @@ function formatSpecialDate(dateStr: string) {
             <sl-icon name="calendar2-check"></sl-icon>
             本月特殊日
           </h3>
-          <p class="section-desc">宿曜經記載的全域吉凶日，由七曜與當日宿決定</p>
+          <p class="section-desc">不分本命宿，所有人共通的宿曜吉凶日。可用來安排重要行程或避開不利日期。</p>
 
           <div class="special-days-nav">
             <button class="nav-btn" @click="changeSpecialDaysMonth(-1)">
@@ -286,7 +295,7 @@ function formatSpecialDate(dateStr: string) {
                 <span class="special-day-type-badge" :class="getSpecialDayTypeClass(day.type)">{{ day.name }}</span>
                 <span class="special-day-level" :class="getSpecialDayTypeClass(day.type)">{{ day.level }}</span>
               </div>
-              <div class="special-day-mansion">{{ day.mansion }}（{{ day.mansion_reading }}）</div>
+              <p class="special-day-advice">{{ getSpecialDayAdvice(day.type) }}</p>
             </div>
           </div>
           <div v-else class="no-lucky-days">
@@ -1538,10 +1547,11 @@ function formatSpecialDate(dateStr: string) {
 .special-day-level.kongou { color: #5B8FA8; }
 .special-day-level.rasetsu { color: #E85D4C; }
 
-.special-day-mansion {
+.special-day-advice {
   font-size: var(--font-xs);
   color: var(--text-secondary);
-  margin-top: var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  line-height: 1.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
