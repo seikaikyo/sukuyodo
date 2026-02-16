@@ -75,7 +75,7 @@ function getKuyouRowClass(level: string) {
         :aria-selected="activeTab === 'elements'"
         aria-controls="panel-knowledge-elements"
         @click="emit('update:activeTab', 'elements')"
-      >七曜</button>
+      >五行七曜</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'special-days' }"
@@ -99,7 +99,7 @@ function getKuyouRowClass(level: string) {
         :aria-selected="activeTab === 'ryouhan'"
         aria-controls="panel-knowledge-ryouhan"
         @click="emit('update:activeTab', 'ryouhan')"
-      >凌犯</button>
+      >凌犯逆轉</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'sanki' }"
@@ -107,7 +107,7 @@ function getKuyouRowClass(level: string) {
         :aria-selected="activeTab === 'sanki'"
         aria-controls="panel-knowledge-sanki"
         @click="emit('update:activeTab', 'sanki')"
-      >三期</button>
+      >三九秘曆</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'calendar' }"

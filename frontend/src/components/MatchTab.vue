@@ -156,6 +156,11 @@ function handleMansionClick(m: CompatibleMansion) {
     <!-- Finder -->
     <div v-if="activeTab === 'finder'" id="panel-match-finder" class="match-content" role="tabpanel">
       <template v-if="compatFinder">
+        <div class="finder-intro">
+          <p>宿曜經將 27 宿之間的關係分為六種，由宿與宿之間的距離和元素交互決定。
+            分數越高代表自然和諧度越強，但低分不代表不合，而是相處時需要更多覺察。
+            點擊宿名可查看該宿的農曆日期對照。</p>
+        </div>
         <div class="relation-grid">
           <div
             v-for="rk in relationKeys"
@@ -192,6 +197,16 @@ function handleMansionClick(m: CompatibleMansion) {
           <p>{{ selectedMansion.personality }}</p>
           <div class="keywords">
             <span v-for="kw in selectedMansion.keywords" :key="kw" class="keyword">{{ kw }}</span>
+          </div>
+          <div v-if="selectedMansion.lunar_dates?.length" class="lunar-dates">
+            <h5>農曆日期對照</h5>
+            <div class="lunar-date-chips">
+              <span
+                v-for="ld in selectedMansion.lunar_dates"
+                :key="ld.display"
+                class="lunar-date-chip"
+              >{{ ld.display }}</span>
+            </div>
           </div>
         </div>
       </template>
@@ -516,8 +531,8 @@ function handleMansionClick(m: CompatibleMansion) {
   padding: var(--space-md);
 }
 
-.relation-section.excellent { border-left: 3px solid var(--success); }
-.relation-section.good { border-left: 3px solid var(--accent); }
+.relation-section.excellent { border-left: 3px solid var(--stellar); }
+.relation-section.good { border-left: 3px solid var(--success); }
 .relation-section.fair { border-left: 3px solid var(--info); }
 .relation-section.neutral { border-left: 3px solid var(--text-secondary); }
 .relation-section.caution { border-left: 3px solid #eab308; }
@@ -606,6 +621,22 @@ function handleMansionClick(m: CompatibleMansion) {
   border-radius: var(--radius-lg);
 }
 
+/* Finder Intro */
+.finder-intro {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+}
+
+.finder-intro p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
 .mansion-detail h4 {
   font-size: var(--font-lg);
   margin: 0 0 var(--space-sm);
@@ -627,6 +658,34 @@ function handleMansionClick(m: CompatibleMansion) {
 .keyword {
   padding: var(--space-xs) var(--space-sm);
   background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+/* Lunar Dates */
+.lunar-dates {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.lunar-dates h5 {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.lunar-date-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.lunar-date-chip {
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: var(--font-xs);
   color: var(--text-secondary);
@@ -708,9 +767,9 @@ function handleMansionClick(m: CompatibleMansion) {
 }
 
 .compat-score.excellent .score-num,
-.compat-score.excellent .score-text { color: var(--success); }
+.compat-score.excellent .score-text { color: var(--stellar); }
 .compat-score.good .score-num,
-.compat-score.good .score-text { color: var(--accent); }
+.compat-score.good .score-text { color: var(--success); }
 .compat-score.fair .score-num,
 .compat-score.fair .score-text { color: var(--info); }
 .compat-score.warning .score-num,
@@ -1069,8 +1128,8 @@ function handleMansionClick(m: CompatibleMansion) {
   background: var(--bg-elevated);
 }
 
-.partner-card.excellent { border-left: 3px solid var(--success); }
-.partner-card.good { border-left: 3px solid var(--accent); }
+.partner-card.excellent { border-left: 3px solid var(--stellar); }
+.partner-card.good { border-left: 3px solid var(--success); }
 .partner-card.fair { border-left: 3px solid var(--info); }
 .partner-card.caution { border-left: 3px solid #eab308; }
 .partner-card.warning { border-left: 3px solid var(--warning); }

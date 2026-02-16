@@ -216,6 +216,7 @@ export interface WeeklyFortune {
 export interface MonthlyFortune {
   year: number
   month: number
+  lunar_month?: number
   month_mansion: {
     name_jp: string
     reading: string

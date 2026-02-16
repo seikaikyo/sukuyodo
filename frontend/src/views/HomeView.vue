@@ -289,7 +289,8 @@ onMounted(() => {
   --text-secondary: #a8a29e;
   --accent: #f59e0b;
   --accent-hover: #d97706;
-  --success: #22c55e;
+  --stellar: #d4a017;
+  --success: #4a9b6b;
   --warning: #ef4444;
   --info: #3b82f6;
 

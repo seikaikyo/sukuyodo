@@ -134,12 +134,20 @@ function formatDate(dateStr: string) {
             </div>
           </div>
 
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+          </div>
+
           <div v-if="dailyFortune.special_day" class="special-day-banner" :class="[dailyFortune.special_day.type, { reversed: dailyFortune.special_day.ryouhan_reversed }]">
             <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
             <span class="special-day-name">{{ dailyFortune.special_day.name }}</span>
             <p class="special-day-desc">{{ dailyFortune.special_day.description }}</p>
             <p v-if="dailyFortune.special_day.ryouhan_reversed" class="special-day-reversed">
-              凌犯期間中のため吉凶が逆轉しています
+              凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）
             </p>
           </div>
 
@@ -157,7 +165,7 @@ function formatDate(dateStr: string) {
             <div class="sanki-header">
               <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">{{ dailyFortune.sanki.period }}</span>
               <span class="sanki-day-type">{{ dailyFortune.sanki.day_type }}</span>
-              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黒の一週間</span>
+              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黑週（暗黒の一週間）</span>
             </div>
             <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
             <p class="sanki-period-desc">{{ dailyFortune.sanki.period_description }}</p>
@@ -238,6 +246,34 @@ function formatDate(dateStr: string) {
               </div>
               <span class="score-value">{{ weeklyFortune.fortune.love }}</span>
             </div>
+            <div class="score-row">
+              <span class="score-label">健康</span>
+              <div class="score-bar">
+                <div class="score-fill" :class="getScoreClass(weeklyFortune.fortune.health)" :style="{ width: weeklyFortune.fortune.health + '%' }"></div>
+              </div>
+              <span class="score-value">{{ weeklyFortune.fortune.health }}</span>
+            </div>
+            <div class="score-row">
+              <span class="score-label">財運</span>
+              <div class="score-bar">
+                <div class="score-fill" :class="getScoreClass(weeklyFortune.fortune.wealth)" :style="{ width: weeklyFortune.fortune.wealth + '%' }"></div>
+              </div>
+              <span class="score-value">{{ weeklyFortune.fortune.wealth }}</span>
+            </div>
+          </div>
+
+          <div v-if="weeklyFortune.lucky" class="lucky-info">
+            <div class="lucky-item">
+              <span class="lucky-label">幸運色</span>
+              <span class="lucky-value">
+                <span class="color-dot" :style="{ background: weeklyFortune.lucky.color_hex }"></span>
+                {{ weeklyFortune.lucky.color }}
+              </span>
+            </div>
+            <div class="lucky-item">
+              <span class="lucky-label">幸運方位</span>
+              <span class="lucky-value">{{ weeklyFortune.lucky.direction }}</span>
+            </div>
           </div>
 
           <div v-if="weeklyFortune.focus" class="weekly-focus">
@@ -299,6 +335,16 @@ function formatDate(dateStr: string) {
             {{ monthlyFortune.year }} 年 {{ monthlyFortune.month }} 月
           </h3>
 
+          <div v-if="monthlyFortune.month_mansion || monthlyFortune.lunar_month" class="month-mansion-info">
+            <span v-if="monthlyFortune.lunar_month" class="lunar-month">農曆{{ monthlyFortune.lunar_month }}月</span>
+            <span v-if="monthlyFortune.month_mansion" class="month-mansion">
+              當月宿：<strong>{{ monthlyFortune.month_mansion.name_jp }}</strong>（{{ monthlyFortune.month_mansion.element }}）
+            </span>
+            <span v-if="monthlyFortune.relation" class="month-relation hint-relation" :class="monthlyFortune.relation.type">
+              {{ monthlyFortune.relation.name }}
+            </span>
+          </div>
+
           <div v-if="monthlyFortune.theme" class="theme-box">
             <h4>{{ monthlyFortune.theme.title }}</h4>
             <p class="theme-focus">{{ monthlyFortune.theme.focus }}</p>
@@ -326,6 +372,20 @@ function formatDate(dateStr: string) {
                 <div class="score-fill" :class="getScoreClass(monthlyFortune.fortune.love)" :style="{ width: monthlyFortune.fortune.love + '%' }"></div>
               </div>
               <span class="score-value">{{ monthlyFortune.fortune.love }}</span>
+            </div>
+            <div class="score-row">
+              <span class="score-label">健康</span>
+              <div class="score-bar">
+                <div class="score-fill" :class="getScoreClass(monthlyFortune.fortune.health)" :style="{ width: monthlyFortune.fortune.health + '%' }"></div>
+              </div>
+              <span class="score-value">{{ monthlyFortune.fortune.health }}</span>
+            </div>
+            <div class="score-row">
+              <span class="score-label">財運</span>
+              <div class="score-bar">
+                <div class="score-fill" :class="getScoreClass(monthlyFortune.fortune.wealth)" :style="{ width: monthlyFortune.fortune.wealth + '%' }"></div>
+              </div>
+              <span class="score-value">{{ monthlyFortune.fortune.wealth }}</span>
             </div>
           </div>
 
@@ -462,6 +522,23 @@ function formatDate(dateStr: string) {
                 <div class="score-fill" :class="getScoreClass(yearlyFortune.fortune.wealth)" :style="{ width: yearlyFortune.fortune.wealth + '%' }"></div>
               </div>
               <span class="score-value">{{ yearlyFortune.fortune.wealth }}</span>
+            </div>
+          </div>
+
+          <div v-if="yearlyFortune.monthly_trend?.length" class="monthly-trend">
+            <h4>每月趨勢</h4>
+            <div class="trend-list">
+              <div
+                v-for="m in yearlyFortune.monthly_trend"
+                :key="m.month"
+                class="trend-item"
+              >
+                <span class="trend-month">{{ m.month }}月</span>
+                <div class="trend-bar">
+                  <div class="trend-fill" :class="getScoreClass(m.score)" :style="{ width: m.score + '%' }"></div>
+                </div>
+                <span class="trend-score" :class="getScoreClass(m.score)">{{ m.score }}</span>
+              </div>
             </div>
           </div>
 
@@ -611,8 +688,8 @@ function formatDate(dateStr: string) {
   transition: width 0.5s ease;
 }
 
-.score-fill.excellent { background: var(--success); }
-.score-fill.good { background: var(--accent); }
+.score-fill.excellent { background: var(--stellar); }
+.score-fill.good { background: var(--success); }
 .score-fill.fair { background: var(--info); }
 .score-fill.caution { background: #eab308; }
 .score-fill.warning { background: var(--warning); }
@@ -625,8 +702,8 @@ function formatDate(dateStr: string) {
   color: var(--text-secondary);
 }
 
-.score-value.excellent { color: var(--success); font-weight: 600; }
-.score-value.good { color: var(--accent); font-weight: 600; }
+.score-value.excellent { color: var(--stellar); font-weight: 600; }
+.score-value.good { color: var(--success); font-weight: 600; }
 .score-value.fair { color: var(--info); font-weight: 600; }
 .score-value.caution { color: #eab308; font-weight: 600; }
 .score-value.warning { color: var(--warning); font-weight: 600; }
@@ -644,6 +721,34 @@ function formatDate(dateStr: string) {
   line-height: 1.5;
   opacity: 0.85;
 }
+
+.score-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-xs) 0;
+  margin-bottom: var(--space-md);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.legend-dot.excellent { background: var(--stellar); }
+.legend-dot.good { background: var(--success); }
+.legend-dot.fair { background: var(--info); }
+.legend-dot.caution { background: #eab308; }
+.legend-dot.warning { background: var(--warning); }
 
 .overall-row {
   padding-bottom: var(--space-sm);
@@ -912,8 +1017,8 @@ function formatDate(dateStr: string) {
   border-radius: var(--radius-full);
 }
 
-.hint-relation.eishin { background: var(--success); color: var(--bg-primary); }
-.hint-relation.gyotai { background: var(--accent); color: var(--bg-primary); }
+.hint-relation.eishin { background: var(--stellar); color: var(--bg-primary); }
+.hint-relation.gyotai { background: var(--success); color: var(--bg-primary); }
 .hint-relation.mei { background: var(--info); color: var(--bg-primary); }
 .hint-relation.yusui { background: var(--text-secondary); color: var(--bg-primary); }
 .hint-relation.kisei { background: #eab308; color: var(--bg-primary); }
@@ -1136,8 +1241,8 @@ function formatDate(dateStr: string) {
   outline-offset: 2px;
 }
 
-.daily-item.excellent { border-bottom: 2px solid var(--success); }
-.daily-item.good { border-bottom: 2px solid var(--accent); }
+.daily-item.excellent { border-bottom: 2px solid var(--stellar); }
+.daily-item.good { border-bottom: 2px solid var(--success); }
 .daily-item.fair { border-bottom: 2px solid var(--info); }
 .daily-item.caution { border-bottom: 2px solid #eab308; }
 .daily-item.warning { border-bottom: 2px solid var(--warning); }
@@ -1277,8 +1382,8 @@ function formatDate(dateStr: string) {
   border-radius: var(--radius-sm);
 }
 
-.week-fill.excellent { background: var(--success); }
-.week-fill.good { background: var(--accent); }
+.week-fill.excellent { background: var(--stellar); }
+.week-fill.good { background: var(--success); }
 .week-fill.fair { background: var(--info); }
 .week-fill.caution { background: #eab308; }
 .week-fill.warning { background: var(--warning); }
@@ -1348,8 +1453,8 @@ function formatDate(dateStr: string) {
   font-variant-numeric: tabular-nums;
 }
 
-.detail-value.excellent { color: var(--success); }
-.detail-value.good { color: var(--accent); }
+.detail-value.excellent { color: var(--stellar); }
+.detail-value.good { color: var(--success); }
 .detail-value.fair { color: var(--info); }
 .detail-value.caution { color: #eab308; }
 .detail-value.warning { color: var(--warning); }
@@ -1381,8 +1486,8 @@ function formatDate(dateStr: string) {
   font-variant-numeric: tabular-nums;
 }
 
-.daily-chip.excellent { border-left: 2px solid var(--success); }
-.daily-chip.good { border-left: 2px solid var(--accent); }
+.daily-chip.excellent { border-left: 2px solid var(--stellar); }
+.daily-chip.good { border-left: 2px solid var(--success); }
 .daily-chip.fair { border-left: 2px solid var(--info); }
 .daily-chip.caution { border-left: 2px solid #eab308; }
 .daily-chip.warning { border-left: 2px solid var(--warning); }
@@ -1444,13 +1549,105 @@ function formatDate(dateStr: string) {
   }
 }
 
+/* Monthly Trend */
+.monthly-trend {
+  margin-bottom: var(--space-md);
+}
+
+.monthly-trend h4 {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.trend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.trend-month {
+  width: 36px;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.trend-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.trend-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 0.5s ease;
+}
+
+.trend-fill.excellent { background: var(--stellar); }
+.trend-fill.good { background: var(--success); }
+.trend-fill.fair { background: var(--info); }
+.trend-fill.caution { background: #eab308; }
+.trend-fill.warning { background: var(--warning); }
+
+.trend-score {
+  width: 28px;
+  text-align: right;
+  font-size: var(--font-xs);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.trend-score.excellent { color: var(--stellar); font-weight: 600; }
+.trend-score.good { color: var(--success); font-weight: 600; }
+.trend-score.fair { color: var(--info); }
+.trend-score.caution { color: #eab308; }
+.trend-score.warning { color: var(--warning); }
+
+/* Month Mansion Info */
+.month-mansion-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.month-mansion-info strong {
+  color: var(--text-primary);
+}
+
+.lunar-month {
+  padding: 2px 8px;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-xs);
+  color: var(--accent);
+  font-weight: 500;
+}
+
 .opportunities,
 .warnings {
   margin-bottom: var(--space-md);
 }
 
 .opportunities h4 {
-  color: var(--success);
+  color: var(--stellar);
   font-size: var(--font-sm);
   margin: 0 0 var(--space-sm);
 }

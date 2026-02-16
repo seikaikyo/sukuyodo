@@ -296,8 +296,8 @@ function getSpecialDayAdvice(type: string): string {
                 <span class="special-day-level" :class="getSpecialDayTypeClass(day.type)">{{ day.level }}</span>
                 <span v-if="day.ryouhan_reversed" class="ryouhan-tag">凌犯</span>
               </div>
-              <p class="special-day-advice">{{ getSpecialDayAdvice(day.type) }}</p>
-              <p v-if="day.ryouhan_reversed" class="ryouhan-note">凌犯期間中のため吉凶が逆轉しています</p>
+              <p class="special-day-advice">{{ day.description || getSpecialDayAdvice(day.type) }}</p>
+              <p v-if="day.ryouhan_reversed" class="ryouhan-note">凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）</p>
             </div>
           </div>
           <div v-else class="no-lucky-days">
@@ -808,8 +808,8 @@ function getSpecialDayAdvice(type: string): string {
   font-size: var(--font-sm);
 }
 
-.day-chip.excellent { border-left: 3px solid var(--success); }
-.day-chip.good { border-left: 3px solid var(--accent); }
+.day-chip.excellent { border-left: 3px solid var(--stellar); }
+.day-chip.good { border-left: 3px solid var(--success); }
 .day-chip.fair { border-left: 3px solid var(--info); }
 .day-chip.caution { border-left: 3px solid #eab308; }
 
@@ -825,8 +825,8 @@ function getSpecialDayAdvice(type: string): string {
   border-radius: var(--radius-sm);
 }
 
-.day-card.excellent { border-left: 3px solid var(--success); }
-.day-card.good { border-left: 3px solid var(--accent); }
+.day-card.excellent { border-left: 3px solid var(--stellar); }
+.day-card.good { border-left: 3px solid var(--success); }
 .day-card.fair { border-left: 3px solid var(--info); }
 .day-card.caution { border-left: 3px solid #eab308; }
 
@@ -868,13 +868,13 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .day-chip.excellent .chip-rating {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--success);
+  background: rgba(212, 160, 23, 0.15);
+  color: var(--stellar);
 }
 
 .day-chip.good .chip-rating {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--accent);
+  background: rgba(74, 155, 107, 0.15);
+  color: var(--success);
 }
 
 .day-chip.fair .chip-rating {
@@ -1273,8 +1273,8 @@ function getSpecialDayAdvice(type: string): string {
   font-size: var(--font-sm);
 }
 
-.compat-score.excellent { color: var(--success); }
-.compat-score.good { color: var(--accent); }
+.compat-score.excellent { color: var(--stellar); }
+.compat-score.good { color: var(--success); }
 .compat-score.fair { color: var(--info); }
 .compat-score.caution { color: #eab308; }
 

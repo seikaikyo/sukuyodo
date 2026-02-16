@@ -128,8 +128,8 @@ function getMansionRelationClass(relationType: string) {
   background: var(--bg-elevated);
 }
 
-.mansion-relation.excellent { border-left: 3px solid var(--success); }
-.mansion-relation.good { border-left: 3px solid var(--accent); }
+.mansion-relation.excellent { border-left: 3px solid var(--stellar); }
+.mansion-relation.good { border-left: 3px solid var(--success); }
 .mansion-relation.fair { border-left: 3px solid var(--info); }
 .mansion-relation.neutral { border-left: 3px solid var(--text-secondary); }
 .mansion-relation.caution { border-left: 3px solid #eab308; }
@@ -150,8 +150,8 @@ function getMansionRelationClass(relationType: string) {
   font-variant-numeric: tabular-nums;
 }
 
-.fortune-score.excellent { color: var(--success); }
-.fortune-score.good { color: var(--accent); }
+.fortune-score.excellent { color: var(--stellar); }
+.fortune-score.good { color: var(--success); }
 .fortune-score.fair { color: var(--info); }
 .fortune-score.caution { color: #eab308; }
 .fortune-score.warning { color: var(--warning); }
@@ -166,8 +166,8 @@ function getMansionRelationClass(relationType: string) {
   font-weight: 600;
 }
 
-.fortune-level.excellent { color: var(--success); }
-.fortune-level.good { color: var(--accent); }
+.fortune-level.excellent { color: var(--stellar); }
+.fortune-level.good { color: var(--success); }
 .fortune-level.fair { color: var(--info); }
 .fortune-level.caution { color: #eab308; }
 .fortune-level.warning { color: var(--warning); }
