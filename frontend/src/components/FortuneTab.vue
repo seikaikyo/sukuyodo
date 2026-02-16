@@ -163,8 +163,14 @@ function formatDate(dateStr: string) {
 
           <div v-if="dailyFortune.sanki" class="sanki-box" :class="{ 'dark-week': dailyFortune.sanki.is_dark_week }">
             <div class="sanki-header">
-              <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">{{ dailyFortune.sanki.period }}</span>
-              <span class="sanki-day-type">{{ dailyFortune.sanki.day_type }}</span>
+              <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">
+                <ruby v-if="dailyFortune.sanki.period_reading">{{ dailyFortune.sanki.period }}<rp>(</rp><rt>{{ dailyFortune.sanki.period_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ dailyFortune.sanki.period }}</template>
+              </span>
+              <span class="sanki-day-type">
+                <ruby v-if="dailyFortune.sanki.day_type_reading">{{ dailyFortune.sanki.day_type }}<rp>(</rp><rt>{{ dailyFortune.sanki.day_type_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ dailyFortune.sanki.day_type }}</template>
+              </span>
               <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黑週（暗黒の一週間）</span>
             </div>
             <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
@@ -176,12 +182,16 @@ function formatDate(dateStr: string) {
               <span class="lucky-label">幸運色</span>
               <span class="lucky-value">
                 <span class="color-dot" :style="{ background: dailyFortune.lucky.color_hex }"></span>
-                {{ dailyFortune.lucky.color }}
+                <ruby v-if="dailyFortune.lucky.color_reading">{{ dailyFortune.lucky.color }}<rp>(</rp><rt>{{ dailyFortune.lucky.color_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ dailyFortune.lucky.color }}</template>
               </span>
             </div>
             <div class="lucky-item">
               <span class="lucky-label">幸運方位</span>
-              <span class="lucky-value">{{ dailyFortune.lucky.direction }}</span>
+              <span class="lucky-value">
+                <ruby v-if="dailyFortune.lucky.direction_reading">{{ dailyFortune.lucky.direction }}<rp>(</rp><rt>{{ dailyFortune.lucky.direction_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ dailyFortune.lucky.direction }}</template>
+              </span>
             </div>
             <div class="lucky-item">
               <span class="lucky-label">幸運數字</span>
@@ -267,12 +277,16 @@ function formatDate(dateStr: string) {
               <span class="lucky-label">幸運色</span>
               <span class="lucky-value">
                 <span class="color-dot" :style="{ background: weeklyFortune.lucky.color_hex }"></span>
-                {{ weeklyFortune.lucky.color }}
+                <ruby v-if="weeklyFortune.lucky.color_reading">{{ weeklyFortune.lucky.color }}<rp>(</rp><rt>{{ weeklyFortune.lucky.color_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ weeklyFortune.lucky.color }}</template>
               </span>
             </div>
             <div class="lucky-item">
               <span class="lucky-label">幸運方位</span>
-              <span class="lucky-value">{{ weeklyFortune.lucky.direction }}</span>
+              <span class="lucky-value">
+                <ruby v-if="weeklyFortune.lucky.direction_reading">{{ weeklyFortune.lucky.direction }}<rp>(</rp><rt>{{ weeklyFortune.lucky.direction_reading }}</rt><rp>)</rp></ruby>
+                <template v-else>{{ weeklyFortune.lucky.direction }}</template>
+              </span>
             </div>
           </div>
 
@@ -341,9 +355,11 @@ function formatDate(dateStr: string) {
               當月宿：<strong>{{ monthlyFortune.month_mansion.name_jp }}</strong>（{{ monthlyFortune.month_mansion.element }}）
             </span>
             <span v-if="monthlyFortune.relation" class="month-relation hint-relation" :class="monthlyFortune.relation.type">
-              {{ monthlyFortune.relation.name }}
+              <ruby v-if="monthlyFortune.relation.reading">{{ monthlyFortune.relation.name }}<rp>(</rp><rt>{{ monthlyFortune.relation.reading }}</rt><rp>)</rp></ruby>
+              <template v-else>{{ monthlyFortune.relation.name }}</template>
             </span>
           </div>
+          <p v-if="monthlyFortune.relation?.description" class="month-relation-desc">{{ monthlyFortune.relation.description }}</p>
 
           <div v-if="monthlyFortune.theme" class="theme-box">
             <h4>{{ monthlyFortune.theme.title }}</h4>
@@ -1639,6 +1655,13 @@ function formatDate(dateStr: string) {
   font-size: var(--font-xs);
   color: var(--accent);
   font-weight: 500;
+}
+
+.month-relation-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-md);
+  line-height: 1.6;
 }
 
 .opportunities,
