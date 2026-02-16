@@ -7,6 +7,7 @@ import type {
   PartnerCompatibility
 } from '../composables/useSukuyodo'
 import { getScoreClass, getScoreLevel } from '../utils/fortune-helpers'
+import { generateCompatReport } from '../utils/report-generator'
 
 const expandedPartnerId = ref<string | null>(null)
 
@@ -234,9 +235,12 @@ function handleMansionClick(m: CompatibleMansion) {
       <div v-if="compatError" class="error-msg">{{ compatError }}</div>
 
       <div v-if="compatibility" class="compat-result">
-        <div class="compat-score" :class="getScoreLevel(compatibility.score).class">
-          <span class="score-num">{{ compatibility.score }}</span>
-          <span class="score-text">{{ getScoreLevel(compatibility.score).text }}</span>
+        <div class="compat-result-header">
+          <div class="compat-score" :class="getScoreLevel(compatibility.score).class">
+            <span class="score-num">{{ compatibility.score }}</span>
+            <span class="score-text">{{ getScoreLevel(compatibility.score).text }}</span>
+          </div>
+          <button class="export-btn" @click="generateCompatReport(compatibility!)">匯出報告</button>
         </div>
 
         <div class="compat-persons">
@@ -740,6 +744,44 @@ function handleMansionClick(m: CompatibleMansion) {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
+}
+
+.compat-result-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  margin-bottom: var(--space-lg);
+}
+
+.compat-result-header .compat-score {
+  margin-bottom: 0;
+}
+
+.compat-result-header .export-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.compat-result-header .export-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.compat-result-header .export-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .compat-score {

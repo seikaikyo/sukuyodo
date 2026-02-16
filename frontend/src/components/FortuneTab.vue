@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 
-import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune } from '../composables/useSukuyodo'
+import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune, Mansion } from '../composables/useSukuyodo'
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
+import { generateDecadeReport } from '../utils/report-generator'
 
 const props = defineProps<{
   activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'
@@ -14,6 +15,8 @@ const props = defineProps<{
   yearlyRangeLoading: boolean
   expandedMonthlyWeek: number | null
   currentWeekNumber: number
+  mansion: Mansion | null
+  birthDate: string
 }>()
 
 const emit = defineEmits<{
@@ -117,6 +120,18 @@ const yGridLines = computed(() => {
 function shortStarName(name: string): string {
   if (name.length <= 2) return name
   return name.replace('曜星', '').replace('星', '')
+}
+
+function exportDecadeReport() {
+  if (!props.mansion || props.yearlyRange.length === 0) return
+  generateDecadeReport({
+    yearlyRange: props.yearlyRange,
+    mansionName: props.mansion.name_jp,
+    mansionReading: props.mansion.reading,
+    mansionElement: props.mansion.element,
+    birthDate: props.birthDate,
+    perspective: decadePerspective.value,
+  })
 }
 </script>
 
@@ -743,6 +758,11 @@ function shortStarName(name: string): string {
             :aria-checked="decadePerspective === 'practitioner'"
             @click="decadePerspective = 'practitioner'"
           >修行者觀</button>
+          <button
+            v-if="yearlyRange.length > 0"
+            class="export-btn"
+            @click="exportDecadeReport"
+          >匯出報告</button>
         </div>
 
         <template v-if="yearlyRangeLoading">
@@ -2361,6 +2381,7 @@ function shortStarName(name: string): string {
 .perspective-toggle {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 4px;
   margin-bottom: var(--space-md);
   background: var(--bg-elevated);
@@ -2369,6 +2390,30 @@ function shortStarName(name: string): string {
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
+}
+
+.export-btn {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+  margin-left: var(--space-sm);
+}
+
+.export-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.export-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .perspective-btn {

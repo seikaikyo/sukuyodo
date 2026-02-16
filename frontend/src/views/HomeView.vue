@@ -225,6 +225,8 @@ onMounted(() => {
         :yearly-range-loading="yearlyRangeLoading"
         :expanded-monthly-week="expandedMonthlyWeek"
         :current-week-number="currentWeekNumber"
+        :mansion="mansion"
+        :birth-date="birthDate"
         @toggle-week="toggleMonthlyWeek"
         @select-day="fetchDailyFortuneForDate"
         @fetch-yearly-range="(s: number, e: number) => fetchYearlyRange(s, e)"
