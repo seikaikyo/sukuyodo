@@ -1595,6 +1595,41 @@ function getSpecialDayAdvice(type: string): string {
   font-weight: 500;
 }
 
+@media (max-width: 767px) {
+  .section-title {
+    font-size: var(--font-base);
+  }
+
+  .special-day-card {
+    padding: var(--space-sm);
+  }
+
+  .special-day-header {
+    gap: var(--space-xs);
+  }
+
+  .senjitsu-chip {
+    min-width: calc(50% - var(--space-sm));
+  }
+
+  .compatibility-row {
+    padding: var(--space-sm);
+    gap: var(--space-sm);
+  }
+
+  .day-card {
+    padding: var(--space-sm);
+  }
+
+  .legend-card {
+    padding: var(--space-sm);
+  }
+
+  .partner-form sl-input {
+    font-size: 16px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lucky-tab {
     animation: none;

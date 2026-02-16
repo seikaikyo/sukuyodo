@@ -1725,6 +1725,55 @@ function formatDate(dateStr: string) {
   padding: var(--space-2xl);
 }
 
+@media (max-width: 767px) {
+  .fortune-card {
+    padding: var(--space-sm);
+  }
+
+  .score-desc {
+    padding-left: calc(40px + var(--space-sm));
+  }
+
+  .score-label {
+    width: 40px;
+  }
+
+  .lucky-info {
+    gap: var(--space-sm);
+  }
+
+  .lucky-item {
+    min-width: calc(50% - var(--space-sm));
+  }
+
+  .daily-item {
+    min-width: 48px;
+    padding: var(--space-xs);
+  }
+
+  .day-score {
+    font-size: var(--font-base);
+  }
+
+  .weekly-item {
+    padding: var(--space-sm);
+    gap: var(--space-xs);
+  }
+
+  .week-num {
+    width: 48px;
+    font-size: var(--font-xs);
+  }
+
+  .trend-month {
+    width: 28px;
+  }
+
+  .kuyou-star-box {
+    padding: var(--space-sm);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fortune-content {
     animation: none;
