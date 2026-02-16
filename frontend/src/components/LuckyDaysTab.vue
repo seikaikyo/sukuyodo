@@ -127,6 +127,14 @@ function getLabelClass(label: string) {
   return classMap[label] || ''
 }
 
+// 配對吉日展開狀態（key = action_key + date）
+const expandedPairDay = ref<string | null>(null)
+
+function togglePairDay(actionKey: string, date: string) {
+  const key = `${actionKey}_${date}`
+  expandedPairDay.value = expandedPairDay.value === key ? null : key
+}
+
 // 圖例展開狀態
 const expandedLegend = ref<string | null>(null)
 
@@ -245,6 +253,16 @@ const selectedPartner = computed(() => {
                     <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
                   </div>
                   <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
+                  <div v-if="day.best_time || day.avoid_time" class="day-times">
+                    <div v-if="day.best_time" class="time-row best">
+                      <span class="time-label">推薦時段</span>
+                      <span class="time-value">{{ day.best_time }}</span>
+                    </div>
+                    <div v-if="day.avoid_time" class="time-row avoid">
+                      <span class="time-label">留意事項</span>
+                      <span class="time-value">{{ day.avoid_time }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div v-else class="no-lucky-days">
@@ -419,16 +437,37 @@ const selectedPartner = computed(() => {
                 class="action-section"
               >
                 <h5 class="action-name">{{ action.name }}</h5>
-                <div v-if="action.lucky_days.length > 0" class="day-chips">
+                <div v-if="action.lucky_days.length > 0" class="day-cards">
                   <div
                     v-for="day in action.lucky_days"
                     :key="day.date"
-                    class="day-chip"
-                    :class="getScoreClass(day.score)"
+                    class="pair-day-card"
+                    :class="[getScoreClass(day.score), { expanded: expandedPairDay === `${action.action}_${day.date}` }]"
                   >
-                    <span class="chip-date">{{ formatDate(day.date) }}</span>
-                    <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                    <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                    <button
+                      class="pair-day-header"
+                      @click="togglePairDay(action.action, day.date)"
+                    >
+                      <span class="chip-date">{{ formatDate(day.date) }}</span>
+                      <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+                      <span class="pair-day-score">{{ day.score }}分</span>
+                      <span class="pair-day-rating" :class="day.rating === '大吉' ? 'top' : day.rating === '吉' ? 'good' : 'mid'">{{ day.rating || getRating(day.score) }}</span>
+                      <span class="pair-day-toggle" aria-hidden="true">{{ expandedPairDay === `${action.action}_${day.date}` ? '▲' : '▼' }}</span>
+                    </button>
+                    <div v-if="expandedPairDay === `${action.action}_${day.date}`" class="pair-day-detail">
+                      <p v-if="day.reason" class="pair-day-reason">{{ day.reason }}</p>
+                      <div v-if="day.best_time || day.avoid_time" class="pair-day-times">
+                        <div v-if="day.best_time" class="time-row best">
+                          <span class="time-label">推薦時段</span>
+                          <span class="time-value">{{ day.best_time }}</span>
+                        </div>
+                        <div v-if="day.avoid_time" class="time-row avoid">
+                          <span class="time-label">留意事項</span>
+                          <span class="time-value">{{ day.avoid_time }}</span>
+                        </div>
+                      </div>
+                      <p v-if="day.tip" class="pair-day-tip">{{ day.tip }}</p>
+                    </div>
                   </div>
                 </div>
                 <div v-else class="no-lucky-days">
@@ -728,6 +767,13 @@ const selectedPartner = computed(() => {
   font-size: var(--font-xs);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.day-times {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
 }
 
 .chip-date {
@@ -1174,6 +1220,153 @@ const selectedPartner = computed(() => {
   font-weight: 600;
   color: var(--accent);
   margin: 0 0 var(--space-sm);
+}
+
+/* 配對吉日卡片 */
+.pair-day-card {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.pair-day-card.excellent {
+  border-left: 4px solid #b45309;
+  background: rgba(180, 83, 9, 0.06);
+}
+
+.pair-day-card.good {
+  border-left: 4px solid #16a34a;
+  background: rgba(22, 163, 74, 0.06);
+}
+
+.pair-day-card.fair {
+  border-left: 4px solid var(--info);
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.pair-day-card.caution {
+  border-left: 4px solid #eab308;
+  background: rgba(234, 179, 8, 0.06);
+}
+
+.pair-day-card.expanded {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pair-day-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  text-align: left;
+}
+
+.pair-day-header:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.pair-day-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.pair-day-rating {
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.pair-day-rating.top {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  color: #fff;
+}
+
+.pair-day-rating.good {
+  background: #16a34a;
+  color: #fff;
+}
+
+.pair-day-rating.mid {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--info);
+}
+
+.pair-day-toggle {
+  font-size: var(--font-xs);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.pair-day-detail {
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.pair-day-reason {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.pair-day-times {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.time-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  font-size: var(--font-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-xs);
+}
+
+.time-row.best {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.time-row.avoid {
+  background: rgba(234, 179, 8, 0.08);
+}
+
+.time-label {
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.time-row.best .time-label {
+  color: #16a34a;
+}
+
+.time-row.avoid .time-label {
+  color: #b45309;
+}
+
+.time-value {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.pair-day-tip {
+  margin: 0;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.5;
 }
 
 /* 對話框表單 */

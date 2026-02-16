@@ -328,6 +328,9 @@ export interface LuckyDay {
   score: number
   rating?: string
   reason: string
+  best_time?: string
+  avoid_time?: string
+  tip?: string
 }
 
 export interface LuckyDayResult {

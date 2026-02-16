@@ -2228,12 +2228,18 @@ class SukuyodoService:
             if is_lucky and len(lucky_days) < 8:
                 # 計算評級
                 rating = "大吉" if score >= 85 else "吉" if score >= 70 else "中吉"
+
+                # 時段建議
+                time_tip = self._get_personal_time_tip(day_element, user_element, action)
+
                 lucky_days.append({
                     "date": check_date.isoformat(),
                     "weekday": day_name,
                     "score": score,
                     "rating": rating,
-                    "reason": lucky_reason
+                    "reason": lucky_reason,
+                    "best_time": time_tip["best_time"],
+                    "avoid_time": time_tip["avoid_time"]
                 })
 
         return {
@@ -2474,6 +2480,100 @@ class SukuyodoService:
         }
     }
 
+    def _get_personal_time_tip(self, day_element: str, user_element: str, action: str) -> dict:
+        """根據七曜元素和本命元素生成個人吉日的時段建議"""
+
+        ELEMENT_PEAK = {
+            "日": "上午十點到中午",
+            "月": "傍晚到晚間",
+            "火": "下午兩點到四點",
+            "水": "上午九點到十一點",
+            "木": "上午到午後",
+            "金": "下午三點到五點",
+            "土": "早上八點到十點",
+        }
+
+        ELEMENT_AVOID = {
+            "日": "傍晚後能量消退，重要決定不要拖到晚上",
+            "月": "正午前後能量弱，避免安排正式場合",
+            "火": "晚間容易浮躁，不適合需要耐心的事",
+            "水": "下午注意力容易下降，複雜事務排上午",
+            "木": "傍晚後能量分散，日落前完成重要的事",
+            "金": "上午能量還沒到位，重要的事排下午",
+            "土": "午後容易拖延，早辦早好",
+        }
+
+        return {
+            "best_time": ELEMENT_PEAK.get(day_element, "上午"),
+            "avoid_time": ELEMENT_AVOID.get(day_element, "")
+        }
+
+    def _get_pair_time_tip(
+        self,
+        relation1_type: str,
+        relation2_type: str,
+        day_element: str,
+        element1: str,
+        element2: str,
+        action_key: str
+    ) -> dict:
+        """根據雙方宿曜關係和七曜元素生成時段建議"""
+
+        # 七曜元素對應的能量高峰時段
+        ELEMENT_PEAK_HOURS = {
+            "日": {"peak": "10:00-12:00", "label": "上午十點到中午", "note": "日曜能量在正午前最強，適合正式場合"},
+            "月": {"peak": "18:00-21:00", "label": "傍晚到晚間", "note": "月曜能量在日落後漸強，適合輕鬆的互動"},
+            "火": {"peak": "14:00-16:00", "label": "下午兩點到四點", "note": "火曜能量在午後達到高峰，適合需要活力的活動"},
+            "水": {"peak": "09:00-11:00", "label": "上午九點到十一點", "note": "水曜能量在早晨清澈穩定，適合需要思考的事務"},
+            "木": {"peak": "10:00-14:00", "label": "上午到午後", "note": "木曜能量持續時間長，上午到午後都適合行動"},
+            "金": {"peak": "15:00-17:00", "label": "下午三點到五點", "note": "金曜能量在午後偏晚時段最集中，適合簽約和決策"},
+            "土": {"peak": "08:00-10:00", "label": "早上八點到十點", "note": "土曜能量在清晨最穩定，早起行動效果最好"},
+        }
+
+        # 避免的時段
+        ELEMENT_AVOID_HOURS = {
+            "日": "傍晚後日曜能量消退，重要決定不要拖到晚上",
+            "月": "中午前後月曜能量最弱，避免安排正式場合",
+            "火": "晚間火曜容易讓人浮躁，不適合需要耐心的溝通",
+            "水": "下午容易疲倦，注意力下降，避免處理複雜事務",
+            "木": "傍晚後能量分散，盡量在日落前完成重要的事",
+            "金": "上午金曜能量還沒到位，重要的事排在下午比較好",
+            "土": "午後土曜能量變得沉重，容易拖延，早辦早好",
+        }
+
+        peak = ELEMENT_PEAK_HOURS.get(day_element, ELEMENT_PEAK_HOURS["土"])
+        avoid = ELEMENT_AVOID_HOURS.get(day_element, "")
+
+        # 根據行動類型微調建議
+        ACTION_TIME_TIPS = {
+            "date": "約會選在能量高峰前後，兩人的互動會更自然放鬆。不用趕時間，留充裕的相處空間",
+            "dinner": "晚餐約會選在六點半到七點入座。太早趕、太晚餓，剛好的時間讓談話更從容",
+            "trip": "出發時間盡量排在上午。早出門的旅途心情比較好，也有更多時間享受目的地",
+            "gift": "挑禮物選在自己狀態好的時段去，你的品味判斷力跟精神狀態直接相關",
+            "meeting": "正式場合排在雙方都精神好的時段。開場前十分鐘到場，從容的態度是最好的開場白",
+            "register": "登記和簽約選上午，精神清醒而且處理完還有一整天可以慶祝",
+            "wedding": "婚禮儀式排在上午到中午，賓客的精神和心情都在最好的狀態",
+            "engagement": "訂婚是溫馨的場合，下午茶時段或晚餐時段都適合，選雙方家庭方便的時間",
+            "parent_visit": "拜訪長輩選上午或午後，避開午休時段。帶一份對方喜歡的點心，比空手更體面",
+            "family_dinner": "家庭聚餐選週末中午或傍晚。人齊比時間完美更重要",
+        }
+
+        tip = ACTION_TIME_TIPS.get(action_key, "")
+
+        # 如果雙方都是好關係，給更積極的提示
+        good_relations = {"eishin", "gyotai", "mei", "yusui"}
+        if relation1_type in good_relations and relation2_type in good_relations:
+            if not tip:
+                tip = f"雙方能量都處於良好狀態，{peak['label']}行動效果最好"
+        elif not tip:
+            tip = peak["note"]
+
+        return {
+            "best_time": peak["label"],
+            "avoid_time": avoid,
+            "tip": tip
+        }
+
     def get_pair_lucky_days(
         self,
         birth_date1: date,
@@ -2535,6 +2635,7 @@ class SukuyodoService:
                 jp_weekday = (weekday + 1) % 7
                 day_info = fortune_data["weekday_elements"][str(jp_weekday)]
                 day_name = day_info["name"]
+                day_element = day_info["element"]
 
                 # 計算當日宿
                 lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
@@ -2566,12 +2667,23 @@ class SukuyodoService:
 
                 if is_lucky and len(lucky_days) < 5:
                     rating = "大吉" if avg_score >= 85 else "吉" if avg_score >= 70 else "中吉"
+
+                    # 時段建議
+                    time_tip = self._get_pair_time_tip(
+                        relation1["type"], relation2["type"],
+                        day_element, mansion1["element"], mansion2["element"],
+                        action["key"]
+                    )
+
                     lucky_days.append({
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": avg_score,
                         "rating": rating,
-                        "reason": lucky_reason
+                        "reason": lucky_reason,
+                        "best_time": time_tip["best_time"],
+                        "avoid_time": time_tip["avoid_time"],
+                        "tip": time_tip["tip"]
                     })
 
             results.append({
