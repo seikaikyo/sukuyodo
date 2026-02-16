@@ -884,10 +884,10 @@ function getKuyouRowClass(level: string) {
 .cell-kongou { color: #5B8FA8; font-weight: 600; }
 .cell-rasetsu { color: #E85D4C; font-weight: 600; }
 
-.kuyou-row-great td { background: rgba(196, 160, 82, 0.08); }
-.kuyou-row-good td { background: rgba(91, 143, 168, 0.08); }
-.kuyou-row-half td { background: rgba(168, 162, 158, 0.08); }
-.kuyou-row-bad td { background: rgba(232, 93, 76, 0.08); }
+.kuyou-row-great td { background: rgba(196, 160, 82, 0.15); }
+.kuyou-row-good td { background: rgba(91, 143, 168, 0.15); }
+.kuyou-row-half td { background: rgba(168, 162, 158, 0.12); }
+.kuyou-row-bad td { background: rgba(232, 93, 76, 0.15); }
 
 @media (max-width: 767px) {
   .elements-grid {

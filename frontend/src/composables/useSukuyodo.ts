@@ -675,7 +675,6 @@ export function useSukuyodo() {
   const weeklyFortune = ref<WeeklyFortune | null>(null)
   const monthlyFortune = ref<MonthlyFortune | null>(null)
   const yearlyFortune = ref<YearlyFortune | null>(null)
-  const fortuneLoading = ref(false)
 
   // Monthly Week Expansion
   const expandedMonthlyWeek = ref<number | null>(null)
@@ -824,8 +823,6 @@ export function useSukuyodo() {
 
   async function fetchDailyFortune() {
     if (!birthDate.value) return
-    fortuneLoading.value = true
-
     const today = new Date().toISOString().split('T')[0]
     try {
       const res = await fetch(getApiUrl(`/fortune/daily/${today}?birth_date=${birthDate.value}`))
@@ -837,15 +834,11 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch daily fortune')
-    } finally {
-      fortuneLoading.value = false
     }
   }
 
   async function fetchDailyFortuneForDate(targetDate: string) {
     if (!birthDate.value) return
-    fortuneLoading.value = true
-
     try {
       const res = await fetch(getApiUrl(`/fortune/daily/${targetDate}?birth_date=${birthDate.value}`))
       if (res.ok) {
@@ -857,15 +850,11 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch daily fortune for date')
-    } finally {
-      fortuneLoading.value = false
     }
   }
 
   async function fetchWeeklyFortune() {
     if (!birthDate.value) return
-    fortuneLoading.value = true
-
     // 使用今天作為中心日期（滾動視窗）
     const today = new Date().toISOString().split('T')[0]
 
@@ -879,8 +868,6 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch weekly fortune')
-    } finally {
-      fortuneLoading.value = false
     }
   }
 
@@ -901,8 +888,6 @@ export function useSukuyodo() {
 
   async function fetchMonthlyFortune() {
     if (!birthDate.value) return
-    fortuneLoading.value = true
-
     const now = new Date()
     try {
       const res = await fetch(getApiUrl(`/fortune/monthly/${now.getFullYear()}/${now.getMonth() + 1}?birth_date=${birthDate.value}`))
@@ -918,15 +903,11 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch monthly fortune')
-    } finally {
-      fortuneLoading.value = false
     }
   }
 
   async function fetchYearlyFortune() {
     if (!birthDate.value) return
-    fortuneLoading.value = true
-
     const year = new Date().getFullYear()
     try {
       const res = await fetch(getApiUrl(`/fortune/yearly/${year}?birth_date=${birthDate.value}`))
@@ -938,8 +919,6 @@ export function useSukuyodo() {
       }
     } catch {
       console.error('Failed to fetch yearly fortune')
-    } finally {
-      fortuneLoading.value = false
     }
   }
 
@@ -1321,7 +1300,6 @@ export function useSukuyodo() {
     weeklyFortune,
     monthlyFortune,
     yearlyFortune,
-    fortuneLoading,
     expandedMonthlyWeek,
     currentWeekNumber,
 

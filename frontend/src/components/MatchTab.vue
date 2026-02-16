@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import type {
   CompatibilityFinderResult,
   CompatibleMansion,
@@ -11,7 +11,14 @@ import { getScoreClass, getScoreLevel } from '../utils/fortune-helpers'
 const expandedPartnerId = ref<string | null>(null)
 
 function togglePartner(id: string) {
-  expandedPartnerId.value = expandedPartnerId.value === id ? null : id
+  const isExpanding = expandedPartnerId.value !== id
+  expandedPartnerId.value = isExpanding ? id : null
+  if (isExpanding) {
+    nextTick(() => {
+      const el = document.querySelector('.partner-detail')
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }
 }
 
 const props = defineProps<{
