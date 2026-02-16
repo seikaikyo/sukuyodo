@@ -3032,6 +3032,7 @@ class SukuyodoService:
                     "favor_weekdays": [2, 4],
                     "avoid_weekdays": [1],
                     "avoid_birth_mansion": True,
+                    "favor_mansions": [11, 8, 21],
                     "favor_score": 70
                 }
             }
@@ -3114,7 +3115,11 @@ class SukuyodoService:
         avoid_relations = action_config.get("avoid_relations", ["ankai", "kisei"])
         favor_score = action_config.get("favor_score", 70)
         favor_weekdays = action_config.get("favor_weekdays", None)
+        favor_mansions = action_config.get("favor_mansions", None)
         month_day_range = action_config.get("month_day_range", None)
+
+        # 吉宿名稱對照（用於顯示）
+        mansion_names = {11: "室宿", 8: "女宿", 21: "鬼宿"}
 
         for i in range(days_ahead):
             check_date = today + timedelta(days=i)
@@ -3200,6 +3205,10 @@ class SukuyodoService:
             if relation_type in favor_relations:
                 is_lucky = True
                 lucky_reason = f"{relation['name']}日，{self._get_relation_benefit(relation_type, action)}"
+            elif favor_mansions and day_mansion_index in favor_mansions:
+                is_lucky = True
+                m_name = mansion_names.get(day_mansion_index, f"index {day_mansion_index}")
+                lucky_reason = f"當日宿為{m_name}，傳統上特別適合{action_config['name']}。{m_name}之日淨身修儀，事半功倍"
             elif day_element == user_element and score >= favor_score:
                 is_lucky = True
                 lucky_reason = f"{day_name}（{day_element}曜）與你的本命元素相同，能量共振特別強烈。這天你的狀態比平時穩定，做需要專注和耐心的事情效率最高"
