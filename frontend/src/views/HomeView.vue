@@ -169,6 +169,7 @@ onMounted(() => {
       :daily-fortune="dailyFortune"
       :element-color="mansionElementColor"
       @query="showQueryDialog = true"
+      @navigate-fortune="activeMainTab = 'fortune'; activeFortuneTab = 'daily'"
     />
 
     <!-- Empty State -->

@@ -474,6 +474,11 @@ function handleMansionClick(m: CompatibleMansion) {
               <div class="partner-relation">
                 <span class="relation-name">{{ pc.relation.name }}</span>
                 <span v-if="pc.relation.distance_type_name" class="distance-tag" :class="pc.relation.distance_type">{{ pc.relation.distance_type_name }}</span>
+                <div v-if="pc.relation.direction" class="partner-directions">
+                  <span class="dir-tag">你→{{ pc.relation.direction }}</span>
+                  <span class="dir-tag">{{ pc.nickname.charAt(0) }}→{{ getInverseDirection(pc.relation.direction) }}</span>
+                </div>
+                <span v-if="pc.calculation?.element_relation" class="element-mini-tag">{{ pc.calculation.element_relation.replace(/[+\-]\d+\s*分/, '').trim() }}</span>
               </div>
               <div class="partner-score">
                 <span class="score-num">{{ pc.score }}</span>
@@ -1317,6 +1322,29 @@ function handleMansionClick(m: CompatibleMansion) {
 .partner-relation .relation-name {
   color: var(--accent);
   font-size: var(--font-sm);
+}
+
+.partner-directions {
+  display: flex;
+  gap: 4px;
+}
+
+.dir-tag {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.element-mini-tag {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  padding: 1px 6px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 .partner-score .score-num {

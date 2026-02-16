@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   query: []
+  'navigate-fortune': []
 }>()
 </script>
 
@@ -35,7 +36,12 @@ const emit = defineEmits<{
         <span class="relation-desc">{{ dailyFortune.mansion_relation.description }}</span>
       </div>
     </div>
-    <div class="summary-fortune">
+    <button
+      class="summary-fortune"
+      :disabled="!dailyFortune"
+      aria-label="查看今日運勢詳情"
+      @click="dailyFortune && emit('navigate-fortune')"
+    >
       <template v-if="dailyFortune">
         <div class="fortune-score" :class="getFortuneLevel(dailyFortune.fortune.overall).class">
           {{ dailyFortune.fortune.overall }}
@@ -46,7 +52,7 @@ const emit = defineEmits<{
         </div>
       </template>
       <sl-spinner v-else></sl-spinner>
-    </div>
+    </button>
   </section>
 </template>
 
@@ -136,6 +142,28 @@ const emit = defineEmits<{
   align-items: center;
   gap: var(--space-xs);
   min-width: 80px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+  font: inherit;
+  color: inherit;
+}
+
+.summary-fortune:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.summary-fortune:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.summary-fortune:disabled {
+  cursor: default;
 }
 
 .fortune-score {

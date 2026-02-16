@@ -675,7 +675,7 @@ export function useSukuyodo() {
 
   // Tab Navigation
   const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
-  const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'>('daily')
+  const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'decade'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
   const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
 
