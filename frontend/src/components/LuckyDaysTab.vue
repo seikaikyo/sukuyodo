@@ -267,7 +267,7 @@ function getSpecialDayAdvice(type: string): string {
             <sl-icon name="calendar2-check"></sl-icon>
             本月特殊日
           </h3>
-          <p class="section-desc">不分本命宿，所有人共通的宿曜吉凶日。可用來安排重要行程或避開不利日期。</p>
+          <p class="section-desc"><strong>不分本命宿，所有人共通</strong>的宿曜吉凶日。可用來安排重要行程或避開不利日期。</p>
 
           <div class="special-days-nav">
             <button class="nav-btn" @click="changeSpecialDaysMonth(-1)">
@@ -506,6 +506,9 @@ function getSpecialDayAdvice(type: string): string {
               </div>
               <div class="compat-score" :class="getScoreClass(pairLuckyDays.compatibility.score)">
                 <span class="score-label">{{ pairLuckyDays.compatibility.relation }}</span>
+                <div class="mini-score-bar">
+                  <div class="mini-score-fill" :class="getScoreClass(pairLuckyDays.compatibility.score)" :style="{ width: pairLuckyDays.compatibility.score + '%' }"></div>
+                </div>
                 <span class="score-value">{{ pairLuckyDays.compatibility.score }}分</span>
               </div>
             </div>
@@ -1277,6 +1280,25 @@ function getSpecialDayAdvice(type: string): string {
 .compat-score.good { color: var(--success); }
 .compat-score.fair { color: var(--info); }
 .compat-score.caution { color: #eab308; }
+
+.mini-score-bar {
+  width: 80px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mini-score-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.mini-score-fill.excellent { background: var(--stellar); }
+.mini-score-fill.good { background: var(--success); }
+.mini-score-fill.fair { background: var(--info); }
+.mini-score-fill.caution { background: #eab308; }
 
 .pair-actions {
   display: flex;

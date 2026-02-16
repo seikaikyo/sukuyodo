@@ -893,7 +893,9 @@ function handleMansionClick(m: CompatibleMansion) {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
   margin-bottom: var(--space-lg);
   flex-wrap: wrap;
 }

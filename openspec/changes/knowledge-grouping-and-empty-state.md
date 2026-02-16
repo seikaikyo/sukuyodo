@@ -1,7 +1,7 @@
 ---
 title: 知識 tab 分組、空狀態改善、關係手風琴
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

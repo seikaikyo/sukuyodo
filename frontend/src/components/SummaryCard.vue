@@ -50,7 +50,8 @@ function getMansionRelationClass(relationType: string) {
         class="mansion-relation"
         :class="getMansionRelationClass(dailyFortune.mansion_relation.type)"
       >
-        今日與本命宿關係：{{ dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）- {{ dailyFortune.mansion_relation.description }}
+        <span class="relation-title">今日與本命宿關係：<strong>{{ dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）</strong></span>
+        <span class="relation-desc">{{ dailyFortune.mansion_relation.description }}</span>
       </div>
     </div>
     <div class="summary-fortune">
@@ -122,10 +123,23 @@ function getMansionRelationClass(relationType: string) {
 }
 
 .mansion-relation {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   font-size: var(--font-sm);
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
+}
+
+.relation-title {
+  line-height: 1.4;
+}
+
+.relation-desc {
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
+  line-height: 1.4;
 }
 
 .mansion-relation.excellent { border-left: 3px solid var(--stellar); }
