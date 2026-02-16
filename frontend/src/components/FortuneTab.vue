@@ -122,10 +122,28 @@ function formatDate(dateStr: string) {
             </div>
           </div>
 
-          <div v-if="dailyFortune.special_day" class="special-day-banner" :class="dailyFortune.special_day.type">
+          <div v-if="dailyFortune.special_day" class="special-day-banner" :class="[dailyFortune.special_day.type, { reversed: dailyFortune.special_day.ryouhan_reversed }]">
             <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
             <span class="special-day-name">{{ dailyFortune.special_day.name }}</span>
             <p class="special-day-desc">{{ dailyFortune.special_day.description }}</p>
+            <p v-if="dailyFortune.special_day.ryouhan_reversed" class="special-day-reversed">
+              凌犯期間中のため吉凶が逆轉しています
+            </p>
+          </div>
+
+          <div v-if="dailyFortune.ryouhan" class="ryouhan-banner">
+            <span class="ryouhan-label">凌犯期間</span>
+            <p class="ryouhan-desc">{{ dailyFortune.ryouhan.description }}</p>
+          </div>
+
+          <div v-if="dailyFortune.rokugai" class="rokugai-banner">
+            <span class="rokugai-label">六害宿「{{ dailyFortune.rokugai.name }}」</span>
+            <p class="rokugai-desc">{{ dailyFortune.rokugai.description }}</p>
+          </div>
+
+          <div v-if="dailyFortune.sanki" class="sanki-badge">
+            <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">{{ dailyFortune.sanki.period }}</span>
+            <span class="sanki-day">第{{ dailyFortune.sanki.day_in_period }}天</span>
           </div>
 
           <div class="lucky-info">
@@ -670,6 +688,103 @@ function formatDate(dateStr: string) {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.special-day-reversed {
+  width: 100%;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-xs);
+  color: #b8860b;
+  font-weight: 600;
+}
+
+.special-day-banner.reversed {
+  border-style: dashed;
+}
+
+.ryouhan-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  background: linear-gradient(135deg, rgba(128, 0, 128, 0.10), rgba(100, 0, 100, 0.06));
+  border: 1px dashed rgba(128, 0, 128, 0.4);
+}
+
+.ryouhan-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(128, 0, 128, 0.2);
+  color: #7b1fa2;
+  white-space: nowrap;
+}
+
+.ryouhan-desc {
+  width: 100%;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.rokugai-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  background: linear-gradient(135deg, rgba(180, 0, 0, 0.12), rgba(150, 0, 0, 0.06));
+  border: 1px solid rgba(180, 0, 0, 0.5);
+}
+
+.rokugai-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(180, 0, 0, 0.25);
+  color: #b71c1c;
+  white-space: nowrap;
+}
+
+.rokugai-desc {
+  width: 100%;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.sanki-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-md);
+  font-size: var(--font-sm);
+}
+
+.sanki-period {
+  font-weight: 600;
+}
+
+.sanki-1 { color: #2196f3; }
+.sanki-2 { color: #f44336; }
+.sanki-3 { color: #4caf50; }
+
+.sanki-day {
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
 }
 
 .lucky-info {

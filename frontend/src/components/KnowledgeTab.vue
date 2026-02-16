@@ -2,8 +2,10 @@
 import MansionWheel from './MansionWheel.vue'
 import type { Mansion, WheelMansion, RelationType, ElementType, Metadata } from '../composables/useSukuyodo'
 
+type KnowledgeActiveTab = 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'
+
 const props = defineProps<{
-  activeTab: 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history'
+  activeTab: KnowledgeActiveTab
   mansion: Mansion | null
   mansionElementColor: string
   allMansions: WheelMansion[]
@@ -15,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:activeTab': [value: 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history']
+  'update:activeTab': [value: KnowledgeActiveTab]
   'update:selectedWheelMansion': [value: WheelMansion | null]
 }>()
 
@@ -89,6 +91,22 @@ function getKuyouRowClass(level: string) {
         aria-controls="panel-knowledge-kuyou"
         @click="emit('update:activeTab', 'kuyou')"
       >九曜</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'ryouhan' }"
+        role="tab"
+        :aria-selected="activeTab === 'ryouhan'"
+        aria-controls="panel-knowledge-ryouhan"
+        @click="emit('update:activeTab', 'ryouhan')"
+      >凌犯</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'sanki' }"
+        role="tab"
+        :aria-selected="activeTab === 'sanki'"
+        aria-controls="panel-knowledge-sanki"
+        @click="emit('update:activeTab', 'sanki')"
+      >三期</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'calendar' }"
@@ -301,6 +319,49 @@ function getKuyouRowClass(level: string) {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ryouhan -->
+    <div v-if="activeTab === 'ryouhan'" id="panel-knowledge-ryouhan" class="knowledge-content" role="tabpanel">
+      <div class="calendar-info" v-if="metadata?.ryouhan_knowledge">
+        <h3>{{ metadata.ryouhan_knowledge.title }}</h3>
+        <div class="history-sections">
+          <div v-for="(section, i) in metadata.ryouhan_knowledge.sections" :key="'rh-' + i" class="history-item">
+            <h4>{{ section.title }}</h4>
+            <p>{{ section.content }}</p>
+          </div>
+        </div>
+        <div v-if="metadata.ryouhan_knowledge.ryouhan_table" class="knowledge-table-section">
+          <h4 class="table-subtitle">{{ metadata.ryouhan_knowledge.ryouhan_table.description }}</h4>
+          <div class="calendar-table">
+            <table>
+              <thead>
+                <tr>
+                  <th v-for="h in metadata.ryouhan_knowledge.ryouhan_table.headers" :key="h">{{ h }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in metadata.ryouhan_knowledge.ryouhan_table.rows" :key="'rhrow-' + i">
+                  <td v-for="(cell, j) in row" :key="'rhcell-' + j">{{ cell }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sanki -->
+    <div v-if="activeTab === 'sanki'" id="panel-knowledge-sanki" class="knowledge-content" role="tabpanel">
+      <div class="calendar-info" v-if="metadata?.sanki_knowledge">
+        <h3>{{ metadata.sanki_knowledge.title }}</h3>
+        <div class="history-sections">
+          <div v-for="(section, i) in metadata.sanki_knowledge.sections" :key="'sk-' + i" class="history-item">
+            <h4>{{ section.title }}</h4>
+            <p>{{ section.content }}</p>
           </div>
         </div>
       </div>

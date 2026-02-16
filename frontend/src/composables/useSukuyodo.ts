@@ -136,6 +136,28 @@ export interface DailyFortune {
     reading: string
     level: string
     description: string
+    ryouhan_reversed?: boolean
+    original_level?: string
+  } | null
+  ryouhan?: {
+    active: boolean
+    lunar_month: number
+    start_day: number
+    end_day: number
+    description: string
+  } | null
+  rokugai?: {
+    active: boolean
+    name: string
+    severity: number
+    description: string
+  } | null
+  sanki?: {
+    period: string
+    period_reading: string
+    period_index: number
+    day_in_period: number
+    description: string
   } | null
 }
 
@@ -446,6 +468,7 @@ export interface SpecialDay {
   mansion: string
   mansion_reading: string
   description: string
+  ryouhan_reversed?: boolean
 }
 
 export interface SpecialDaysResult {
@@ -581,6 +604,19 @@ export interface Metadata {
   practical_guide?: PracticalGuide[]
   special_days_knowledge?: SpecialDaysKnowledge
   kuyou_knowledge?: KuyouKnowledge
+  ryouhan_knowledge?: {
+    title: string
+    sections: { title: string; content: string }[]
+    ryouhan_table?: {
+      description: string
+      headers: string[]
+      rows: string[][]
+    }
+  }
+  sanki_knowledge?: {
+    title: string
+    sections: { title: string; content: string }[]
+  }
   month_mansion_table?: MonthMansionTable
 }
 
@@ -600,7 +636,7 @@ export function useSukuyodo() {
   const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
   const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
-  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'calendar' | 'history'>('mansion')
+  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
 
   // Query UI
   const showQueryDialog = ref(false)

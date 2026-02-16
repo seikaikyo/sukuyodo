@@ -294,8 +294,10 @@ function getSpecialDayAdvice(type: string): string {
                 <span class="special-day-weekday">{{ day.weekday }}</span>
                 <span class="special-day-type-badge" :class="getSpecialDayTypeClass(day.type)">{{ day.name }}</span>
                 <span class="special-day-level" :class="getSpecialDayTypeClass(day.type)">{{ day.level }}</span>
+                <span v-if="day.ryouhan_reversed" class="ryouhan-tag">凌犯</span>
               </div>
               <p class="special-day-advice">{{ getSpecialDayAdvice(day.type) }}</p>
+              <p v-if="day.ryouhan_reversed" class="ryouhan-note">凌犯期間中のため吉凶が逆轉しています</p>
             </div>
           </div>
           <div v-else class="no-lucky-days">
@@ -1552,6 +1554,22 @@ function getSpecialDayAdvice(type: string): string {
   color: var(--text-secondary);
   margin: var(--space-xs) 0 0;
   line-height: 1.5;
+}
+
+.ryouhan-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(128, 0, 128, 0.15);
+  color: #7b1fa2;
+  font-weight: 600;
+}
+
+.ryouhan-note {
+  font-size: var(--font-xs);
+  color: #7b1fa2;
+  margin: 2px 0 0;
+  font-weight: 500;
 }
 
 @media (prefers-reduced-motion: reduce) {

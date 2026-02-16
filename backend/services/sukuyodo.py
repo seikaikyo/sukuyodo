@@ -826,6 +826,59 @@ class SukuyodoService:
         }
     }
 
+    # 凌犯期間（七曜陵逼）查表
+    # key: (農曆月, 朔日七曜) → (開始日, 結束日)
+    # 農曆月: 1-12, 七曜: 0=日,1=月,2=火,3=水,4=木,5=金,6=土
+    # 根據 nakshatra.tokyo 及宿曜經卷五
+    RYOUHAN_MAP = {
+        (1, 6): (1, 16),    # 正月 土曜 → 1-16日
+        (1, 0): (17, 30),   # 正月 日曜 → 17-30日
+        (2, 1): (1, 14),    # 二月 月曜 → 1-14日
+        (2, 2): (15, 30),   # 二月 火曜 → 15-30日
+        (3, 3): (1, 12),    # 三月 水曜 → 1-12日
+        (3, 4): (13, 30),   # 三月 木曜 → 13-30日
+        (4, 5): (1, 10),    # 四月 金曜 → 1-10日
+        (4, 6): (11, 30),   # 四月 土曜 → 11-30日
+        (5, 0): (1, 8),     # 五月 日曜 → 1-8日
+        (5, 1): (9, 30),    # 五月 月曜 → 9-30日
+        (6, 2): (1, 6),     # 六月 火曜 → 1-6日
+        (6, 3): (7, 30),    # 六月 水曜 → 7-30日
+        (7, 5): (1, 3),     # 七月 金曜 → 1-3日
+        (7, 6): (4, 30),    # 七月 土曜 → 4-30日
+        (8, 2): (1, 27),    # 八月 火曜 → 1-27日
+        (9, 4): (1, 25),    # 九月 木曜 → 1-25日
+        (9, 5): (26, 30),   # 九月 金曜 → 26-30日
+        (10, 6): (1, 23),   # 十月 土曜 → 1-23日
+        (10, 0): (24, 30),  # 十月 日曜 → 24-30日
+        (11, 2): (1, 20),   # 十一月 火曜 → 1-20日
+        (11, 3): (21, 30),  # 十一月 水曜 → 21-30日
+        (12, 4): (1, 18),   # 十二月 木曜 → 1-18日
+        (12, 5): (19, 30),  # 十二月 金曜 → 19-30日
+    }
+
+    # 六害宿：凌犯期間中以本命宿為基準的 6 個大凶日宿
+    # 反時計方向（宿曜盤上逆行）偏移量
+    # 凶度排序：命宿 > 事宿 > 意宿 > 聚宿 > 同宿 > 克宿
+    ROKUGAI_OFFSETS = {
+        "命宿": {"offset": 0, "severity": 1},   # 本命宿
+        "意宿": {"offset": 2, "severity": 3},   # 第 2 位
+        "事宿": {"offset": 8, "severity": 2},   # 第 8 位
+        "克宿": {"offset": 11, "severity": 6},  # 第 11 位
+        "聚宿": {"offset": 14, "severity": 4},  # 第 14 位
+        "同宿": {"offset": 18, "severity": 5},  # 第 18 位
+    }
+
+    # 三期サイクル：27 日為一循環，分三期各 9 天
+    # 每期的起始關係和名稱
+    SANKI_CYCLE = [
+        {"name": "躍動の週", "reading": "やくどうのしゅう", "start_relation": "命",
+         "description": "活動期。27日循環的第一期（一九），從命宿開始。能量充沛，適合積極行動、開展新事。"},
+        {"name": "破壊の週", "reading": "はかいのしゅう", "start_relation": "業",
+         "description": "衰退期。27日循環的第二期（二九），從業宿開始。前期積累的問題浮現，宜收斂整理。"},
+        {"name": "再生の週", "reading": "さいせいのしゅう", "start_relation": "胎",
+         "description": "轉換期。27日循環的第三期（三九），從胎宿開始。舊的結束、新的萌芽，適合反省與準備。"},
+    ]
+
     # 月運勢專用描述
     MONTHLY_FORTUNE_DESCRIPTIONS = {
         "eishin": [
@@ -1347,14 +1400,57 @@ class SukuyodoService:
         special_day_key = (jp_weekday, day_mansion_index)
         special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
         special_day = None
+
+        # === 凌犯期間判定 ===
+        ryouhan = self.check_ryouhan_period(target_date)
+
         if special_day_type:
             special_day = dict(self.SPECIAL_DAY_INFO[special_day_type])
             special_day["type"] = special_day_type
-            # 甘露日加分、羅刹日減分
-            if special_day_type == "kanro":
-                overall_score = min(100, overall_score + 10)
-            elif special_day_type == "rasetsu":
-                overall_score = max(30, overall_score - 10)
+
+            if ryouhan:
+                # 凌犯期間中：甘露/羅刹吉凶逆轉，金剛峯不受影響
+                if special_day_type == "kanro":
+                    special_day["ryouhan_reversed"] = True
+                    special_day["original_level"] = special_day["level"]
+                    special_day["level"] = "凶（凌犯逆轉）"
+                    overall_score = max(30, overall_score - 5)
+                elif special_day_type == "rasetsu":
+                    special_day["ryouhan_reversed"] = True
+                    special_day["original_level"] = special_day["level"]
+                    special_day["level"] = "吉（凌犯逆轉）"
+                    overall_score = min(100, overall_score + 5)
+                else:
+                    # 金剛峯日不受影響
+                    special_day["ryouhan_reversed"] = False
+            else:
+                # 正常期間
+                special_day["ryouhan_reversed"] = False
+                if special_day_type == "kanro":
+                    overall_score = min(100, overall_score + 10)
+                elif special_day_type == "rasetsu":
+                    overall_score = max(30, overall_score - 10)
+
+        # === 六害宿判定（凌犯期間中才生效） ===
+        rokugai = None
+        if ryouhan:
+            rokugai_list = self.get_rokugai_suku(user_index)
+            # 檢查當日宿是否為六害宿之一
+            for rg in rokugai_list:
+                if rg["mansion_index"] == day_mansion_index:
+                    rokugai = {
+                        "active": True,
+                        "name": rg["name"],
+                        "severity": rg["severity"],
+                        "description": f"凌犯期間中の六害宿「{rg['name']}」に当たります。本命宿との関係で特に注意が必要な日です。"
+                    }
+                    # 六害宿額外減分
+                    penalty = max(5, 15 - rg["severity"] * 2)  # severity 1→13, 2→11, ... 6→3
+                    overall_score = max(30, overall_score - penalty)
+                    break
+
+        # === 三期サイクル ===
+        sanki = self.get_sanki_cycle(user_index, day_mansion_index)
 
         # === 幸運物品（每日動態計算） ===
         lucky = fortune_data["lucky_items"]
@@ -1424,7 +1520,10 @@ class SukuyodoService:
                 "color_hex": lucky_color["hex"],
                 "numbers": lucky_numbers
             },
-            "special_day": special_day
+            "special_day": special_day,
+            "ryouhan": ryouhan,
+            "rokugai": rokugai,
+            "sanki": sanki
         }
 
     def calculate_monthly_fortune(self, birth_date: date, year: int, month: int) -> dict:
@@ -2823,6 +2922,110 @@ class SukuyodoService:
         }
 
 
+    def check_ryouhan_period(self, target_date: date) -> Optional[dict]:
+        """
+        判定指定日期是否在凌犯期間（七曜陵逼）
+
+        根據該日期所在農曆月的朔日（初一）七曜，查表判定。
+        凌犯期間內甘露日→凶、羅刹日→吉（吉凶逆轉）。
+
+        Args:
+            target_date: 西曆日期
+
+        Returns:
+            凌犯期間資訊（若不在期間內則返回 None）
+        """
+        lunar_y, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
+
+        # 取得該農曆月朔日（初一）的西曆日期
+        first_day_solar = self.lunar_to_solar(lunar_y, lunar_m, 1)
+        if first_day_solar is None:
+            return None
+
+        # 朔日的七曜
+        jp_weekday_first = (first_day_solar.weekday() + 1) % 7
+
+        # 查表
+        ryouhan = self.RYOUHAN_MAP.get((lunar_m, jp_weekday_first))
+        if ryouhan is None:
+            return None
+
+        start_day, end_day = ryouhan
+
+        # 判定當日農曆日是否在凌犯期間內
+        if start_day <= lunar_d <= end_day:
+            return {
+                "active": True,
+                "lunar_month": lunar_m,
+                "start_day": start_day,
+                "end_day": end_day,
+                "description": f"農曆{lunar_m}月{start_day}日～{end_day}日は凌犯期間。吉凶逆轉：甘露日の効力が弱まり、羅刹日の凶意が緩和される。重大な決断は慎重に。"
+            }
+
+        return None
+
+    def get_rokugai_suku(self, birth_mansion_index: int) -> list[dict]:
+        """
+        計算六害宿
+
+        凌犯期間中，以本命宿為基準，反時計方向計算 6 個大凶日宿。
+
+        Args:
+            birth_mansion_index: 本命宿索引 (0-26)
+
+        Returns:
+            六害宿列表（含宿名、偏移、凶度）
+        """
+        results = []
+        for name, info in self.ROKUGAI_OFFSETS.items():
+            # 反時計 = 從本命宿往回數（減去偏移）
+            target_index = (birth_mansion_index - info["offset"]) % 27
+            target_mansion = self.mansions_data[target_index]
+            results.append({
+                "name": name,
+                "mansion_index": target_index,
+                "mansion_name": target_mansion["name_jp"],
+                "mansion_reading": target_mansion["reading"],
+                "severity": info["severity"],
+                "offset": info["offset"]
+            })
+        # 按凶度排序（1=最凶）
+        results.sort(key=lambda x: x["severity"])
+        return results
+
+    def get_sanki_cycle(self, birth_mansion_index: int, day_mansion_index: int) -> dict:
+        """
+        計算日運三期サイクル
+
+        27 日為一循環，從命宿開始依序分三期各 9 天：
+        - 躍動の週（一九/活動期）：命宿起 9 天
+        - 破壊の週（二九/衰退期）：業宿起 9 天
+        - 再生の週（三九/轉換期）：胎宿起 9 天
+
+        Args:
+            birth_mansion_index: 本命宿索引
+            day_mansion_index: 當日宿索引
+
+        Returns:
+            當日所屬的三期資訊
+        """
+        # 計算當日宿相對於命宿的距離（前向）
+        distance = (day_mansion_index - birth_mansion_index) % 27
+
+        # 分三期：0-8 = 躍動, 9-17 = 破壊, 18-26 = 再生
+        period_index = distance // 9
+        day_in_period = (distance % 9) + 1  # 第幾天（1-9）
+
+        cycle_info = self.SANKI_CYCLE[period_index]
+
+        return {
+            "period": cycle_info["name"],
+            "period_reading": cycle_info["reading"],
+            "period_index": period_index + 1,  # 1=一九, 2=二九, 3=三九
+            "day_in_period": day_in_period,
+            "description": cycle_info["description"]
+        }
+
     def get_special_days_for_month(self, year: int, month: int) -> list[dict]:
         """
         取得指定月份的所有特殊日（甘露日/金剛峯日/羅刹日）
@@ -2868,16 +3071,29 @@ class SukuyodoService:
 
             if special_day_type:
                 info = self.SPECIAL_DAY_INFO[special_day_type]
+                # 凌犯期間判定
+                ryouhan = self.check_ryouhan_period(target_date)
+                level = info["level"]
+                ryouhan_reversed = False
+                if ryouhan:
+                    if special_day_type == "kanro":
+                        level = "凶（凌犯逆轉）"
+                        ryouhan_reversed = True
+                    elif special_day_type == "rasetsu":
+                        level = "吉（凌犯逆轉）"
+                        ryouhan_reversed = True
+
                 results.append({
                     "date": target_date.isoformat(),
                     "weekday": day_info["name"].replace("曜日", ""),
                     "type": special_day_type,
                     "name": info["name"],
                     "reading": info["reading"],
-                    "level": info["level"],
+                    "level": level,
                     "mansion": day_mansion["name_jp"],
                     "mansion_reading": day_mansion["reading"],
-                    "description": info["description"]
+                    "description": info["description"],
+                    "ryouhan_reversed": ryouhan_reversed
                 })
 
         return results
