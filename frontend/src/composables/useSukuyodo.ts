@@ -1,6 +1,13 @@
 import { ref, computed, watch } from 'vue'
 import { useProfile } from '../stores/profile'
 import { getApiUrl } from '../config/api'
+import {
+  getScoreClass,
+  getFortuneLevel,
+  getMansionRelationClass,
+  getScoreLevel,
+  formatDate
+} from '../utils/fortune-helpers'
 
 // ============================================================================
 // Type Definitions
@@ -746,50 +753,6 @@ export function useSukuyodo() {
     { key: 'yusui', cssClass: 'neutral' },
     { key: 'ankai', cssClass: 'warning' }
   ]
-
-  // ============================================================================
-  // Helper Functions
-  // ============================================================================
-
-  function getFortuneLevel(score: number) {
-    if (score >= 90) return { text: '大吉', class: 'excellent' }
-    if (score >= 75) return { text: '吉', class: 'good' }
-    if (score >= 60) return { text: '中吉', class: 'fair' }
-    if (score >= 45) return { text: '小吉', class: 'caution' }
-    return { text: '凶', class: 'warning' }
-  }
-
-  function getMansionRelationClass(relationType: string) {
-    const classMap: Record<string, string> = {
-      'eishin': 'excellent',
-      'gyotai': 'good',
-      'mei': 'fair',
-      'yusui': 'neutral',
-      'kisei': 'caution',
-      'ankai': 'warning'
-    }
-    return classMap[relationType] || 'neutral'
-  }
-
-  function getScoreClass(score: number) {
-    if (score >= 90) return 'excellent'
-    if (score >= 75) return 'good'
-    if (score >= 60) return 'fair'
-    if (score >= 45) return 'caution'
-    return 'warning'
-  }
-
-  function getScoreLevel(score: number) {
-    if (score >= 90) return { text: '天作之合', class: 'excellent' }
-    if (score >= 75) return { text: '相當不錯', class: 'good' }
-    if (score >= 60) return { text: '需要磨合', class: 'fair' }
-    return { text: '多加小心', class: 'warning' }
-  }
-
-  function formatDate(dateStr: string) {
-    const d = new Date(dateStr)
-    return `${d.getMonth() + 1}/${d.getDate()}`
-  }
 
   // ============================================================================
   // API Functions

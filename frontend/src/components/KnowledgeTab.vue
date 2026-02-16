@@ -186,13 +186,14 @@ function getKuyouRowClass(level: string) {
           <button
             class="relation-header"
             :aria-expanded="expandedRelation === rel.type"
+            :aria-controls="`relation-body-${rel.type}`"
             @click="toggleRelation(rel.type)"
           >
             <span class="relation-name">{{ rel.name }}（{{ rel.reading }}）</span>
             <span class="relation-score">{{ rel.score }} 分</span>
             <span class="relation-toggle" aria-hidden="true">{{ expandedRelation === rel.type ? '▲' : '▼' }}</span>
           </button>
-          <div v-if="expandedRelation === rel.type" class="relation-body">
+          <div v-if="expandedRelation === rel.type" :id="`relation-body-${rel.type}`" class="relation-body" role="region">
             <p>{{ rel.description }}</p>
             <p>{{ rel.detailed }}</p>
             <div v-if="rel.good_for?.length" class="good-for">

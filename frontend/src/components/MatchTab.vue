@@ -6,6 +6,7 @@ import type {
   CompatibilityResult,
   PartnerCompatibility
 } from '../composables/useSukuyodo'
+import { getScoreClass, getScoreLevel } from '../utils/fortune-helpers'
 
 const expandedPartnerId = ref<string | null>(null)
 
@@ -43,21 +44,6 @@ const relationKeys = [
   { key: 'yusui', cssClass: 'neutral' },
   { key: 'ankai', cssClass: 'warning' }
 ]
-
-function getScoreClass(score: number) {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'good'
-  if (score >= 60) return 'fair'
-  if (score >= 45) return 'caution'
-  return 'warning'
-}
-
-function getScoreLevel(score: number) {
-  if (score >= 90) return { text: '天作之合', class: 'excellent' }
-  if (score >= 75) return { text: '相當不錯', class: 'good' }
-  if (score >= 60) return { text: '需要磨合', class: 'fair' }
-  return { text: '多加小心', class: 'warning' }
-}
 
 const roleLabels: Record<string, string> = {
   colleague: '同事/工作夥伴',
@@ -182,6 +168,8 @@ function handleMansionClick(m: CompatibleMansion) {
                 :key="m.index"
                 class="mansion-chip"
                 :class="{ active: selectedMansion?.index === m.index }"
+                :aria-label="`${m.name_jp}（${m.reading}）${m.element}曜`"
+                :aria-pressed="selectedMansion?.index === m.index"
                 @click="handleMansionClick(m)"
               >
                 {{ m.name_jp }}

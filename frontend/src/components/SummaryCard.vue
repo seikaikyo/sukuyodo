@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Mansion, DailyFortune } from '../composables/useSukuyodo'
+import { getFortuneLevel, getMansionRelationClass } from '../utils/fortune-helpers'
 
 const props = defineProps<{
   mansion: Mansion
@@ -10,26 +11,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   query: []
 }>()
-
-function getFortuneLevel(score: number) {
-  if (score >= 90) return { text: '大吉', class: 'excellent' }
-  if (score >= 75) return { text: '吉', class: 'good' }
-  if (score >= 60) return { text: '中吉', class: 'fair' }
-  if (score >= 45) return { text: '小吉', class: 'caution' }
-  return { text: '凶', class: 'warning' }
-}
-
-function getMansionRelationClass(relationType: string) {
-  const classMap: Record<string, string> = {
-    'eishin': 'excellent',
-    'gyotai': 'good',
-    'mei': 'fair',
-    'yusui': 'neutral',
-    'kisei': 'caution',
-    'ankai': 'warning'
-  }
-  return classMap[relationType] || 'neutral'
-}
 </script>
 
 <template>

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
+import { getScoreClass, getRating, formatDate } from '../utils/fortune-helpers'
 
 const props = defineProps<{
   luckyDaySummary: LuckyDaySummary | null
@@ -97,26 +98,6 @@ function handleDelete(partner: Partner) {
 
 function getRelationLabel(relation: RelationType): string {
   return RELATION_TYPES.find(r => r.value === relation)?.label || relation
-}
-
-function getScoreClass(score: number) {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'good'
-  if (score >= 60) return 'fair'
-  if (score >= 45) return 'caution'
-  return 'warning'
-}
-
-function getRating(score: number) {
-  if (score >= 90) return '大吉'
-  if (score >= 75) return '吉'
-  if (score >= 60) return '中吉'
-  return '小吉'
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr)
-  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
 function getLabelClass(label: string) {

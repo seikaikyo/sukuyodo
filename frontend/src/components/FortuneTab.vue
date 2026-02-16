@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune } from '../composables/useSukuyodo'
+import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 
 const props = defineProps<{
   activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -17,24 +18,11 @@ const emit = defineEmits<{
   'selectDay': [date: string]
 }>()
 
-function getScoreClass(score: number) {
-  if (score >= 90) return 'excellent'
-  if (score >= 75) return 'good'
-  if (score >= 60) return 'fair'
-  if (score >= 45) return 'caution'
-  return 'warning'
-}
-
 function getKuyouLevelClass(level: string) {
   if (level === '大吉') return 'level-great'
   if (level === '吉') return 'level-good'
   if (level === '半吉') return 'level-half'
   return 'level-bad'
-}
-
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr)
-  return `${d.getMonth() + 1}/${d.getDate()}`
 }
 </script>
 
@@ -450,6 +438,7 @@ function formatDate(dateStr: string) {
                           :key="day.date"
                           class="daily-chip clickable"
                           :class="getScoreClass(day.score)"
+                          :aria-label="`${formatDate(day.date)} ${day.weekday} 運勢 ${day.score} 分，點擊查看詳情`"
                           @click="emit('selectDay', day.date)"
                         >
                           {{ formatDate(day.date) }} {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
