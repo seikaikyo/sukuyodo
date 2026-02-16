@@ -92,33 +92,45 @@ function formatDate(dateStr: string) {
               </div>
               <span class="score-value" :class="getScoreClass(dailyFortune.fortune.overall)">{{ dailyFortune.fortune.overall }}</span>
             </div>
-            <div class="score-row">
-              <span class="score-label">事業</span>
-              <div class="score-bar">
-                <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.career)" :style="{ width: dailyFortune.fortune.career + '%' }"></div>
+            <div class="score-group">
+              <div class="score-row">
+                <span class="score-label">事業</span>
+                <div class="score-bar">
+                  <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.career)" :style="{ width: dailyFortune.fortune.career + '%' }"></div>
+                </div>
+                <span class="score-value">{{ dailyFortune.fortune.career }}</span>
               </div>
-              <span class="score-value">{{ dailyFortune.fortune.career }}</span>
+              <p v-if="dailyFortune.fortune.career_desc" class="score-desc">{{ dailyFortune.fortune.career_desc }}</p>
             </div>
-            <div class="score-row">
-              <span class="score-label">感情</span>
-              <div class="score-bar">
-                <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.love)" :style="{ width: dailyFortune.fortune.love + '%' }"></div>
+            <div class="score-group">
+              <div class="score-row">
+                <span class="score-label">感情</span>
+                <div class="score-bar">
+                  <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.love)" :style="{ width: dailyFortune.fortune.love + '%' }"></div>
+                </div>
+                <span class="score-value">{{ dailyFortune.fortune.love }}</span>
               </div>
-              <span class="score-value">{{ dailyFortune.fortune.love }}</span>
+              <p v-if="dailyFortune.fortune.love_desc" class="score-desc">{{ dailyFortune.fortune.love_desc }}</p>
             </div>
-            <div class="score-row">
-              <span class="score-label">健康</span>
-              <div class="score-bar">
-                <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.health)" :style="{ width: dailyFortune.fortune.health + '%' }"></div>
+            <div class="score-group">
+              <div class="score-row">
+                <span class="score-label">健康</span>
+                <div class="score-bar">
+                  <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.health)" :style="{ width: dailyFortune.fortune.health + '%' }"></div>
+                </div>
+                <span class="score-value">{{ dailyFortune.fortune.health }}</span>
               </div>
-              <span class="score-value">{{ dailyFortune.fortune.health }}</span>
+              <p v-if="dailyFortune.fortune.health_desc" class="score-desc">{{ dailyFortune.fortune.health_desc }}</p>
             </div>
-            <div class="score-row">
-              <span class="score-label">財運</span>
-              <div class="score-bar">
-                <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.wealth)" :style="{ width: dailyFortune.fortune.wealth + '%' }"></div>
+            <div class="score-group">
+              <div class="score-row">
+                <span class="score-label">財運</span>
+                <div class="score-bar">
+                  <div class="score-fill" :class="getScoreClass(dailyFortune.fortune.wealth)" :style="{ width: dailyFortune.fortune.wealth + '%' }"></div>
+                </div>
+                <span class="score-value">{{ dailyFortune.fortune.wealth }}</span>
               </div>
-              <span class="score-value">{{ dailyFortune.fortune.wealth }}</span>
+              <p v-if="dailyFortune.fortune.wealth_desc" class="score-desc">{{ dailyFortune.fortune.wealth_desc }}</p>
             </div>
           </div>
 
@@ -141,9 +153,14 @@ function formatDate(dateStr: string) {
             <p class="rokugai-desc">{{ dailyFortune.rokugai.description }}</p>
           </div>
 
-          <div v-if="dailyFortune.sanki" class="sanki-badge">
-            <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">{{ dailyFortune.sanki.period }}</span>
-            <span class="sanki-day">第{{ dailyFortune.sanki.day_in_period }}天</span>
+          <div v-if="dailyFortune.sanki" class="sanki-box" :class="{ 'dark-week': dailyFortune.sanki.is_dark_week }">
+            <div class="sanki-header">
+              <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">{{ dailyFortune.sanki.period }}</span>
+              <span class="sanki-day-type">{{ dailyFortune.sanki.day_type }}</span>
+              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黒の一週間</span>
+            </div>
+            <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
+            <p class="sanki-period-desc">{{ dailyFortune.sanki.period_description }}</p>
           </div>
 
           <div class="lucky-info">
@@ -503,6 +520,7 @@ function formatDate(dateStr: string) {
 
 .pill-btn {
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -612,6 +630,20 @@ function formatDate(dateStr: string) {
 .score-value.fair { color: var(--info); font-weight: 600; }
 .score-value.caution { color: #eab308; font-weight: 600; }
 .score-value.warning { color: var(--warning); font-weight: 600; }
+
+.score-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.score-desc {
+  margin: 2px 0 var(--space-xs);
+  padding-left: calc(48px + var(--space-md));
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  opacity: 0.85;
+}
 
 .overall-row {
   padding-bottom: var(--space-sm);
@@ -762,19 +794,24 @@ function formatDate(dateStr: string) {
   line-height: 1.5;
 }
 
-.sanki-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-md);
+.sanki-box {
+  padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   margin-bottom: var(--space-md);
-  font-size: var(--font-sm);
+}
+
+.sanki-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-xs);
 }
 
 .sanki-period {
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 
@@ -782,9 +819,39 @@ function formatDate(dateStr: string) {
 .sanki-2 { color: #f44336; }
 .sanki-3 { color: #4caf50; }
 
-.sanki-day {
+.sanki-day-type {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sanki-day-desc {
+  font-size: var(--font-sm);
   color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-xs);
+}
+
+.sanki-period-desc {
   font-size: var(--font-xs);
+  color: var(--text-secondary);
+  opacity: 0.7;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sanki-box.dark-week {
+  background: linear-gradient(135deg, rgba(180, 0, 0, 0.08), rgba(100, 0, 0, 0.04));
+  border-color: rgba(180, 0, 0, 0.3);
+}
+
+.dark-week-label {
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: #c62828;
+  padding: 1px 6px;
+  background: rgba(200, 60, 60, 0.15);
+  border-radius: var(--radius-sm);
 }
 
 .lucky-info {

@@ -42,6 +42,7 @@ function getKuyouRowClass(level: string) {
 
 <template>
   <section class="knowledge-tab">
+    <div class="sub-tabs-wrapper">
     <div class="sub-tabs scrollable" role="tablist" aria-label="知識類別選擇">
       <button
         class="pill-btn"
@@ -123,6 +124,7 @@ function getKuyouRowClass(level: string) {
         aria-controls="panel-knowledge-history"
         @click="emit('update:activeTab', 'history')"
       >歷史</button>
+    </div>
     </div>
 
     <!-- My Mansion -->
@@ -452,6 +454,22 @@ function getKuyouRowClass(level: string) {
   margin-bottom: var(--space-lg);
 }
 
+.sub-tabs-wrapper {
+  position: relative;
+}
+
+.sub-tabs-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 32px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, var(--bg-primary));
+  pointer-events: none;
+  z-index: 1;
+}
+
 .sub-tabs.scrollable {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -464,6 +482,7 @@ function getKuyouRowClass(level: string) {
 
 .pill-btn {
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);

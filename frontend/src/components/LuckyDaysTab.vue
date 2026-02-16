@@ -681,6 +681,7 @@ function getSpecialDayAdvice(type: string): string {
 
 .sub-tab {
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: none;
   border: none;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
@@ -1450,8 +1451,8 @@ function getSpecialDayAdvice(type: string): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-surface);

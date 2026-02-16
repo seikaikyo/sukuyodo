@@ -86,6 +86,10 @@ export interface FortuneScores {
   love: number
   health: number
   wealth: number
+  career_desc?: string
+  love_desc?: string
+  health_desc?: string
+  wealth_desc?: string
 }
 
 export interface MansionRelation {
@@ -157,7 +161,11 @@ export interface DailyFortune {
     period_reading: string
     period_index: number
     day_in_period: number
-    description: string
+    is_dark_week: boolean
+    day_type: string
+    day_type_reading: string
+    day_description: string
+    period_description: string
   } | null
 }
 
@@ -936,6 +944,10 @@ export function useSukuyodo() {
         const data = await res.json()
         if (data.success) {
           monthlyFortune.value = data.data
+          // 預設展開當前週
+          if (expandedMonthlyWeek.value === null) {
+            expandedMonthlyWeek.value = currentWeekNumber.value
+          }
         }
       }
     } catch {

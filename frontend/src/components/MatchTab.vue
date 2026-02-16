@@ -343,6 +343,7 @@ function handleMansionClick(m: CompatibleMansion) {
 
 .pill-btn {
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);

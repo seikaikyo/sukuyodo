@@ -775,6 +775,115 @@ class SukuyodoService:
         "ankai": "凶"
     }
 
+    # 每日運勢各項描述（根據分數區間 × 三九秘法關係）
+    # 5 個區間：excellent(85+), good(70-84), fair(55-69), caution(40-54), warning(<40)
+    DAILY_CATEGORY_DESCRIPTIONS = {
+        "career": {
+            "excellent": [
+                "今天事業運勢極佳。三九秘法顯示你的本命宿與當日宿形成強力共振，工作上的企劃、提案、面試都容易被接受。把握這天推動關鍵事項。",
+                "職場上你今天的存在感特別強，上司和同事對你的表現會留下深刻印象。適合爭取曝光機會、主導會議、或提出新的工作方向。",
+                "你的判斷力和執行力今天都在高峰。需要做重大工作決策的話，今天的直覺值得信任。團隊合作也特別順暢。",
+            ],
+            "good": [
+                "事業運穩中向好。宿曜關係顯示今天適合推進已在進行中的專案，執行力不錯，處理複雜任務的效率比平時高。",
+                "工作上的溝通順暢，跟客戶或同事的互動容易達成共識。適合安排需要協調多方的工作，或處理需要細心的行政事務。",
+                "今天在職場上不太會踩雷，按照計畫進行就好。如果有想爭取的加薪或升遷機會，可以開始做準備。",
+            ],
+            "fair": [
+                "事業運平穩，沒有特別的助力也沒有阻礙。按部就班處理日常工作即可，不需要刻意求表現。",
+                "今天適合做不需要太多創意的例行工作。整理檔案、回覆郵件、更新報告這類事務做起來很順手。",
+                "工作上遇到的問題不大不小，花點時間就能解決。不用急著做大決定，觀望一下再行動比較穩妥。",
+            ],
+            "caution": [
+                "事業運需要留意。宿曜關係提示今天職場上容易遇到小摩擦，與上司或客戶的互動要比平時更謹慎。確認再確認是今天的工作原則。",
+                "今天不太適合提出新企劃或爭取新專案，時機不對。把精力放在完善手邊已有的工作上比較有成果。",
+                "工作中的細節今天要特別注意，數字、日期、名稱這些容易出錯的地方多檢查幾遍。避免在壓力下做倉促決定。",
+            ],
+            "warning": [
+                "事業運低迷，宿曜關係顯示外在環境不利於積極行動。今天做好本分就好，不要主動挑起衝突或爭取什麼。需要談判或簽約的事延後處理。",
+                "職場上可能遇到意料外的阻礙或延遲，保持冷靜不要焦躁。這只是暫時的能量低谷，硬撐著做大事反而容易出差錯。",
+            ]
+        },
+        "love": {
+            "excellent": [
+                "今天感情運極佳。宿曜能量有利於人際連結，不管是伴侶間的交流還是新的邂逅，都特別容易產生深度共鳴。適合表白、約會、深入對話。",
+                "你今天散發的氣場特別有魅力，身邊的人會不自覺地被你吸引。有伴侶的人適合安排特別的約會，單身者出門社交可能有驚喜。",
+                "感情上的溝通今天特別順暢，平時說不出口的話今天說出來效果特別好。適合處理關係中懸而未決的問題。",
+            ],
+            "good": [
+                "感情運不錯。人際互動中容易感受到溫暖和善意。與伴侶的日常相處會特別和諧，小確幸的一天。",
+                "今天適合和重要的人一起做些日常但舒服的事情：一起吃飯、散步、或只是聊天。不需要大陣仗，自然的互動就很美好。",
+                "社交場合中你今天的親和力不錯，別人願意主動跟你分享或聊天。如果想拓展人際圈，今天跨出第一步會比較自在。",
+            ],
+            "fair": [
+                "感情運平穩，沒有波瀾也沒有驚喜。與身邊人的相處維持常態，不需要刻意經營也不會出問題。",
+                "今天的人際互動中規中矩。如果有什麼想對重要的人說的話，找個輕鬆的時機自然地表達就好。",
+                "感情方面保持現狀即可。不需要刻意製造浪漫，做好日常的關心和陪伴就是最好的。",
+            ],
+            "caution": [
+                "感情運需留意。今天容易因為小事和身邊人產生摩擦，特別是語氣和措辭上。說話前先想一想，很多衝突其實只是溝通方式的問題。",
+                "人際關係中今天可能會出現誤解，不要急著解釋或反駁。給對方和自己一點空間冷靜，過一陣子自然會理清。",
+                "今天不太適合討論敏感話題或做關係中的重大決定。如果覺得情緒上來了，先離開現場冷靜再回來處理。",
+            ],
+            "warning": [
+                "感情運低落。宿曜能量提示今天容易在人際關係中踩雷，避免翻舊帳或做出衝動的承諾。獨處比強迫自己社交更好。",
+                "今天如果和伴侶或朋友發生不愉快，忍一忍，不要在氣頭上說出讓自己後悔的話。低潮會過去，但傷人的話收不回來。",
+            ]
+        },
+        "health": {
+            "excellent": [
+                "今天健康運極佳。身體能量充沛，精力旺盛。適合安排高強度的運動或戶外活動，體能表現會比平時好。",
+                "身心狀態都在最佳水準。如果平時有在運動，今天可以試著挑戰一下自己的極限。睡眠品質也預計會不錯。",
+                "你的免疫力和恢復力今天都很好。如果最近有什麼小毛病，今天可能會感覺明顯好轉。適合安排健康檢查。",
+            ],
+            "good": [
+                "健康運不錯。身體沒什麼大問題，精神狀態也清醒。做一些輕鬆的運動（散步、瑜伽、伸展）會讓你感覺更好。",
+                "今天的體能和精神都在及格線以上。維持正常的作息就好，如果天氣不錯，出門走走對身心都有幫助。",
+                "身體狀況穩定。注意補充水分和均衡飲食，讓好的狀態延續下去。今天開始培養新的健康習慣是個好時機。",
+            ],
+            "fair": [
+                "健康運普通。身體沒什麼特別需要擔心的，維持日常的保健習慣就好。注意不要久坐，定時起來活動一下。",
+                "體能和精神都在一般水準，不會覺得特別有活力也不會太疲倦。按照平時的作息過就好。",
+                "健康面保持現狀。如果之前有在做的運動或保健計畫，今天繼續執行就好，不需要加量也不需要減量。",
+            ],
+            "caution": [
+                "健康運需注意。宿曜能量提示今天身體比較容易感到疲勞，不要硬撐。如果覺得累就休息，不要逞強。",
+                "今天要特別注意肩頸和腰背，長時間維持同一個姿勢容易造成不適。每隔一小時起來活動一下筋骨。",
+                "精神上可能會有些低落或焦慮，這是暫時的能量波動。做幾次深呼吸，或聽一些讓自己放鬆的音樂。",
+            ],
+            "warning": [
+                "健康運低落，今天最需要留意的就是身體訊號。覺得不舒服就不要硬撐，該看醫生就去看。避免高強度運動和熬夜。",
+                "身體處於需要休養的狀態。今天最好的健康策略是早睡、多喝水、減少刺激性食物。給身體一個恢復的機會。",
+            ]
+        },
+        "wealth": {
+            "excellent": [
+                "今天財運極佳。宿曜關係顯示金錢方面的決策特別準確，適合處理投資、簽約、談薪資等與錢相關的重要事項。",
+                "財運旺盛的一天。如果有想購入的資產或想投資的項目，今天的判斷力值得信賴。意外之財也有可能出現。",
+                "金錢運上你今天的直覺特別準，看到好的機會不要猶豫太久。不過也不是叫你衝動消費，有理性分析支撐的決定才值得行動。",
+            ],
+            "good": [
+                "財運不錯。日常的收支管理今天做起來特別順手，可能會發現省錢的好方法或意外的折扣。適合整理帳務。",
+                "金錢方面今天不太會踩雷。正常的消費沒問題，如果有在比價的東西，今天做決定通常不會後悔。",
+                "財運穩中向好。今天適合規劃理財方向或檢視目前的收支平衡。做一些未來會讓你的錢包感謝你的準備工作。",
+            ],
+            "fair": [
+                "財運平穩，不會有大的進帳也不會有意外支出。維持平時的消費習慣即可，不需要刻意節省也不要衝動消費。",
+                "金錢方面中規中矩。該花的花、該省的省，不需要特別擔心。大額支出的話可以再觀望一下。",
+                "財運沒有特別的波動。處理日常帳單、繳費這類事務沒問題，但不建議今天做重大的財務決策。",
+            ],
+            "caution": [
+                "財運需留意。今天容易出現預期外的支出，出門前確認一下錢包和手機的付款額度。避免借錢給別人或做財務擔保。",
+                "金錢方面今天要保守一些。看到打折促銷先不要衝動，回家想一想真的需要再買。投資決策也建議延後。",
+                "今天不太適合談錢。無論是談薪資、議價還是追討欠款，效果都不會太好。等個幾天再處理，條件會更有利。",
+            ],
+            "warning": [
+                "財運低迷。今天盡量減少不必要的支出，避免涉及大額金錢的決定。簽合約、投資、借貸這些事情延後處理最安全。",
+                "金錢方面要格外小心，容易因為疏忽而造成損失。出門帶的現金和卡片夠用就好，不要帶太多。線上付款也多確認金額。",
+            ]
+        }
+    }
+
     # 甘露日/金剛峯日/羅刹日（宿曜經卷五）
     # key: (jp_weekday, day_mansion_index) → special_day_type
     # jp_weekday: 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
@@ -857,15 +966,16 @@ class SukuyodoService:
     }
 
     # 六害宿：凌犯期間中以本命宿為基準的 6 個大凶日宿
-    # 反時計方向（宿曜盤上逆行）偏移量
+    # 順時計方向（宿曜盤上順行）偏移量
+    # 來源：yakumoin.net, kosei-do.co.jp, sukuyou.divination.page 三方交叉驗證
     # 凶度排序：命宿 > 事宿 > 意宿 > 聚宿 > 同宿 > 克宿
     ROKUGAI_OFFSETS = {
         "命宿": {"offset": 0, "severity": 1},   # 本命宿
-        "意宿": {"offset": 2, "severity": 3},   # 第 2 位
-        "事宿": {"offset": 8, "severity": 2},   # 第 8 位
-        "克宿": {"offset": 11, "severity": 6},  # 第 11 位
-        "聚宿": {"offset": 14, "severity": 4},  # 第 14 位
-        "同宿": {"offset": 18, "severity": 5},  # 第 18 位
+        "意宿": {"offset": 3, "severity": 3},   # 一九の安（第 4 番目）
+        "事宿": {"offset": 9, "severity": 2},   # 業（第 10 番目）
+        "克宿": {"offset": 12, "severity": 6},  # 二九の安（第 13 番目）
+        "聚宿": {"offset": 15, "severity": 4},  # 二九の壊（第 16 番目）
+        "同宿": {"offset": 19, "severity": 5},  # 三九の栄（第 20 番目）
     }
 
     # 三期サイクル：27 日為一循環，分三期各 9 天
@@ -878,6 +988,39 @@ class SukuyodoService:
         {"name": "再生の週", "reading": "さいせいのしゅう", "start_relation": "胎",
          "description": "轉換期。27日循環的第三期（三九），從胎宿開始。舊的結束、新的萌芽，適合反省與準備。"},
     ]
+
+    # 三期サイクル各日型（每期 9 天：起始日 + 栄→衰→安→危→成→壊→友→親）
+    # 起始日因期而異：一九=命、二九=業、三九=胎
+    SANKI_DAY_TYPES = {
+        # 各期的第 1 天（起始日）
+        "period_start": {
+            1: {"name": "命の日", "reading": "めいのひ",
+                "description": "27 日循環の起點。本命宿に回歸する日で、自分自身の原點を見つめ直すのに適している。新しい循環が始まり、エネルギーがリセットされる。"},
+            2: {"name": "業の日", "reading": "ごうのひ",
+                "description": "前世からの因縁を示す業の位置。過去の行動の結果が現れやすく、先送りにしていた課題に向き合うことになる日。破壊の週の入口でもある。"},
+            3: {"name": "胎の日", "reading": "たいのひ",
+                "description": "再生の始まり。新しいものが宿る胎の位置にあたり、まだ形になっていない可能性を感じ取れる日。静かに内省し、次の循環に向けた種を蒔くとよい。"},
+        },
+        # 第 2-9 天（全期共通）
+        "day": {
+            2: {"name": "栄の日", "reading": "えいのひ",
+                "description": "繁栄の気が巡る日。物事が順調に進み、人からの評価も得やすい。交渉事や公の場への参加に好適。積極的に動いて吉。"},
+            3: {"name": "衰の日", "reading": "すいのひ",
+                "description": "気の勢いが弱まる日。無理をせず、控えめに過ごすのが基本。ただし内省や學びには向いており、知識を吸収する力は高い。"},
+            4: {"name": "安の日", "reading": "あんのひ",
+                "description": "穏やかで安定した氣が流れる日。日常の用事をこなすのに適しており、心身ともに落ち着きやすい。大きな冒険よりも着実な一歩を。"},
+            5: {"name": "危の日", "reading": "きのひ",
+                "description": "注意を要する日。判断を誤りやすく、衝動的な行動は裏目に出る。重要な契約や決断は避け、慎重に行動すること。"},
+            6: {"name": "成の日", "reading": "せいのひ",
+                "description": "物事が成就しやすい日。努力の成果が実を結び、仕上げや完了に最適。始めたことを完成させるエネルギーがある。"},
+            7: {"name": "壊の日", "reading": "かいのひ",
+                "description": "破壊と変革の氣が強い日。古い習慣や不要な関係を断つには好機だが、新たに始めることには不向き。壊すべきものを見極める力がある。"},
+            8: {"name": "友の日", "reading": "ゆうのひ",
+                "description": "友好的な氣が流れる日。人間関係が円滑になり、相談事や共同作業に向いている。信頼できる人と過ごすとエネルギーが充電される。"},
+            9: {"name": "親の日", "reading": "しんのひ",
+                "description": "親密な関係が深まる日。家族、恋人、親しい友人との時間が充実する。心を開いた交流が運気を高め、期の締めくくりにふさわしい。"},
+        }
+    }
 
     # 月運勢專用描述
     MONTHLY_FORTUNE_DESCRIPTIONS = {
@@ -1382,6 +1525,26 @@ class SukuyodoService:
         health_score = calc_category_score("health")
         wealth_score = calc_category_score("wealth")
 
+        # === 各項描述 ===
+        def get_category_desc(category: str, score: int) -> str:
+            descs = self.DAILY_CATEGORY_DESCRIPTIONS.get(category, {})
+            if score >= 85:
+                pool = descs.get("excellent", [""])
+            elif score >= 70:
+                pool = descs.get("good", [""])
+            elif score >= 55:
+                pool = descs.get("fair", [""])
+            elif score >= 40:
+                pool = descs.get("caution", [""])
+            else:
+                pool = descs.get("warning", [""])
+            return random.choice(pool)
+
+        career_desc = get_category_desc("career", career_score)
+        love_desc = get_category_desc("love", love_score)
+        health_desc = get_category_desc("health", health_score)
+        wealth_desc = get_category_desc("wealth", wealth_score)
+
         # === 選擇建議 ===
         if overall_score >= 85:
             advice_list = fortune_data["daily_advice"]["excellent"]
@@ -1430,6 +1593,19 @@ class SukuyodoService:
                     overall_score = min(100, overall_score + 10)
                 elif special_day_type == "rasetsu":
                     overall_score = max(30, overall_score - 10)
+
+        # === 凌犯期間全面吉凶影響 ===
+        # 凌犯期間中，吉日（栄/安/成/友/親）受負面影響，凶日（衰/壊/危）反而緩和
+        if ryouhan and not special_day_type:
+            positive_types = {"eishin", "mei"}  # 栄親/命（大吉型）
+            mild_positive = {"kisei"}  # 危成（半吉型，含成）
+            negative_types = {"ankai"}  # 安壊（含壊）
+            if mansion_relation_type in positive_types:
+                overall_score = max(30, overall_score - 3)
+            elif mansion_relation_type in mild_positive:
+                overall_score = max(30, overall_score - 2)
+            elif mansion_relation_type in negative_types:
+                overall_score = min(100, overall_score + 2)
 
         # === 六害宿判定（凌犯期間中才生效） ===
         rokugai = None
@@ -1509,7 +1685,11 @@ class SukuyodoService:
                 "career": career_score,
                 "love": love_score,
                 "health": health_score,
-                "wealth": wealth_score
+                "wealth": wealth_score,
+                "career_desc": career_desc,
+                "love_desc": love_desc,
+                "health_desc": health_desc,
+                "wealth_desc": wealth_desc
             },
             "advice": advice,
             "lucky": {
@@ -2968,7 +3148,8 @@ class SukuyodoService:
         """
         計算六害宿
 
-        凌犯期間中，以本命宿為基準，反時計方向計算 6 個大凶日宿。
+        凌犯期間中，以本命宿為基準，順時計方向計算 6 個大凶日宿。
+        偏移量對應三九秘法中的特定位置（命/一九安/業/二九安/二九壊/三九栄）。
 
         Args:
             birth_mansion_index: 本命宿索引 (0-26)
@@ -2978,8 +3159,8 @@ class SukuyodoService:
         """
         results = []
         for name, info in self.ROKUGAI_OFFSETS.items():
-            # 反時計 = 從本命宿往回數（減去偏移）
-            target_index = (birth_mansion_index - info["offset"]) % 27
+            # 順時計 = 從本命宿往前數（加上偏移）
+            target_index = (birth_mansion_index + info["offset"]) % 27
             target_mansion = self.mansions_data[target_index]
             results.append({
                 "name": name,
@@ -3018,12 +3199,26 @@ class SukuyodoService:
 
         cycle_info = self.SANKI_CYCLE[period_index]
 
+        # 暗黒の一週間：破壊の週 distance 9-15（業→栄→衰→安→危→成→壊）
+        is_dark_week = (9 <= distance <= 15)
+
+        # 日型判定：第 1 天為期起始日（命/業/胎），第 2-9 天為共通日型
+        period_num = period_index + 1  # 1=一九, 2=二九, 3=三九
+        if day_in_period == 1:
+            day_type = self.SANKI_DAY_TYPES["period_start"][period_num]
+        else:
+            day_type = self.SANKI_DAY_TYPES["day"][day_in_period]
+
         return {
             "period": cycle_info["name"],
             "period_reading": cycle_info["reading"],
-            "period_index": period_index + 1,  # 1=一九, 2=二九, 3=三九
+            "period_index": period_num,
             "day_in_period": day_in_period,
-            "description": cycle_info["description"]
+            "is_dark_week": is_dark_week,
+            "day_type": day_type["name"],
+            "day_type_reading": day_type["reading"],
+            "day_description": day_type["description"],
+            "period_description": cycle_info["description"]
         }
 
     def get_special_days_for_month(self, year: int, month: int) -> list[dict]:

@@ -502,6 +502,7 @@ onMounted(() => {
 
 .tab-btn {
   padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
