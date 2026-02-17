@@ -137,6 +137,14 @@ export interface DailyFortune {
     reading: string
     element: string
     index: number
+    day_fortune?: {
+      auspicious: string[]
+      inauspicious: string[]
+      summary: string
+      summary_ja: string
+      summary_classic: string
+      is_most_auspicious: boolean
+    }
   }
   mansion_relation: MansionRelation
   element_relation: {

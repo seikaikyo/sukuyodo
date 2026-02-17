@@ -312,6 +312,18 @@ function exportDecadeReport() {
             </p>
           </div>
 
+          <div v-if="dailyFortune.day_mansion?.day_fortune" class="day-fortune-box" :class="{ 'most-auspicious': dailyFortune.day_mansion.day_fortune.is_most_auspicious }">
+            <h4>
+              {{ dailyFortune.day_mansion.name_jp }}日 行事宜忌
+              <span v-if="dailyFortune.day_mansion.day_fortune.is_most_auspicious" class="best-day-badge">最吉日</span>
+            </h4>
+            <div class="day-fortune-tags">
+              <span v-for="item in dailyFortune.day_mansion.day_fortune.auspicious" :key="'a-'+item" class="day-tag auspicious">{{ item }}</span>
+              <span v-for="item in dailyFortune.day_mansion.day_fortune.inauspicious" :key="'i-'+item" class="day-tag inauspicious">{{ item }}</span>
+            </div>
+            <p class="day-fortune-classic">{{ dailyFortune.day_mansion.day_fortune.summary_classic }}</p>
+          </div>
+
           <div class="advice-box">
             <h4>今日建議</h4>
             <p>{{ dailyFortune.advice }}</p>
@@ -1374,6 +1386,68 @@ function exportDecadeReport() {
 .hint-element {
   font-style: italic;
   opacity: 0.85;
+}
+
+.day-fortune-box {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.day-fortune-box.most-auspicious {
+  border-color: var(--score-high, #c9a43c);
+  background: color-mix(in srgb, var(--score-high, #c9a43c) 6%, var(--bg-elevated));
+}
+
+.day-fortune-box h4 {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.best-day-badge {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--score-high, #c9a43c);
+  color: #fff;
+  font-weight: 600;
+}
+
+.day-fortune-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: var(--space-xs);
+}
+
+.day-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.day-tag.auspicious {
+  background: color-mix(in srgb, var(--score-high, #c9a43c) 15%, var(--bg-surface));
+  color: var(--score-high, #c9a43c);
+}
+
+.day-tag.inauspicious {
+  background: color-mix(in srgb, var(--score-low, #b44) 12%, var(--bg-surface));
+  color: var(--score-low, #b44);
+}
+
+.day-fortune-classic {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+  line-height: 1.5;
 }
 
 .advice-box {
