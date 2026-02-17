@@ -102,7 +102,7 @@ function getKuyouRowClass(level: string) {
         <h3>{{ mansion?.name_jp }}（{{ mansion?.reading }}）</h3>
         <p class="mansion-element-text">
           <span class="element-badge" :style="{ background: mansionElementColor }">{{ mansion?.element }}</span>
-          元素
+          <span v-if="mansion?.nature_type" class="nature-badge">{{ mansion.nature_type }}</span>
         </p>
         <div class="mansion-sections">
           <div class="info-section">
@@ -515,6 +515,15 @@ function getKuyouRowClass(level: string) {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   color: var(--bg-primary);
+  font-weight: 600;
+}
+
+.nature-badge {
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: var(--text-muted);
+  color: var(--bg-primary);
+  font-size: var(--font-xs);
   font-weight: 600;
 }
 

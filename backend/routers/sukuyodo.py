@@ -40,7 +40,8 @@ async def get_all_mansions():
                 "reading": m["reading"],
                 "element": m["element"],
                 "keywords": m["keywords"],
-                "personality": m.get("personality", "")
+                "personality": m.get("personality", ""),
+                "nature_type": m.get("nature_type", "")
             }
             for m in mansions
         ]

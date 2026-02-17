@@ -28,6 +28,7 @@ export interface Mansion {
   element: string
   personality: string
   keywords: string[]
+  nature_type?: string
   love: string
   career: string
   health: string
