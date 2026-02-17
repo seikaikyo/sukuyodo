@@ -6,7 +6,7 @@ import type {
   CompatibilityResult,
   PartnerCompatibility
 } from '../composables/useSukuyodo'
-import { getScoreClass, getScoreLevel } from '../utils/fortune-helpers'
+import { getScoreClass, getScoreLevel, getLocalDateStr } from '../utils/fortune-helpers'
 import { generateCompatReport, generatePairedDecadeReport } from '../utils/report-generator'
 import { getApiUrl } from '../config/api'
 
@@ -303,7 +303,7 @@ function handleMansionClick(m: CompatibleMansion) {
           name="partner-birthday"
           :value="date2"
           label="對方生日"
-          :max="new Date().toISOString().split('T')[0]"
+          :max="getLocalDateStr()"
           @sl-input="emit('update:date2', ($event.target as HTMLInputElement).value)"
         ></sl-input>
         <button

@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
-import { getScoreClass, getRating, formatDate } from '../utils/fortune-helpers'
+import { getScoreClass, getRating, formatDate, getLocalDateStr } from '../utils/fortune-helpers'
 
 const props = defineProps<{
   luckyDaySummary: LuckyDaySummary | null
@@ -559,7 +559,7 @@ function getSpecialDayAdvice(type: string): string {
           label="生日"
           :value="formBirthDate"
           @sl-input="formBirthDate = ($event.target as HTMLInputElement).value"
-          :max="new Date().toISOString().split('T')[0]"
+          :max="getLocalDateStr()"
           required
         ></sl-input>
 
@@ -611,7 +611,7 @@ function getSpecialDayAdvice(type: string): string {
           label="生日"
           :value="formBirthDate"
           @sl-input="formBirthDate = ($event.target as HTMLInputElement).value"
-          :max="new Date().toISOString().split('T')[0]"
+          :max="getLocalDateStr()"
           required
         ></sl-input>
 

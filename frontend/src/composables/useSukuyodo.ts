@@ -6,7 +6,8 @@ import {
   getFortuneLevel,
   getMansionRelationClass,
   getScoreLevel,
-  formatDate
+  formatDate,
+  getLocalDateStr
 } from '../utils/fortune-helpers'
 
 // ============================================================================
@@ -854,7 +855,7 @@ export function useSukuyodo() {
 
   async function fetchDailyFortune() {
     if (!birthDate.value) return
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateStr()
     try {
       const res = await fetch(getApiUrl(`/fortune/daily/${today}?birth_date=${birthDate.value}`))
       if (res.ok) {
@@ -887,7 +888,7 @@ export function useSukuyodo() {
   async function fetchWeeklyFortune() {
     if (!birthDate.value) return
     // 使用今天作為中心日期（滾動視窗）
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateStr()
 
     try {
       const res = await fetch(getApiUrl(`/fortune/weekly/${today}?birth_date=${birthDate.value}`))

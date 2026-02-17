@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useSukuyodo } from '../composables/useSukuyodo'
+import { getLocalDateStr } from '../utils/fortune-helpers'
 import SummaryCard from '../components/SummaryCard.vue'
 import FortuneTab from '../components/FortuneTab.vue'
 import MatchTab from '../components/MatchTab.vue'
@@ -143,7 +144,7 @@ onMounted(() => {
             type="date"
             :value="birthDate"
             label="西曆生日"
-            :max="new Date().toISOString().split('T')[0]"
+            :max="getLocalDateStr()"
             @sl-input="birthDate = ($event.target as HTMLInputElement).value"
           ></sl-input>
         </div>

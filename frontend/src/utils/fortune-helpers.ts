@@ -40,6 +40,14 @@ export function getRating(score: number): string {
   return '小吉'
 }
 
+/** 取得本地日期字串 YYYY-MM-DD（避免 toISOString 轉 UTC 導致時區偏移） */
+export function getLocalDateStr(d: Date = new Date()): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
