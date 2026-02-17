@@ -1,7 +1,7 @@
 ---
 title: 真言宗修行對照指南
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

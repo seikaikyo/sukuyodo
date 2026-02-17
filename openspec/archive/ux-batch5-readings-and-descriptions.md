@@ -1,7 +1,7 @@
 ---
 title: 第五批 UX 改善：日文讀音顯示與月運關係說明
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

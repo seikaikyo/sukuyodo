@@ -1,7 +1,7 @@
 ---
 title: 第四批 UX 改善：視覺一致性與摘要卡片
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

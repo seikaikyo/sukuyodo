@@ -1,7 +1,7 @@
 ---
 title: 修正 27 宿構成與三九秘法距離分配
 type: fix
-status: in-progress
+status: completed
 created: 2026-02-14
 ---
 

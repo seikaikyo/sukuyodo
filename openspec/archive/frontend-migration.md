@@ -1,7 +1,7 @@
 ---
 title: Sukuyodo 前端遷移
 type: feature
-status: in-progress
+status: completed
 created: 2026-01-31
 phase: 1
 ---

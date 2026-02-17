@@ -1,7 +1,7 @@
 ---
 title: 第七批 UX 改善：Helper 提取與 Accessibility
 type: refactor
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

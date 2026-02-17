@@ -1,7 +1,7 @@
 ---
 title: UX Batch 8 - 死代碼移除、展開滾動、視覺對比
 type: refactor
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 

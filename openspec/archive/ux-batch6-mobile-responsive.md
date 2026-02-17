@@ -1,7 +1,7 @@
 ---
 title: 第六批 UX 改善：FortuneTab 和 LuckyDaysTab mobile 響應式
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 
