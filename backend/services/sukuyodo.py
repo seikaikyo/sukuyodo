@@ -1685,7 +1685,8 @@ class SukuyodoService:
                 "name_jp": day_mansion["name_jp"],
                 "reading": day_mansion["reading"],
                 "element": day_mansion["element"],
-                "index": day_mansion_index
+                "index": day_mansion_index,
+                "day_fortune": day_mansion.get("day_fortune", {})
             },
             "your_mansion": {
                 "name_jp": mansion["name_jp"],
