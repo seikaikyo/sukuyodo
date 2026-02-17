@@ -919,19 +919,25 @@ class SukuyodoService:
             "name": "甘露日",
             "reading": "かんろび",
             "level": "大吉",
-            "description": "宿曜經記載的大吉日。七曜與當日宿的能量完全調和，萬事順遂。適合護摩供養、灌頂傳法、開眼供養、入佛開光、結婚、簽約、搬遷、開業等重要行動。"
+            "description": "宿曜經記載的大吉日。七曜與當日宿的能量完全調和，萬事順遂。適合護摩供養、灌頂傳法、開眼供養、入佛開光、結婚、簽約、搬遷、開業等重要行動。",
+            "description_classic": "甘露者，天降甘美之法雨也。七曜與宿値相應調和，萬事成就，百福莊嚴。此日行事，如沐法雨，所願皆遂。",
+            "description_ja": "甘露日は七曜と当日の宿が最も調和する大吉日なり。「甘露」とは仏教における不死の霊薬（アムリタ）を指し、天の恵みが降り注ぐ日とされる。真言宗では護摩供養・灌頂伝法・開眼供養など最重要の仏事をこの日に行うことを旨とす。"
         },
         "kongou": {
             "name": "金剛峯日",
             "reading": "こんごうぶび",
             "level": "吉",
-            "description": "宿曜經記載的吉日。七曜與當日宿形成堅固的守護能量，做事容易成就。適合修法、寫經、授戒、出家受戒、面試、考試等需要毅力與持續力的行動。"
+            "description": "宿曜經記載的吉日。七曜與當日宿形成堅固的守護能量，做事容易成就。適合修法、寫經、授戒、出家受戒、面試、考試等需要毅力與持續力的行動。",
+            "description_classic": "金剛峯者，金剛界之堅固守護也。七曜與宿値相成，成事不壞。此日所作，堅牢不退，久長成就。",
+            "description_ja": "金剛峯日は七曜と当日の宿が堅固な守護の力を形成する吉日なり。「金剛」は密教の金剛界に由来し、壊れることなき力を象徴する。この日に始めたことは持続しやすく、修法・写経・授戒など継続力を要する行に適す。"
         },
         "rasetsu": {
             "name": "羅刹日",
             "reading": "らせつび",
             "level": "凶",
-            "description": "宿曜經記載的凶日。七曜與當日宿的能量產生衝突，容易遇到阻礙。避免護摩、灌頂、簽約、遠行。適合靜坐禪修、誦經迴向、閉關自修、整理反省。"
+            "description": "宿曜經記載的凶日。七曜與當日宿的能量產生衝突，容易遇到阻礙。避免護摩、灌頂、簽約、遠行。適合靜坐禪修、誦經迴向、閉關自修、整理反省。",
+            "description_classic": "羅刹者，障礙破壞之鬼神也。七曜與宿値相沖，諸事不順，多遇阻滯。此日宜靜守，不宜遠行興作。",
+            "description_ja": "羅刹日は七曜と当日の宿が衝突し、障碍が生じやすい凶日なり。「羅刹」は仏教における悪鬼の名で、妨げと破壊を象徴する。この日は護摩・灌頂など重要な仏事を避け、静坐禅修・誦経回向・閑居自省に充てるべし。"
         }
     }
 
@@ -982,11 +988,17 @@ class SukuyodoService:
     # 每期的起始關係和名稱
     SANKI_CYCLE = [
         {"name": "躍動の週", "reading": "やくどうのしゅう", "start_relation": "命",
-         "description": "活動期。27日循環的第一期（一九），從命宿開始。能量充沛，適合積極行動、開展新事。"},
+         "description": "活動期。27日循環的第一期（一九），從命宿開始。能量充沛，適合積極行動、開展新事。",
+         "description_classic": "一九者，命宿起行之期也。氣勢充盈，所作多成。宜積極進取，興造百事。",
+         "description_ja": "一九（いっく）は命宿から始まる活動期なり。27日循環の最初の9日間にして、エネルギーが最も充実する時期。新たな計画の発起、重要な約束、積極的な行動に適す。"},
         {"name": "破壊の週", "reading": "はかいのしゅう", "start_relation": "業",
-         "description": "衰退期。27日循環的第二期（二九），從業宿開始。前期積累的問題浮現，宜收斂整理。"},
+         "description": "衰退期。27日循環的第二期（二九），從業宿開始。前期積累的問題浮現，宜收斂整理。",
+         "description_classic": "二九者，業宿起行之期也。前期所積之疲困顯現，氣勢轉衰。宜收斂謹慎，不宜妄動。",
+         "description_ja": "二九（にく）は業宿から始まる衰退期なり。前期に蓄積した疲労や問題が表面化し、エネルギーが収斂に向かう。新規の着手を避け、手元の整理と反省に努めるべき時期。"},
         {"name": "再生の週", "reading": "さいせいのしゅう", "start_relation": "胎",
-         "description": "轉換期。27日循環的第三期（三九），從胎宿開始。舊的結束、新的萌芽，適合反省與準備。"},
+         "description": "轉換期。27日循環的第三期（三九），從胎宿開始。舊的結束、新的萌芽，適合反省與準備。",
+         "description_classic": "三九者，胎宿起行之期也。舊事終而新事萌。宜靜養整理，以備來期。",
+         "description_ja": "三九（さんく）は胎宿から始まる転換期なり。27日循環の最終段階にして、古きものの終わりと新しきものの萌芽が同時に起こる。静養・整理・準備に充て、次の循環に向けた蓄力の時期とす。"},
     ]
 
     # 三期サイクル各日型（每期 9 天：起始日 + 栄→衰→安→危→成→壊→友→親）
@@ -3631,7 +3643,10 @@ class SukuyodoService:
             "day_type": day_type["name"],
             "day_type_reading": day_type["reading"],
             "day_description": day_type["description"],
-            "period_description": cycle_info["description"]
+            "day_description_ja": day_type.get("description_ja", ""),
+            "period_description": cycle_info["description"],
+            "period_description_classic": cycle_info.get("description_classic", ""),
+            "period_description_ja": cycle_info.get("description_ja", "")
         }
 
     def get_special_days_for_month(self, year: int, month: int) -> list[dict]:
@@ -3701,6 +3716,8 @@ class SukuyodoService:
                     "mansion": day_mansion["name_jp"],
                     "mansion_reading": day_mansion["reading"],
                     "description": info["description"],
+                    "description_classic": info.get("description_classic", ""),
+                    "description_ja": info.get("description_ja", ""),
                     "ryouhan_reversed": ryouhan_reversed
                 })
 

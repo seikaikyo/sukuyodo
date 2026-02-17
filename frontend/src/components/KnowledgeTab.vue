@@ -307,6 +307,8 @@ function getKuyouRowClass(level: string) {
         <div class="history-sections">
           <div v-for="(section, i) in metadata.special_days_knowledge.sections" :key="'sd-' + i" class="history-item">
             <h4>{{ section.title }}</h4>
+            <div v-if="section.content_classic" class="classic-quote">{{ section.content_classic }}</div>
+            <div v-if="section.content_ja" class="ja-text">{{ section.content_ja }}</div>
             <p>{{ section.content }}</p>
           </div>
         </div>
@@ -398,6 +400,8 @@ function getKuyouRowClass(level: string) {
         <div class="history-sections">
           <div v-for="(section, i) in metadata.sanki_knowledge.sections" :key="'sk-' + i" class="history-item">
             <h4>{{ section.title }}</h4>
+            <div v-if="section.content_classic" class="classic-quote">{{ section.content_classic }}</div>
+            <div v-if="section.content_ja" class="ja-text">{{ section.content_ja }}</div>
             <p>{{ section.content }}</p>
           </div>
         </div>

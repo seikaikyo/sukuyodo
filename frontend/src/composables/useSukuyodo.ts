@@ -588,6 +588,8 @@ export interface PracticalGuide {
 export interface KnowledgeSection {
   title: string
   content: string
+  content_classic?: string
+  content_ja?: string
 }
 
 export interface KnowledgeTable {
@@ -652,7 +654,7 @@ export interface Metadata {
   }
   sanki_knowledge?: {
     title: string
-    sections: { title: string; content: string }[]
+    sections: KnowledgeSection[]
   }
   nature_types_knowledge?: NatureTypesKnowledge
   month_mansion_table?: MonthMansionTable
