@@ -255,6 +255,7 @@ onMounted(() => {
         @update:date2="date2 = $event"
         @calculate-compatibility="calculateCompatibility"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
+        @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />
 
       <LuckyDaysTab

@@ -125,6 +125,7 @@ const emit = defineEmits<{
   'update:date2': [value: string]
   calculateCompatibility: []
   'navigate-knowledge': [tab: string]
+  'navigate-lucky': []
 }>()
 
 const relationKeys = [
@@ -448,7 +449,7 @@ function handleMansionClick(m: CompatibleMansion) {
       <template v-if="partnersWithBirthDate.length === 0">
         <div class="empty-partners">
           <p>尚未設定收藏對象</p>
-          <router-link to="/profile" class="btn-link">前往設定</router-link>
+          <button class="btn-link" @click="emit('navigate-lucky')">前往設定</button>
         </div>
       </template>
       <template v-else-if="partnerCompatLoading">

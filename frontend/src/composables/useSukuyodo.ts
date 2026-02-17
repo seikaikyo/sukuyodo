@@ -377,18 +377,6 @@ export interface CompatibilityFinderResult {
   kisei: CompatibilityCategory
 }
 
-export interface LuckyDayAction {
-  key: string
-  name: string
-}
-
-export interface LuckyDayCategory {
-  key: string
-  name: string
-  icon: string
-  actions: LuckyDayAction[]
-}
-
 export interface LuckyDay {
   date: string
   weekday: string
@@ -741,9 +729,6 @@ export function useSukuyodo() {
   const partnerCompatLoading = ref(false)
 
   // Lucky Days
-  const luckyDayCategories = ref<LuckyDayCategory[]>([])
-  const selectedLuckyCategory = ref<string | null>(null)
-  const selectedLuckyAction = ref<string | null>(null)
   const luckyDayResult = ref<LuckyDayResult | null>(null)
   const luckyDayLoading = ref(false)
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
@@ -782,12 +767,6 @@ export function useSukuyodo() {
 
   const mansionElementColor = computed(() => {
     return mansion.value ? elementColors[mansion.value.element] || '#f59e0b' : '#f59e0b'
-  })
-
-  const currentCategoryActions = computed(() => {
-    if (!selectedLuckyCategory.value) return []
-    const cat = luckyDayCategories.value.find(c => c.key === selectedLuckyCategory.value)
-    return cat?.actions || []
   })
 
   const relationKeys = [
@@ -996,44 +975,6 @@ export function useSukuyodo() {
       fetchMonthlyFortune(),
       fetchYearlyFortune()
     ])
-  }
-
-  async function fetchLuckyDayCategories() {
-    try {
-      const res = await fetch(getApiUrl('/lucky-days/categories'))
-      if (res.ok) {
-        const data = await res.json()
-        if (data.success) {
-          luckyDayCategories.value = data.categories
-        }
-      }
-    } catch {
-      console.error('Failed to fetch lucky day categories')
-    }
-  }
-
-  async function fetchLuckyDays() {
-    const queryDate = birthDate.value || myBirthDate.value
-    if (!queryDate || !selectedLuckyCategory.value || !selectedLuckyAction.value) return
-
-    luckyDayLoading.value = true
-    luckyDayResult.value = null
-
-    try {
-      const res = await fetch(
-        getApiUrl(`/lucky-days/${queryDate}?category=${selectedLuckyCategory.value}&action=${selectedLuckyAction.value}`)
-      )
-      if (res.ok) {
-        const data = await res.json()
-        if (data.success) {
-          luckyDayResult.value = data.data
-        }
-      }
-    } catch {
-      console.error('Failed to fetch lucky days')
-    } finally {
-      luckyDayLoading.value = false
-    }
   }
 
   async function fetchLuckyDaySummary() {
@@ -1282,17 +1223,6 @@ export function useSukuyodo() {
   // Event Handlers
   // ============================================================================
 
-  function selectLuckyCategory(categoryKey: string) {
-    selectedLuckyCategory.value = categoryKey
-    selectedLuckyAction.value = null
-    luckyDayResult.value = null
-  }
-
-  function selectLuckyAction(actionKey: string) {
-    selectedLuckyAction.value = actionKey
-    fetchLuckyDays()
-  }
-
   function handleWheelSelect(m: WheelMansion) {
     if (selectedWheelMansion.value?.index === m.index) {
       selectedWheelMansion.value = null
@@ -1326,8 +1256,7 @@ export function useSukuyodo() {
       loadMetadata(),
       loadAllMansions(),
       loadRelations(),
-      loadElements(),
-      fetchLuckyDayCategories()
+      loadElements()
     ])
 
     // Auto-load if profile has birthdate
@@ -1387,9 +1316,6 @@ export function useSukuyodo() {
     partnerCompatLoading,
 
     // Lucky Days
-    luckyDayCategories,
-    selectedLuckyCategory,
-    selectedLuckyAction,
     luckyDayResult,
     luckyDayLoading,
     luckyDaySummary,
@@ -1406,7 +1332,6 @@ export function useSukuyodo() {
     // Computed
     elementColors,
     mansionElementColor,
-    currentCategoryActions,
     relationKeys,
 
     // Helper Functions
@@ -1418,7 +1343,6 @@ export function useSukuyodo() {
 
     // API Functions
     lookupMansion,
-    fetchLuckyDays,
     fetchLuckyDaySummary,
     fetchJapaneseCalendar,
     fetchSpecialDays,
@@ -1430,8 +1354,6 @@ export function useSukuyodo() {
     fetchYearlyRange,
 
     // Event Handlers
-    selectLuckyCategory,
-    selectLuckyAction,
     handleWheelSelect,
     quickSelect,
     toggleMonthlyWeek,
