@@ -516,58 +516,6 @@ class JapaneseCalendarService:
         """取得所有吉日/凶日類型的說明"""
         return self.DAY_TYPE_DESCRIPTIONS
 
-    def get_upcoming_lucky_days(self, days_ahead: int = 30) -> dict:
-        """
-        取得未來指定天數內的吉日
-
-        Args:
-            days_ahead: 查詢未來幾天（預設 30）
-
-        Returns:
-            包含各類吉日列表的字典
-        """
-        today = date.today()
-        result = {
-            "tensya": [],
-            "ichiryumanbai": [],
-            "tora_no_hi": [],
-            "mi_no_hi": [],
-            "tsuchinoto_mi": [],
-            "super_lucky": [],
-            "fujoubyou": []
-        }
-
-        for i in range(days_ahead):
-            target_date = today + timedelta(days=i)
-            day_info = self.get_day_info(target_date)
-
-            base_info = {
-                "date": day_info["date"],
-                "weekday": day_info["weekday"],
-                "stem_branch": day_info["stem_branch"]["full"]
-            }
-
-            if "tensya" in day_info["types"]:
-                result["tensya"].append(base_info)
-            if "ichiryumanbai" in day_info["types"]:
-                result["ichiryumanbai"].append(base_info)
-            if "tora_no_hi" in day_info["types"]:
-                result["tora_no_hi"].append(base_info)
-            if "mi_no_hi" in day_info["types"]:
-                result["mi_no_hi"].append(base_info)
-            if "tsuchinoto_mi" in day_info["types"]:
-                result["tsuchinoto_mi"].append(base_info)
-            if day_info["is_super_lucky"]:
-                result["super_lucky"].append({
-                    **base_info,
-                    "types": day_info["types"],
-                    "labels": day_info["labels"]
-                })
-            if day_info["is_fujoubyou"]:
-                result["fujoubyou"].append(base_info)
-
-        return result
-
 
 # 全域實例
 japanese_calendar_service = JapaneseCalendarService()
