@@ -813,8 +813,10 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
     fetch(`${apiUrl}/fortune/yearly-range?birth_date=${person2.date}&start_year=${startYear}&end_year=${endYear}`)
   ])
   if (!res1.ok || !res2.ok) throw new Error('API 呼叫失敗')
-  const p1Data: YearlyFortune[] = await res1.json()
-  const p2Data: YearlyFortune[] = await res2.json()
+  const p1Raw = await res1.json()
+  const p2Raw = await res2.json()
+  const p1Data: YearlyFortune[] = p1Raw.data ?? p1Raw
+  const p2Data: YearlyFortune[] = p2Raw.data ?? p2Raw
 
   // 互補分析
   const lowThreshold = 55
