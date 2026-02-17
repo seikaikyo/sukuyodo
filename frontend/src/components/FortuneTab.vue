@@ -322,6 +322,8 @@ function exportDecadeReport() {
               <span v-for="item in dailyFortune.day_mansion.day_fortune.inauspicious" :key="'i-'+item" class="day-tag inauspicious">{{ item }}</span>
             </div>
             <p class="day-fortune-classic">{{ dailyFortune.day_mansion.day_fortune.summary_classic }}</p>
+            <p class="day-fortune-ja">{{ dailyFortune.day_mansion.day_fortune.summary_ja }}</p>
+            <p class="day-fortune-zh">{{ dailyFortune.day_mansion.day_fortune.summary }}</p>
           </div>
 
           <div class="advice-box">
@@ -1442,12 +1444,27 @@ function exportDecadeReport() {
   color: var(--score-low, #b44);
 }
 
-.day-fortune-classic {
+.day-fortune-classic,
+.day-fortune-ja,
+.day-fortune-zh {
   margin: 0;
   font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.day-fortune-classic {
   color: var(--text-tertiary);
   font-style: italic;
-  line-height: 1.5;
+}
+
+.day-fortune-ja {
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.day-fortune-zh {
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
 .advice-box {
