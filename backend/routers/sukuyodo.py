@@ -44,7 +44,8 @@ async def get_all_mansions():
                 "personality_classic": m.get("personality_classic", ""),
                 "personality_ja": m.get("personality_ja", ""),
                 "classic_source": m.get("classic_source", ""),
-                "nature_type": m.get("nature_type", "")
+                "nature_type": m.get("nature_type", ""),
+                "day_fortune": m.get("day_fortune", {})
             }
             for m in mansions
         ]
