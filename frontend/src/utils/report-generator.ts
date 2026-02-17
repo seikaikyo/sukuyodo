@@ -809,8 +809,8 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
 
   // 平行呼叫兩人 yearly-range API
   const [res1, res2] = await Promise.all([
-    fetch(`${apiUrl}/fortune/yearly-range?date=${person1.date}&start_year=${startYear}&end_year=${endYear}`),
-    fetch(`${apiUrl}/fortune/yearly-range?date=${person2.date}&start_year=${startYear}&end_year=${endYear}`)
+    fetch(`${apiUrl}/fortune/yearly-range?birth_date=${person1.date}&start_year=${startYear}&end_year=${endYear}`),
+    fetch(`${apiUrl}/fortune/yearly-range?birth_date=${person2.date}&start_year=${startYear}&end_year=${endYear}`)
   ])
   if (!res1.ok || !res2.ok) throw new Error('API 呼叫失敗')
   const p1Data: YearlyFortune[] = await res1.json()

@@ -388,21 +388,6 @@ export interface LuckyDay {
   tip?: string
 }
 
-export interface LuckyDayResult {
-  category: string
-  category_name: string
-  action: string
-  action_name: string
-  your_mansion: {
-    name_jp: string
-    reading: string
-    element: string
-  }
-  lucky_days: LuckyDay[]
-  avoid_days: LuckyDay[]
-  advice: string
-}
-
 export interface LuckyDaySummaryItem {
   name: string
   lucky_days: LuckyDay[]
@@ -729,8 +714,6 @@ export function useSukuyodo() {
   const partnerCompatLoading = ref(false)
 
   // Lucky Days
-  const luckyDayResult = ref<LuckyDayResult | null>(null)
-  const luckyDayLoading = ref(false)
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
   const luckyDaySummaryLoading = ref(false)
 
@@ -795,7 +778,6 @@ export function useSukuyodo() {
     monthlyFortune.value = null
     yearlyFortune.value = null
     yearlyRange.value = []
-    luckyDayResult.value = null
 
     try {
       const res = await fetch(getApiUrl(`/mansion/${birthDate.value}`))
@@ -1316,8 +1298,6 @@ export function useSukuyodo() {
     partnerCompatLoading,
 
     // Lucky Days
-    luckyDayResult,
-    luckyDayLoading,
     luckyDaySummary,
     luckyDaySummaryLoading,
     japaneseCalendar,
