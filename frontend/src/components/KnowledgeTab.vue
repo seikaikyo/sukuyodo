@@ -339,6 +339,8 @@ function getKuyouRowClass(level: string) {
         <div class="history-sections">
           <div v-for="(section, i) in metadata.kuyou_knowledge.sections" :key="'ky-' + i" class="history-item">
             <h4>{{ section.title }}</h4>
+            <div v-if="section.content_classic" class="classic-quote">{{ section.content_classic }}</div>
+            <div v-if="section.content_ja" class="ja-text">{{ section.content_ja }}</div>
             <p>{{ section.content }}</p>
           </div>
         </div>

@@ -645,7 +645,7 @@ export interface Metadata {
   kuyou_knowledge?: KuyouKnowledge
   ryouhan_knowledge?: {
     title: string
-    sections: { title: string; content: string }[]
+    sections: KnowledgeSection[]
     ryouhan_table?: {
       description: string
       headers: string[]
