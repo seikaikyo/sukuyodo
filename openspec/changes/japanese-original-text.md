@@ -1,7 +1,7 @@
 ---
 title: 宿曜經原典日文與漢文經典對照
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-17
 ---
 

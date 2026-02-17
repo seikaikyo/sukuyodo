@@ -137,14 +137,20 @@ function getKuyouRowClass(level: string) {
           </div>
           <div class="info-section">
             <h4>愛情運</h4>
+            <div v-if="mansion?.love_classic" class="classic-quote">{{ mansion.love_classic }}</div>
+            <div v-if="mansion?.love_ja" class="ja-text">{{ mansion.love_ja }}</div>
             <p>{{ mansion?.love }}</p>
           </div>
           <div class="info-section">
             <h4>事業運</h4>
+            <div v-if="mansion?.career_classic" class="classic-quote">{{ mansion.career_classic }}</div>
+            <div v-if="mansion?.career_ja" class="ja-text">{{ mansion.career_ja }}</div>
             <p>{{ mansion?.career }}</p>
           </div>
           <div class="info-section">
             <h4>健康運</h4>
+            <div v-if="mansion?.health_classic" class="classic-quote">{{ mansion.health_classic }}</div>
+            <div v-if="mansion?.health_ja" class="ja-text">{{ mansion.health_ja }}</div>
             <p>{{ mansion?.health }}</p>
           </div>
           <div v-if="mansion?.life_stages" class="info-section">
@@ -152,18 +158,26 @@ function getKuyouRowClass(level: string) {
             <div class="life-stages">
               <div class="stage-item">
                 <span class="stage-label">20 代</span>
+                <div v-if="mansion.life_stages_classic?.twenties" class="classic-quote stage-quote">{{ mansion.life_stages_classic.twenties }}</div>
+                <div v-if="mansion.life_stages_ja?.twenties" class="ja-text stage-quote">{{ mansion.life_stages_ja.twenties }}</div>
                 <p>{{ mansion.life_stages.twenties }}</p>
               </div>
               <div class="stage-item">
                 <span class="stage-label">30 代</span>
+                <div v-if="mansion.life_stages_classic?.thirties" class="classic-quote stage-quote">{{ mansion.life_stages_classic.thirties }}</div>
+                <div v-if="mansion.life_stages_ja?.thirties" class="ja-text stage-quote">{{ mansion.life_stages_ja.thirties }}</div>
                 <p>{{ mansion.life_stages.thirties }}</p>
               </div>
               <div class="stage-item">
                 <span class="stage-label">40 代</span>
+                <div v-if="mansion.life_stages_classic?.forties" class="classic-quote stage-quote">{{ mansion.life_stages_classic.forties }}</div>
+                <div v-if="mansion.life_stages_ja?.forties" class="ja-text stage-quote">{{ mansion.life_stages_ja.forties }}</div>
                 <p>{{ mansion.life_stages.forties }}</p>
               </div>
               <div class="stage-item">
                 <span class="stage-label">50 代+</span>
+                <div v-if="mansion.life_stages_classic?.fifties_plus" class="classic-quote stage-quote">{{ mansion.life_stages_classic.fifties_plus }}</div>
+                <div v-if="mansion.life_stages_ja?.fifties_plus" class="ja-text stage-quote">{{ mansion.life_stages_ja.fifties_plus }}</div>
                 <p>{{ mansion.life_stages.fifties_plus }}</p>
               </div>
             </div>
@@ -1011,6 +1025,11 @@ function getKuyouRowClass(level: string) {
   color: var(--text-muted);
   margin-top: var(--space-1);
   font-style: normal;
+}
+
+.stage-quote {
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.8rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -33,9 +33,17 @@ export interface Mansion {
   keywords: string[]
   nature_type?: string
   love: string
+  love_classic?: string
+  love_ja?: string
   career: string
+  career_classic?: string
+  career_ja?: string
   health: string
+  health_classic?: string
+  health_ja?: string
   life_stages?: LifeStages
+  life_stages_classic?: Partial<LifeStages>
+  life_stages_ja?: Partial<LifeStages>
   seasonal?: string
   lunar_date?: {
     year: number
