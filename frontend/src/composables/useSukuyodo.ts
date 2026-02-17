@@ -515,6 +515,8 @@ export interface RelationType {
   reading: string
   score: number
   description: string
+  description_classic?: string
+  description_ja?: string
   detailed: string
   advice: string
   tips: string[]

@@ -41,6 +41,9 @@ async def get_all_mansions():
                 "element": m["element"],
                 "keywords": m["keywords"],
                 "personality": m.get("personality", ""),
+                "personality_classic": m.get("personality_classic", ""),
+                "personality_ja": m.get("personality_ja", ""),
+                "classic_source": m.get("classic_source", ""),
                 "nature_type": m.get("nature_type", "")
             }
             for m in mansions
@@ -159,6 +162,8 @@ async def get_relation_types():
                 "reading": rel.get("reading", ""),
                 "score": rel["score"],
                 "description": rel["description"],
+                "description_classic": rel.get("description_classic", ""),
+                "description_ja": rel.get("description_ja", ""),
                 "detailed": rel.get("detailed", ""),
                 "advice": rel["advice"],
                 "tips": rel.get("tips", []),
