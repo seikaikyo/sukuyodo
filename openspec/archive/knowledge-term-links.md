@@ -1,7 +1,7 @@
 ---
 title: 專有名詞連結至知識頁面
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-17
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: 流年報告 / 相性報告 / 雙人流年報告 HTML 匯出
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-16
 ---
 
