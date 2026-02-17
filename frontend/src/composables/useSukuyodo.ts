@@ -27,6 +27,9 @@ export interface Mansion {
   reading: string
   element: string
   personality: string
+  personality_classic?: string
+  personality_ja?: string
+  classic_source?: string
   keywords: string[]
   nature_type?: string
   love: string

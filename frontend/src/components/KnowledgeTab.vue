@@ -118,6 +118,15 @@ function getKuyouRowClass(level: string) {
         <div class="mansion-sections">
           <div class="info-section">
             <h4>性格特質</h4>
+            <div v-if="mansion?.personality_classic" class="classic-quote">
+              {{ mansion.personality_classic }}
+              <div v-if="mansion?.classic_source" class="classic-source">
+                — {{ mansion.classic_source }}
+              </div>
+            </div>
+            <div v-if="mansion?.personality_ja" class="ja-text">
+              {{ mansion.personality_ja }}
+            </div>
             <p>{{ mansion?.personality }}</p>
           </div>
           <div class="info-section">
@@ -958,6 +967,38 @@ function getKuyouRowClass(level: string) {
   .nature-types-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 漢文原典 - 金色左邊框 + 經卷風格 */
+.classic-quote {
+  border-left: 3px solid var(--stellar-gold);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-2) 0;
+  background: rgba(212, 175, 55, 0.05);
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--stellar-soft);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+/* 日文詮釋 - 銀色左邊框 */
+.ja-text {
+  border-left: 3px solid var(--moon-silver);
+  padding: var(--space-2) var(--space-4);
+  margin: var(--space-2) 0;
+  background: rgba(184, 196, 208, 0.05);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* 出處標記 */
+.classic-source {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+  font-style: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
