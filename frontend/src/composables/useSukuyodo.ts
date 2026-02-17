@@ -630,6 +630,23 @@ export interface KuyouKnowledge {
   stars_table: KnowledgeTable
 }
 
+export interface NatureTypeEntry {
+  name: string
+  reading: string
+  sanskrit: string
+  mansions: string[]
+  description: string
+}
+
+export interface NatureTypesKnowledge {
+  title: string
+  sections: KnowledgeSection[]
+  nature_types_table: {
+    description: string
+    types: NatureTypeEntry[]
+  }
+}
+
 export interface Metadata {
   name: string
   reading: string
@@ -659,6 +676,7 @@ export interface Metadata {
     title: string
     sections: { title: string; content: string }[]
   }
+  nature_types_knowledge?: NatureTypesKnowledge
   month_mansion_table?: MonthMansionTable
 }
 
@@ -678,7 +696,7 @@ export function useSukuyodo() {
   const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
   const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'decade'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
-  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
+  const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'nature-types' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
 
   // Query UI
   const showQueryDialog = ref(false)

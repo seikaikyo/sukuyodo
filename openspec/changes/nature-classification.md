@@ -8,8 +8,9 @@ created: 2026-02-17
 # 二十七宿性質分類（七科分宿）
 
 ## 變更內容
-依據宿曜經原典，新增 27 宿的七科分宿（性質分類），將每宿歸入 7 種性質類別之一。
-6 個外部來源交叉驗證完全一致，無爭議。
+依據宿曜經原典，新增 27 宿的七科分宿（性質分類）欄位與詳細說明。
+Phase 1 已完成 nature_type 欄位和 badge 顯示。
+Phase 2 新增 7 種分類的專業說明和獨立知識 tab。
 
 ## 七科分類
 
@@ -24,17 +25,20 @@ created: 2026-02-17
 | 剛柔宿 | 2 | 昴、氐 | Mishra (混合) |
 
 ## 影響範圍
-- `backend/data/sukuyodo_mansions.json` — 每宿新增 `nature_type` 欄位
-- `backend/services/sukuyodo.py` — 新增 NATURE_TYPE 常數和 API 支援
-- 前端宿詳情頁 — 顯示性質分類
+- `backend/data/sukuyodo_mansions.json` — 每宿 `nature_type` 欄位 + metadata 內 `nature_types_knowledge`
+- `backend/routers/sukuyodo.py` — `/mansions` 端點加入 nature_type
+- `frontend/src/composables/useSukuyodo.ts` — Mansion interface + Metadata interface
+- `frontend/src/components/KnowledgeTab.vue` — nature badge + 七科分宿知識 tab
 
 ## 測試計畫
-1. 驗證 27 宿的 nature_type 全部正確對應
-2. API 回傳包含 nature_type
-3. 前端正確顯示
+1. API `/metadata` 回傳含 nature_types_knowledge
+2. 前端「七科分宿」tab 顯示 7 個分類卡片
+3. 本命宿所屬分類正確標示
 
 ## Checklist
-- [x] JSON 資料新增 nature_type (27 宿全部正確)
-- [x] 後端 /mansions 端點加入 nature_type
-- [x] 前端 Mansion interface 加入 nature_type
-- [x] 前端 KnowledgeTab 顯示 nature-badge
+- [x] JSON 資料新增 nature_type (Phase 1)
+- [x] 後端 /mansions 端點加入 nature_type (Phase 1)
+- [x] 前端 Mansion interface + nature badge (Phase 1)
+- [x] JSON metadata 新增 nature_types_knowledge
+- [x] 前端 Metadata interface 擴充
+- [x] 前端七科分宿知識 tab

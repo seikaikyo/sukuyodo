@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import MansionWheel from './MansionWheel.vue'
 import type { Mansion, WheelMansion, RelationType, ElementType, Metadata } from '../composables/useSukuyodo'
 
-type KnowledgeActiveTab = 'mansion' | 'wheel' | 'relations' | 'elements' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'
+type KnowledgeActiveTab = 'mansion' | 'wheel' | 'relations' | 'elements' | 'nature-types' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'
 
 const props = defineProps<{
   activeTab: KnowledgeActiveTab
@@ -36,7 +36,8 @@ const tabGroups = [
       { key: 'mansion' as KnowledgeActiveTab, name: '本命宿' },
       { key: 'wheel' as KnowledgeActiveTab, name: '二十七宿' },
       { key: 'relations' as KnowledgeActiveTab, name: '六種關係' },
-      { key: 'elements' as KnowledgeActiveTab, name: '五行七曜' }
+      { key: 'elements' as KnowledgeActiveTab, name: '五行七曜' },
+      { key: 'nature-types' as KnowledgeActiveTab, name: '七科分宿' }
     ]
   },
   {
@@ -63,6 +64,16 @@ function handleWheelSelect(m: WheelMansion) {
   } else {
     emit('update:selectedWheelMansion', m)
   }
+}
+
+const natureTypeColors: Record<string, string> = {
+  '安住宿': '#6B8E6B',
+  '和善宿': '#7BA7C9',
+  '急速宿': '#C4A052',
+  '悪害宿': '#C96B5B',
+  '猛悪宿': '#9B5B7A',
+  '軽燥宿': '#6BB3A0',
+  '剛柔宿': '#8B7D6B'
 }
 
 function getKuyouRowClass(level: string) {
@@ -236,6 +247,39 @@ function getKuyouRowClass(level: string) {
             <p v-if="el.detailed_traits" class="element-extra">{{ el.detailed_traits }}</p>
             <p v-if="el.interactions" class="element-extra">{{ el.interactions }}</p>
             <p v-if="el.life_advice" class="element-extra element-advice">{{ el.life_advice }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nature Types (七科分宿) -->
+    <div v-if="activeTab === 'nature-types'" id="panel-knowledge-nature-types" class="knowledge-content" role="tabpanel">
+      <div class="calendar-info" v-if="metadata?.nature_types_knowledge">
+        <h3>{{ metadata.nature_types_knowledge.title }}</h3>
+        <div class="history-sections">
+          <div v-for="(section, i) in metadata.nature_types_knowledge.sections" :key="'nt-' + i" class="history-item">
+            <h4>{{ section.title }}</h4>
+            <p>{{ section.content }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="nature-types-grid" v-if="metadata?.nature_types_knowledge?.nature_types_table">
+        <div
+          v-for="nt in metadata.nature_types_knowledge.nature_types_table.types"
+          :key="nt.name"
+          class="element-card"
+          :class="{ 'my-element': mansion?.nature_type === nt.name }"
+          :style="{ borderColor: natureTypeColors[nt.name] }"
+        >
+          <div class="element-header" :style="{ background: natureTypeColors[nt.name] }">
+            <span class="element-name">{{ nt.name }}</span>
+            <span class="element-reading">{{ nt.reading }}</span>
+            <span v-if="mansion?.nature_type === nt.name" class="my-element-tag">你的分類</span>
+          </div>
+          <div class="element-body">
+            <p class="planet">{{ nt.sanskrit }}</p>
+            <p class="traits">所屬宿：{{ nt.mansions.join('、') }}</p>
+            <p class="element-description">{{ nt.description }}</p>
           </div>
         </div>
       </div>
@@ -902,8 +946,16 @@ function getKuyouRowClass(level: string) {
 .kuyou-row-half td { background: rgba(168, 162, 158, 0.12); }
 .kuyou-row-bad td { background: rgba(232, 93, 76, 0.15); }
 
+.nature-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
 @media (max-width: 767px) {
-  .elements-grid {
+  .elements-grid,
+  .nature-types-grid {
     grid-template-columns: 1fr;
   }
 }
