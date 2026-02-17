@@ -23,6 +23,7 @@ const emit = defineEmits<{
   (e: 'clearPartner'): void
   (e: 'refreshPartner', partnerId: string): void
   (e: 'fetchSpecialDays', year: number, month: number): void
+  (e: 'navigate-knowledge', tab: string): void
 }>()
 
 const { profile, addPartner, updatePartner, removePartner } = useProfile()
@@ -273,9 +274,9 @@ function getSpecialDayAdvice(type: string): string {
               <div class="special-day-header">
                 <span class="special-day-date">{{ formatSpecialDate(day.date) }}</span>
                 <span class="special-day-weekday">{{ day.weekday }}</span>
-                <span class="special-day-type-badge" :class="getSpecialDayTypeClass(day.type)">{{ day.name }}</span>
+                <span class="special-day-type-badge term-link" :class="getSpecialDayTypeClass(day.type)" @click="emit('navigate-knowledge', 'special-days')">{{ day.name }}</span>
                 <span class="special-day-level" :class="getSpecialDayTypeClass(day.type)">{{ day.level }}</span>
-                <span v-if="day.ryouhan_reversed" class="ryouhan-tag">凌犯</span>
+                <span v-if="day.ryouhan_reversed" class="ryouhan-tag term-link" @click="emit('navigate-knowledge', 'ryouhan')">凌犯</span>
               </div>
               <p class="special-day-advice">{{ day.description || getSpecialDayAdvice(day.type) }}</p>
               <p v-if="day.ryouhan_reversed" class="ryouhan-note">凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）</p>

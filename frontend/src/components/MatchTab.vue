@@ -124,6 +124,7 @@ const emit = defineEmits<{
   'update:selectedMansion': [value: CompatibleMansion | null]
   'update:date2': [value: string]
   calculateCompatibility: []
+  'navigate-knowledge': [tab: string]
 }>()
 
 const relationKeys = [
@@ -342,15 +343,16 @@ function handleMansionClick(m: CompatibleMansion) {
             <span class="person-element">{{ compatibility.person1.element }}</span>
           </div>
           <div class="relation-arrow">
-            <span class="relation-name">
+            <span class="relation-name term-link" @click="emit('navigate-knowledge', 'relations')">
               {{ compatibility.relation.name }}
               <template v-if="compatibility.relation.direction">（{{ compatibility.relation.direction }}）</template>
             </span>
             <span class="relation-reading">{{ compatibility.relation.reading }}</span>
             <span
               v-if="compatibility.relation.distance_type_name"
-              class="distance-tag"
+              class="distance-tag term-link"
               :class="compatibility.relation.distance_type"
+              @click="emit('navigate-knowledge', 'relations')"
             >
               {{ compatibility.relation.distance_type_name }}
             </span>
@@ -381,7 +383,7 @@ function handleMansionClick(m: CompatibleMansion) {
           <span class="element-tag" :style="{ background: elementColors[compatibility.person1.element] }">{{ compatibility.person1.element }}</span>
           <span class="element-arrow">→</span>
           <span class="element-tag" :style="{ background: elementColors[compatibility.person2.element] }">{{ compatibility.person2.element }}</span>
-          <span class="element-desc">{{ getElementDesc(compatibility.person1.element, compatibility.person2.element, compatibility.calculation.element_relation) }}</span>
+          <span class="element-desc term-link" @click="emit('navigate-knowledge', 'elements')">{{ getElementDesc(compatibility.person1.element, compatibility.person2.element, compatibility.calculation.element_relation) }}</span>
         </div>
 
         <div class="compat-detail">
@@ -472,8 +474,8 @@ function handleMansionClick(m: CompatibleMansion) {
                 <span class="partner-mansion">{{ pc.mansion.name_jp }}（{{ pc.mansion.reading }}）</span>
               </div>
               <div class="partner-relation">
-                <span class="relation-name">{{ pc.relation.name }}</span>
-                <span v-if="pc.relation.distance_type_name" class="distance-tag" :class="pc.relation.distance_type">{{ pc.relation.distance_type_name }}</span>
+                <span class="relation-name term-link" @click.stop="emit('navigate-knowledge', 'relations')">{{ pc.relation.name }}</span>
+                <span v-if="pc.relation.distance_type_name" class="distance-tag term-link" :class="pc.relation.distance_type" @click.stop="emit('navigate-knowledge', 'relations')">{{ pc.relation.distance_type_name }}</span>
                 <div v-if="pc.relation.direction" class="partner-directions">
                   <span class="dir-tag">你→{{ pc.relation.direction }}</span>
                   <span class="dir-tag">{{ pc.nickname.charAt(0) }}→{{ getInverseDirection(pc.relation.direction) }}</span>
@@ -505,7 +507,7 @@ function handleMansionClick(m: CompatibleMansion) {
                 <span class="element-tag" :style="{ background: elementColors[pc.calculation.person1_element || ''] }">{{ pc.calculation.person1_element || '' }}</span>
                 <span class="element-arrow">→</span>
                 <span class="element-tag" :style="{ background: elementColors[pc.calculation.person2_element || ''] }">{{ pc.calculation.person2_element || '' }}</span>
-                <span class="element-desc">{{ getElementDesc(pc.calculation.person1_element || '', pc.calculation.person2_element || '', pc.calculation.element_relation || '') }}</span>
+                <span class="element-desc term-link" @click="emit('navigate-knowledge', 'elements')">{{ getElementDesc(pc.calculation.person1_element || '', pc.calculation.person2_element || '', pc.calculation.element_relation || '') }}</span>
               </div>
 
               <div class="compat-detail">

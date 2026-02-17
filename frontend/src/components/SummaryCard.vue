@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   query: []
   'navigate-fortune': []
+  'navigate-knowledge': [tab: string]
 }>()
 </script>
 
@@ -22,7 +23,7 @@ const emit = defineEmits<{
         <ruby class="mansion-name">
           {{ mansion.name_jp }}<rp>(</rp><rt>{{ mansion.reading }}</rt><rp>)</rp>
         </ruby>
-        <span class="mansion-element" :style="{ background: elementColor }">
+        <span class="mansion-element term-link" :style="{ background: elementColor }" @click="emit('navigate-knowledge', 'elements')">
           {{ mansion.element }}
         </span>
       </div>
@@ -32,7 +33,7 @@ const emit = defineEmits<{
         class="mansion-relation"
         :class="getMansionRelationClass(dailyFortune.mansion_relation.type)"
       >
-        <span class="relation-title">今日與本命宿關係：<strong>{{ dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）</strong></span>
+        <span class="relation-title">今日與本命宿關係：<strong class="term-link" @click.stop="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）</strong></span>
         <span class="relation-desc">{{ dailyFortune.mansion_relation.description }}</span>
       </div>
     </div>

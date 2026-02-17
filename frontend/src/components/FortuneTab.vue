@@ -24,6 +24,7 @@ const emit = defineEmits<{
   'toggleWeek': [week: number]
   'selectDay': [date: string]
   'fetchYearlyRange': [startYear: number, endYear: number]
+  'navigate-knowledge': [tab: string]
 }>()
 
 function getKuyouLevelClass(level: string) {
@@ -241,7 +242,7 @@ function exportDecadeReport() {
 
           <div v-if="dailyFortune.special_day" class="special-day-banner" :class="[dailyFortune.special_day.type, { reversed: dailyFortune.special_day.ryouhan_reversed }]">
             <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
-            <span class="special-day-name">{{ dailyFortune.special_day.name }}</span>
+            <span class="special-day-name term-link" @click="emit('navigate-knowledge', 'special-days')">{{ dailyFortune.special_day.name }}</span>
             <p class="special-day-desc">{{ dailyFortune.special_day.description }}</p>
             <p v-if="dailyFortune.special_day.ryouhan_reversed" class="special-day-reversed">
               凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）
@@ -249,18 +250,18 @@ function exportDecadeReport() {
           </div>
 
           <div v-if="dailyFortune.ryouhan" class="ryouhan-banner">
-            <span class="ryouhan-label">凌犯期間</span>
+            <span class="ryouhan-label term-link" @click="emit('navigate-knowledge', 'ryouhan')">凌犯期間</span>
             <p class="ryouhan-desc">{{ dailyFortune.ryouhan.description }}</p>
           </div>
 
           <div v-if="dailyFortune.rokugai" class="rokugai-banner">
-            <span class="rokugai-label">六害宿「{{ dailyFortune.rokugai.name }}」</span>
+            <span class="rokugai-label term-link" @click="emit('navigate-knowledge', 'relations')">六害宿「{{ dailyFortune.rokugai.name }}」</span>
             <p class="rokugai-desc">{{ dailyFortune.rokugai.description }}</p>
           </div>
 
           <div v-if="dailyFortune.sanki" class="sanki-box" :class="{ 'dark-week': dailyFortune.sanki.is_dark_week }">
             <div class="sanki-header">
-              <span class="sanki-period" :class="'sanki-' + dailyFortune.sanki.period_index">
+              <span class="sanki-period term-link" :class="'sanki-' + dailyFortune.sanki.period_index" @click="emit('navigate-knowledge', 'sanki')">
                 <ruby v-if="dailyFortune.sanki.period_reading">{{ dailyFortune.sanki.period }}<rp>(</rp><rt>{{ dailyFortune.sanki.period_reading }}</rt><rp>)</rp></ruby>
                 <template v-else>{{ dailyFortune.sanki.period }}</template>
               </span>
@@ -299,7 +300,7 @@ function exportDecadeReport() {
           <div class="mansion-hint">
             <h4>
               今日宿曜提示
-              <span class="hint-relation" :class="dailyFortune.mansion_relation.type">{{ dailyFortune.mansion_relation.name }}</span>
+              <span class="hint-relation term-link" :class="dailyFortune.mansion_relation.type" @click="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name }}</span>
             </h4>
             <p class="hint-mansions">
               本命宿 <strong>{{ dailyFortune.your_mansion.name_jp }}</strong>（{{ dailyFortune.your_mansion.element }}）
@@ -459,7 +460,7 @@ function exportDecadeReport() {
             <span v-if="monthlyFortune.month_mansion" class="month-mansion">
               當月宿：<strong>{{ monthlyFortune.month_mansion.name_jp }}</strong>（{{ monthlyFortune.month_mansion.element }}）
             </span>
-            <span v-if="monthlyFortune.relation" class="month-relation hint-relation" :class="monthlyFortune.relation.type">
+            <span v-if="monthlyFortune.relation" class="month-relation hint-relation term-link" :class="monthlyFortune.relation.type" @click="emit('navigate-knowledge', 'relations')">
               <ruby v-if="monthlyFortune.relation.reading">{{ monthlyFortune.relation.name }}<rp>(</rp><rt>{{ monthlyFortune.relation.reading }}</rt><rp>)</rp></ruby>
               <template v-else>{{ monthlyFortune.relation.name }}</template>
             </span>
@@ -629,7 +630,7 @@ function exportDecadeReport() {
         <div v-if="yearlyFortune" class="current-year-summary">
           <h3 class="current-year-title">{{ yearlyFortune.year }} 年運勢</h3>
           <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
-            <span class="kuyou-name">{{ yearlyFortune.kuyou_star.name }}</span>
+            <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')">{{ yearlyFortune.kuyou_star.name }}</span>
             <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
             <span class="current-year-score" :class="getScoreClass(yearlyFortune.fortune.overall)">{{ yearlyFortune.fortune.overall }}</span>
           </div>

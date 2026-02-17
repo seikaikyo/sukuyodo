@@ -170,6 +170,7 @@ onMounted(() => {
       :element-color="mansionElementColor"
       @query="showQueryDialog = true"
       @navigate-fortune="activeMainTab = 'fortune'; activeFortuneTab = 'daily'"
+      @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
     />
 
     <!-- Empty State -->
@@ -231,6 +232,7 @@ onMounted(() => {
         @toggle-week="toggleMonthlyWeek"
         @select-day="fetchDailyFortuneForDate"
         @fetch-yearly-range="(s: number, e: number) => fetchYearlyRange(s, e)"
+        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
       />
 
       <MatchTab
@@ -252,6 +254,7 @@ onMounted(() => {
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @calculate-compatibility="calculateCompatibility"
+        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
       />
 
       <LuckyDaysTab
@@ -271,6 +274,7 @@ onMounted(() => {
         @clear-partner="clearPairSelection"
         @refresh-partner="fetchPairLuckyDays"
         @fetch-special-days="fetchSpecialDays"
+        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
       />
 
       <KnowledgeTab

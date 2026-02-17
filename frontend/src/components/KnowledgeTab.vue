@@ -112,8 +112,8 @@ function getKuyouRowClass(level: string) {
       <div class="mansion-info-card">
         <h3>{{ mansion?.name_jp }}（{{ mansion?.reading }}）</h3>
         <p class="mansion-element-text">
-          <span class="element-badge" :style="{ background: mansionElementColor }">{{ mansion?.element }}</span>
-          <span v-if="mansion?.nature_type" class="nature-badge">{{ mansion.nature_type }}</span>
+          <span class="element-badge term-link" :style="{ background: mansionElementColor }" @click="emit('update:activeTab', 'elements')">{{ mansion?.element }}</span>
+          <span v-if="mansion?.nature_type" class="nature-badge term-link" @click="emit('update:activeTab', 'nature-types')">{{ mansion.nature_type }}</span>
         </p>
         <div class="mansion-sections">
           <div class="info-section">
@@ -178,7 +178,7 @@ function getKuyouRowClass(level: string) {
       />
       <div v-if="selectedWheelMansion" class="wheel-detail">
         <h4>{{ selectedWheelMansion.name_jp }}（{{ selectedWheelMansion.reading }}）</h4>
-        <span class="element-badge" :style="{ background: elementColors[selectedWheelMansion.element] }">
+        <span class="element-badge term-link" :style="{ background: elementColors[selectedWheelMansion.element] }" @click="emit('update:activeTab', 'elements')">
           {{ selectedWheelMansion.element }}
         </span>
         <p>{{ selectedWheelMansion.personality }}</p>

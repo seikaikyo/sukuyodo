@@ -147,6 +147,20 @@ a:hover {
   }
 }
 
+/* 專有名詞連結 */
+.term-link {
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(212, 175, 55, 0.4);
+  transition: text-decoration-color 0.2s;
+}
+.term-link:hover {
+  text-decoration-style: solid;
+  text-decoration-color: var(--stellar-gold);
+}
+
 /* iOS Shoelace 日期輸入修復 */
 sl-input[type="date"] {
   min-height: 48px;
