@@ -324,9 +324,10 @@ function exportDecadeReport() {
             <p class="day-fortune-classic">{{ dailyFortune.day_mansion.day_fortune.summary_classic }}</p>
             <p class="day-fortune-ja">{{ dailyFortune.day_mansion.day_fortune.summary_ja }}</p>
             <p class="day-fortune-zh">{{ dailyFortune.day_mansion.day_fortune.summary }}</p>
+            <p class="day-fortune-source">出典：宿曜經卷下「二十八宿行事吉凶」</p>
           </div>
 
-          <div class="advice-box">
+          <div class="advice-box" style="margin-top: var(--space-md)">
             <h4>今日建議</h4>
             <p>{{ dailyFortune.advice }}</p>
           </div>
@@ -1465,6 +1466,14 @@ function exportDecadeReport() {
 .day-fortune-zh {
   color: var(--text-secondary);
   margin-top: 2px;
+}
+
+.day-fortune-source {
+  margin: var(--space-xs) 0 0;
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+  text-align: right;
 }
 
 .advice-box {
