@@ -2129,14 +2129,22 @@ class SukuyodoService:
                 "is_dark_week": is_dark
             })
 
-        # 凌犯期間影響月等級（等級位移取代分數減扣）
+        # 月整體分數 = 每日分數平均（與週分數算法一致）
         ryouhan_ratio = ryouhan_count / days_in_month if days_in_month > 0 else 0
-        if ryouhan_ratio > 0.5:
-            month_level = self._shift_level(month_level, -2)  # 降 2 級
-            base_score = self.LEVEL_DISPLAY_SCORE[month_level]
-        elif ryouhan_ratio > 0:
-            month_level = self._shift_level(month_level, -1)  # 降 1 級
-            base_score = self.LEVEL_DISPLAY_SCORE[month_level]
+        daily_avg = round(sum(d["score"] for d in all_daily) / len(all_daily)) if all_daily else 60
+        base_score = max(35, min(100, daily_avg))
+
+        # 從平均分數反推月等級
+        if base_score >= 90:
+            month_level = "daikichi"
+        elif base_score >= 75:
+            month_level = "kichi"
+        elif base_score >= 60:
+            month_level = "chukichi"
+        elif base_score >= 45:
+            month_level = "shokyo"
+        else:
+            month_level = "kyo"
 
         # 各項運勢（基於元素親和，非隨機數）
         def calc_monthly_category(category: str) -> int:
@@ -3077,7 +3085,16 @@ class SukuyodoService:
 
         warnings = []
 
-        # 計算每月趨勢（基於實際月宿關係，非隨機數）
+        # 九曜年運對月趨勢的加持（大吉年底氣高，大凶年全面壓低）
+        KUYOU_MONTHLY_MODIFIER = {
+            "大吉": 8,
+            "半吉": 3,
+            "末吉": 0,
+            "大凶": -8,
+        }
+        kuyou_modifier = KUYOU_MONTHLY_MODIFIER.get(star["level"], 0)
+
+        # 計算每月趨勢（月宿關係 + 九曜年運加持）
         monthly_trend = []
         for m in range(1, 13):
             # 取得該月月宿（農曆月份）
@@ -3090,7 +3107,7 @@ class SukuyodoService:
             month_relation = self.get_relation_type(user_index, month_mansion_idx)
             month_rel_level = self.RELATION_LEVEL_MAP.get(month_relation["type"], "chukichi")
 
-            # 凌犯期間抽樣（每月 7 個取樣日，每 5 天一次確保月底覆蓋）
+            # 凌犯期間抽樣（每月 7 個取樣日）
             ryouhan_days = 0
             if m == 12:
                 days_in_m = (date(year + 1, 1, 1) - date(year, m, 1)).days
@@ -3111,14 +3128,12 @@ class SukuyodoService:
             elif ryouhan_ratio > 0:
                 month_rel_level = self._shift_level(month_rel_level, -1)
 
-            # 等級 → 年趨勢分數（宏觀概覽，差距較小）
-            month_base = self.YEARLY_TREND_SCORE[month_rel_level]
+            # 月宿等級分數 + 九曜年運加持 + 元素微調
+            month_base = self.YEARLY_TREND_SCORE[month_rel_level] + kuyou_modifier
 
-            # 本命元素 vs 月宿元素
             _, user_month_bonus = self._calc_fortune_element_relation(user_element, month_mansion_elem)
             month_base += user_month_bonus // 2
 
-            # 九曜星元素 vs 月宿元素的交叉影響
             if star_element:
                 _, star_month_bonus = self._calc_fortune_element_relation(month_mansion_elem, star_element)
                 month_base += star_month_bonus // 4
