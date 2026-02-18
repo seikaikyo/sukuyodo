@@ -103,7 +103,7 @@ const {
 const { addPartner, updatePartner, removePartner, profile } = useProfile()
 
 // Partner management state
-const showPartnerForm = ref(false)
+const showPartnerDialog = ref(false)
 const editingPartnerId = ref<string | null>(null)
 const partnerNickname = ref('')
 const partnerBirthDate = ref('')
@@ -115,7 +115,7 @@ function startAddPartner() {
   partnerNickname.value = ''
   partnerBirthDate.value = ''
   partnerRelation.value = 'friend'
-  showPartnerForm.value = true
+  showPartnerDialog.value = true
 }
 
 function startEditPartner(id: string) {
@@ -125,7 +125,7 @@ function startEditPartner(id: string) {
   partnerNickname.value = p.nickname
   partnerBirthDate.value = p.birthDate
   partnerRelation.value = p.relation
-  showPartnerForm.value = true
+  showPartnerDialog.value = true
 }
 
 function savePartner() {
@@ -143,7 +143,7 @@ function savePartner() {
       relation: partnerRelation.value,
     })
   }
-  showPartnerForm.value = false
+  showPartnerDialog.value = false
 }
 
 function deletePartner(id: string) {
@@ -174,55 +174,39 @@ onMounted(() => {
       :open.prop="showQueryDialog"
       label="查詢本命宿"
       class="query-dialog"
-      @sl-after-hide="showQueryDialog = false; showPartnerForm = false"
+      @sl-after-hide="showQueryDialog = false"
     >
       <div class="query-content">
-        <p class="query-desc">輸入西曆生日，系統會自動轉換為農曆並計算你的本命宿</p>
-
-        <!-- Quick Select -->
-        <div v-if="myBirthDate || partnersWithBirthDate.length > 0" class="quick-select">
-          <span class="quick-label">快速選擇：</span>
-          <div class="quick-btns">
-            <button
-              v-if="myBirthDate"
-              class="quick-btn"
-              :class="{ active: birthDate === myBirthDate }"
-              @click="quickSelect(myBirthDate)"
-            >我</button>
-            <button
-              v-for="p in partnersWithBirthDate"
-              :key="p.id"
-              class="quick-btn"
-              :class="{ active: birthDate === p.birthDate }"
-              @click="quickSelect(p.birthDate)"
-            >{{ p.nickname }}</button>
-          </div>
-        </div>
-
-        <div class="query-form">
-          <sl-input
-            type="date"
-            :value="birthDate"
-            label="西曆生日"
-            :max="getLocalDateStr()"
-            @sl-input="birthDate = ($event.target as HTMLInputElement).value"
-          ></sl-input>
-        </div>
+        <!-- 日期輸入（主角） -->
+        <sl-input
+          type="date"
+          :value="birthDate"
+          label="西曆生日"
+          :max="getLocalDateStr()"
+          @sl-input="birthDate = ($event.target as HTMLInputElement).value"
+        ></sl-input>
 
         <div v-if="lookupError" class="error-msg">{{ lookupError }}</div>
 
-        <!-- 收藏對象管理 -->
-        <div class="partner-section">
-          <div class="partner-header">
-            <span class="partner-title">收藏對象</span>
-            <button
-              class="btn-add-partner"
-              @click="startAddPartner"
-              :disabled="profile.partners.length >= 10"
-            >+ 新增</button>
-          </div>
+        <!-- 快速選擇 chip -->
+        <div v-if="myBirthDate || partnersWithBirthDate.length > 0" class="quick-chips">
+          <button
+            v-if="myBirthDate"
+            class="quick-chip"
+            :class="{ active: birthDate === myBirthDate }"
+            @click="quickSelect(myBirthDate)"
+          >我</button>
+          <button
+            v-for="p in partnersWithBirthDate"
+            :key="p.id"
+            class="quick-chip"
+            :class="{ active: birthDate === p.birthDate }"
+            @click="quickSelect(p.birthDate)"
+          >{{ p.nickname }}</button>
+        </div>
 
-          <!-- Partner List -->
+        <!-- 收藏對象折疊 -->
+        <sl-details :summary="`收藏對象管理 (${profile.partners.length})`">
           <div v-if="profile.partners.length > 0" class="partner-list">
             <div v-for="p in profile.partners" :key="p.id" class="partner-item">
               <div class="partner-info">
@@ -252,49 +236,12 @@ onMounted(() => {
             </div>
           </div>
           <p v-else class="partner-empty">尚未新增收藏對象</p>
-
-          <!-- Add/Edit Form -->
-          <div v-if="showPartnerForm" class="partner-form">
-            <div class="form-row">
-              <sl-input
-                :value="partnerNickname"
-                label="暱稱"
-                placeholder="例：太太、爸爸"
-                @sl-input="partnerNickname = ($event.target as HTMLInputElement).value"
-              ></sl-input>
-            </div>
-            <div class="form-row">
-              <sl-input
-                type="date"
-                :value="partnerBirthDate"
-                label="西曆生日"
-                :max="getLocalDateStr()"
-                @sl-input="partnerBirthDate = ($event.target as HTMLInputElement).value"
-              ></sl-input>
-            </div>
-            <div class="form-row">
-              <label class="form-label">關係</label>
-              <sl-select
-                :value="partnerRelation"
-                @sl-change="partnerRelation = ($event.target as HTMLSelectElement).value as RelationType"
-              >
-                <sl-option
-                  v-for="rt in RELATION_TYPES"
-                  :key="rt.value"
-                  :value="rt.value"
-                >{{ rt.label }}</sl-option>
-              </sl-select>
-            </div>
-            <div class="form-actions">
-              <button class="btn-cancel" @click="showPartnerForm = false">取消</button>
-              <button
-                class="btn-save"
-                :disabled="!partnerNickname.trim() || !partnerBirthDate"
-                @click="savePartner"
-              >{{ editingPartnerId ? '更新' : '新增' }}</button>
-            </div>
-          </div>
-        </div>
+          <button
+            class="btn-add-partner"
+            @click="startAddPartner"
+            :disabled="profile.partners.length >= 10"
+          >+ 新增對象</button>
+        </sl-details>
       </div>
 
       <div slot="footer" class="dialog-footer">
@@ -305,6 +252,51 @@ onMounted(() => {
           :disabled.prop="!birthDate"
           @click="lookupMansion"
         >查詢</sl-button>
+      </div>
+    </sl-dialog>
+
+    <!-- 子對話框：新增/編輯收藏對象 -->
+    <sl-dialog
+      :open.prop="showPartnerDialog"
+      :label="editingPartnerId ? '編輯收藏對象' : '新增收藏對象'"
+      class="partner-dialog"
+      @sl-after-hide="showPartnerDialog = false"
+    >
+      <div class="partner-form-content">
+        <sl-input
+          :value="partnerNickname"
+          label="暱稱"
+          placeholder="例：太太、爸爸"
+          @sl-input="partnerNickname = ($event.target as HTMLInputElement).value"
+        ></sl-input>
+        <sl-input
+          type="date"
+          :value="partnerBirthDate"
+          label="西曆生日"
+          :max="getLocalDateStr()"
+          @sl-input="partnerBirthDate = ($event.target as HTMLInputElement).value"
+        ></sl-input>
+        <div class="form-row">
+          <label class="form-label">關係</label>
+          <sl-select
+            :value="partnerRelation"
+            @sl-change="partnerRelation = ($event.target as HTMLSelectElement).value as RelationType"
+          >
+            <sl-option
+              v-for="rt in RELATION_TYPES"
+              :key="rt.value"
+              :value="rt.value"
+            >{{ rt.label }}</sl-option>
+          </sl-select>
+        </div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <sl-button variant="default" @click="showPartnerDialog = false">取消</sl-button>
+        <sl-button
+          variant="primary"
+          :disabled.prop="!partnerNickname.trim() || !partnerBirthDate"
+          @click="savePartner"
+        >{{ editingPartnerId ? '更新' : '新增' }}</sl-button>
       </div>
     </sl-dialog>
 
@@ -551,55 +543,7 @@ onMounted(() => {
   gap: var(--space-md);
 }
 
-.query-desc {
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  margin: 0;
-}
-
-.quick-select {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.quick-label {
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-}
-
-.quick-btns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-}
-
-.quick-btn {
-  padding: var(--space-sm) var(--space-md);
-  min-height: 44px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.quick-btn:hover,
-.quick-btn.active {
-  background: var(--accent);
-  color: var(--bg-primary);
-  border-color: var(--accent);
-}
-
-.quick-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.query-form sl-input {
+.query-content sl-input {
   --sl-input-background-color: var(--bg-elevated);
   --sl-input-border-color: var(--border);
   --sl-input-color: var(--text-primary);
@@ -620,33 +564,64 @@ onMounted(() => {
   border-radius: var(--radius-sm);
 }
 
-/* Partner Management */
-.partner-section {
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-md);
-}
-
-.partner-header {
+/* Quick Chips */
+.quick-chips {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-sm);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.partner-title {
+.quick-chip {
+  padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
   font-size: var(--font-sm);
-  font-weight: 600;
-  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.btn-add-partner {
-  padding: var(--space-xs) var(--space-sm);
-  min-height: 32px;
+.quick-chip:hover,
+.quick-chip.active {
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-color: var(--accent);
+}
+
+.quick-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* sl-details 深色主題 */
+.query-dialog sl-details::part(base) {
   background: transparent;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.query-dialog sl-details::part(summary) {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+.query-dialog sl-details::part(content) {
+  padding: var(--space-sm);
+}
+
+/* Partner Management (inside sl-details) */
+.btn-add-partner {
+  width: 100%;
+  padding: var(--space-sm);
+  min-height: 36px;
+  margin-top: var(--space-sm);
+  background: transparent;
+  border: 1px dashed var(--accent);
   border-radius: var(--radius-md);
   color: var(--accent);
-  font-size: var(--font-xs);
+  font-size: var(--font-sm);
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -750,19 +725,16 @@ onMounted(() => {
   margin: 0;
 }
 
-.partner-form {
+/* Partner Sub-Dialog */
+.partner-form-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--bg-elevated);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-sm);
+  gap: var(--space-md);
 }
 
-.partner-form sl-input,
-.partner-form sl-select {
-  --sl-input-background-color: var(--bg-surface);
+.partner-dialog sl-input,
+.partner-dialog sl-select {
+  --sl-input-background-color: var(--bg-elevated);
   --sl-input-border-color: var(--border);
   --sl-input-color: var(--text-primary);
   --sl-input-label-color: var(--text-secondary);
@@ -777,49 +749,6 @@ onMounted(() => {
 .form-label {
   font-size: var(--font-sm);
   color: var(--text-secondary);
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
-}
-
-.btn-cancel,
-.btn-save {
-  padding: var(--space-xs) var(--space-md);
-  min-height: 36px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-cancel {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-
-.btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.btn-save {
-  background: var(--accent);
-  border: none;
-  color: var(--bg-primary);
-  font-weight: 600;
-}
-
-.btn-save:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btn-save:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* Empty State */

@@ -816,9 +816,8 @@ export function useSukuyodo() {
         if (data.success) {
           mansion.value = data.data
           showQueryDialog.value = false
-          // 只在非對象日期時儲存（避免覆蓋自己的生日）
-          const isPartnerDate = profile.value.partners.some(p => p.birthDate === birthDate.value)
-          if (!isPartnerDate) {
+          // 只在首次使用時儲存（避免查詢他人時覆蓋自己的生日）
+          if (!profile.value.birthDate) {
             profile.value.birthDate = birthDate.value
           }
           fetchCompatibleMansions()
