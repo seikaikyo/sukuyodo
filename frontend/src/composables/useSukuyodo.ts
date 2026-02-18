@@ -722,6 +722,12 @@ export function useSukuyodo() {
   // Monthly Week Expansion
   const expandedMonthlyWeek = ref<number | null>(null)
 
+  // Yearly Month Expansion (本年 → 月 drill-down)
+  const expandedYearlyMonth = ref<number | null>(null)
+  const yearlyMonthDetail = ref<MonthlyFortune | null>(null)
+  const yearlyMonthLoading = ref(false)
+  const expandedYearlyWeek = ref<number | null>(null)
+
   // Compatibility
   const compatFinder = ref<CompatibilityFinderResult | null>(null)
   const finderLoading = ref(false)
@@ -922,6 +928,31 @@ export function useSukuyodo() {
     } else {
       expandedMonthlyWeek.value = week
     }
+  }
+
+  async function toggleYearlyMonth(month: number) {
+    if (expandedYearlyMonth.value === month) {
+      expandedYearlyMonth.value = null
+      yearlyMonthDetail.value = null
+      expandedYearlyWeek.value = null
+      return
+    }
+    expandedYearlyMonth.value = month
+    expandedYearlyWeek.value = null
+    yearlyMonthLoading.value = true
+    const year = yearlyFortune.value?.year ?? new Date().getFullYear()
+    try {
+      const res = await fetch(getApiUrl(`/fortune/monthly/${year}/${month}?birth_date=${birthDate.value}`))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) yearlyMonthDetail.value = data.data
+      }
+    } catch { /* silent */ }
+    finally { yearlyMonthLoading.value = false }
+  }
+
+  function toggleYearlyWeek(week: number) {
+    expandedYearlyWeek.value = expandedYearlyWeek.value === week ? null : week
   }
 
   async function fetchMonthlyFortune() {
@@ -1347,6 +1378,10 @@ export function useSukuyodo() {
     yearlyRangeLoading,
     expandedMonthlyWeek,
     currentWeekNumber,
+    expandedYearlyMonth,
+    yearlyMonthDetail,
+    yearlyMonthLoading,
+    expandedYearlyWeek,
 
     // Compatibility
     compatFinder,
@@ -1408,6 +1443,8 @@ export function useSukuyodo() {
     handleWheelSelect,
     quickSelect,
     toggleMonthlyWeek,
+    toggleYearlyMonth,
+    toggleYearlyWeek,
 
     // Init
     init

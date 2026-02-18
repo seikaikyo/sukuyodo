@@ -45,6 +45,10 @@ const {
   yearlyRangeLoading,
   expandedMonthlyWeek,
   currentWeekNumber,
+  expandedYearlyMonth,
+  yearlyMonthDetail,
+  yearlyMonthLoading,
+  expandedYearlyWeek,
 
   // Compatibility
   compatFinder,
@@ -95,6 +99,8 @@ const {
   // Event Handlers
   quickSelect,
   toggleMonthlyWeek,
+  toggleYearlyMonth,
+  toggleYearlyWeek,
 
   // Init
   init
@@ -439,8 +445,14 @@ onUnmounted(() => {
         :current-week-number="currentWeekNumber"
         :mansion="mansion"
         :birth-date="birthDate"
+        :expanded-yearly-month="expandedYearlyMonth"
+        :yearly-month-detail="yearlyMonthDetail"
+        :yearly-month-loading="yearlyMonthLoading"
+        :expanded-yearly-week="expandedYearlyWeek"
         @toggle-week="toggleMonthlyWeek"
         @select-day="fetchDailyFortuneForDate"
+        @toggle-yearly-month="toggleYearlyMonth"
+        @toggle-yearly-week="toggleYearlyWeek"
         @fetch-yearly-range="(s: number, e: number) => fetchYearlyRange(s, e)"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
       />

@@ -17,6 +17,10 @@ const props = defineProps<{
   currentWeekNumber: number
   mansion: Mansion | null
   birthDate: string
+  expandedYearlyMonth: number | null
+  yearlyMonthDetail: MonthlyFortune | null
+  yearlyMonthLoading: boolean
+  expandedYearlyWeek: number | null
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +29,8 @@ const emit = defineEmits<{
   'selectDay': [date: string]
   'fetchYearlyRange': [startYear: number, endYear: number]
   'navigate-knowledge': [tab: string]
+  'toggleYearlyMonth': [month: number]
+  'toggleYearlyWeek': [week: number]
 }>()
 
 function getKuyouLevelClass(level: string) {
@@ -683,21 +689,99 @@ function exportDecadeReport() {
             </div>
           </div>
 
-          <!-- 各月運勢卡片 -->
+          <!-- 各月運勢卡片（可展開） -->
           <h4 class="monthly-section-title">各月運勢</h4>
           <div v-if="yearlyFortune.monthly_trend?.length" class="monthly-card-list">
             <div
               v-for="m in yearlyFortune.monthly_trend"
               :key="m.month"
-              class="monthly-card"
-              :class="{ 'is-current-month': m.month === currentMonth }"
+              class="monthly-card-wrapper"
             >
-              <span class="monthly-month">{{ m.month }}月</span>
-              <div class="monthly-bar-wrapper">
-                <div class="monthly-bar-fill" :class="getScoreClass(m.score)" :style="{ width: m.score + '%' }"></div>
+              <button
+                class="monthly-card"
+                :class="{
+                  'is-current-month': m.month === currentMonth,
+                  'expanded': expandedYearlyMonth === m.month
+                }"
+                :aria-expanded="expandedYearlyMonth === m.month"
+                :aria-controls="`yearly-month-detail-${m.month}`"
+                @click="emit('toggleYearlyMonth', m.month)"
+              >
+                <span class="monthly-card-toggle" aria-hidden="true">{{ expandedYearlyMonth === m.month ? '▼' : '▶' }}</span>
+                <span class="monthly-month">{{ m.month }}月</span>
+                <div class="monthly-bar-wrapper">
+                  <div class="monthly-bar-fill" :class="getScoreClass(m.score)" :style="{ width: m.score + '%' }"></div>
+                </div>
+                <span class="monthly-score" :class="getScoreClass(m.score)">{{ m.score }}</span>
+                <p v-if="m.tip" class="monthly-tip">{{ m.tip }}</p>
+              </button>
+
+              <!-- 展開的月份詳細：週次 + 每日 -->
+              <div
+                v-if="expandedYearlyMonth === m.month"
+                :id="`yearly-month-detail-${m.month}`"
+                class="monthly-card-detail"
+              >
+                <div v-if="yearlyMonthLoading" class="week-detail-loading">
+                  <sl-spinner></sl-spinner>
+                </div>
+                <template v-else-if="yearlyMonthDetail">
+                  <div class="weekly-list">
+                    <div
+                      v-for="w in yearlyMonthDetail.weekly"
+                      :key="w.week"
+                      class="weekly-item-wrapper"
+                    >
+                      <button
+                        class="weekly-item"
+                        :class="{ expanded: expandedYearlyWeek === w.week }"
+                        :aria-expanded="expandedYearlyWeek === w.week"
+                        :aria-controls="`yearly-week-detail-${m.month}-${w.week}`"
+                        @click.stop="emit('toggleYearlyWeek', w.week)"
+                      >
+                        <span class="week-toggle" aria-hidden="true">{{ expandedYearlyWeek === w.week ? '▼' : '▶' }}</span>
+                        <span class="week-num">第 {{ w.week }} 週</span>
+                        <span v-if="m.month === currentMonth && w.week === currentWeekNumber" class="week-current-tag">本週</span>
+                        <div class="week-bar">
+                          <div class="week-fill" :class="getScoreClass(w.score)" :style="{ width: w.score + '%' }"></div>
+                        </div>
+                        <span class="week-score">{{ w.score }}</span>
+                      </button>
+
+                      <div
+                        v-if="expandedYearlyWeek === w.week"
+                        :id="`yearly-week-detail-${m.month}-${w.week}`"
+                        class="week-detail"
+                      >
+                        <div class="week-detail-content">
+                          <div class="week-date-range">
+                            {{ formatDate(w.week_start) }} ~ {{ formatDate(w.week_end) }}
+                          </div>
+                          <div class="week-detail-daily">
+                            <span class="daily-label">每日：</span>
+                            <div class="daily-chips">
+                              <button
+                                v-for="day in w.daily_overview"
+                                :key="day.date"
+                                class="daily-chip clickable"
+                                :class="getScoreClass(day.score)"
+                                :aria-label="`${formatDate(day.date)} ${day.weekday} 運勢 ${day.score} 分，點擊查看詳情`"
+                                @click.stop="emit('selectDay', day.date)"
+                              >
+                                {{ formatDate(day.date) }} {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
+                              </button>
+                            </div>
+                          </div>
+                          <div class="week-detail-focus">
+                            <span class="focus-label">重點：</span>
+                            <span class="focus-text">{{ w.focus }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
               </div>
-              <span class="monthly-score" :class="getScoreClass(m.score)">{{ m.score }}</span>
-              <p v-if="m.tip" class="monthly-tip">{{ m.tip }}</p>
             </div>
           </div>
 
@@ -2275,20 +2359,67 @@ function exportDecadeReport() {
   margin-bottom: var(--space-md);
 }
 
+.monthly-card-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
 .monthly-card {
   display: grid;
-  grid-template-columns: 36px 1fr 32px;
+  grid-template-columns: 16px 36px 1fr 32px;
   align-items: center;
   gap: var(--space-sm);
+  width: 100%;
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
+  border: 1px solid transparent;
   border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.monthly-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--border);
+  border-left-color: transparent;
+}
+
+.monthly-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.monthly-card.expanded {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .monthly-card.is-current-month {
   border-left-color: var(--accent);
   background: rgba(245, 158, 11, 0.06);
+}
+
+.monthly-card-toggle {
+  width: 16px;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.monthly-card-detail {
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: var(--space-md);
+  animation: slideDown 0.2s ease;
 }
 
 .monthly-month {
@@ -2341,7 +2472,7 @@ function exportDecadeReport() {
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
-  padding-left: calc(36px + var(--space-sm));
+  padding-left: calc(16px + 36px + var(--space-sm) * 2);
 }
 
 .yearly-chart-wrapper {
