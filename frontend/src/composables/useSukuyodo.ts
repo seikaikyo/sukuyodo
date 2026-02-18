@@ -110,6 +110,14 @@ export interface FortuneScores {
   love_desc?: string
   health_desc?: string
   wealth_desc?: string
+  career_desc_ja?: string
+  love_desc_ja?: string
+  health_desc_ja?: string
+  wealth_desc_ja?: string
+  ryouhan_active?: boolean
+  ryouhan_warning?: string | null
+  ryouhan_warning_ja?: string | null
+  effective_interpretation?: string
 }
 
 export interface MansionRelation {
@@ -176,7 +184,13 @@ export interface DailyFortune {
     lunar_month: number
     start_day: number
     end_day: number
+    weekday_name?: string
+    period_label?: string
     description: string
+    description_ja?: string
+    description_classic?: string
+    source?: string
+    formula?: Record<string, string>
   } | null
   rokugai?: {
     active: boolean
@@ -195,6 +209,14 @@ export interface DailyFortune {
     day_description: string
     period_description: string
   } | null
+  compound_analysis?: {
+    pattern: string
+    severity: number
+    name: string
+    description: string
+    description_ja?: string
+    description_classic?: string
+  }[]
 }
 
 export interface WeeklyFortune {
@@ -224,7 +246,11 @@ export interface WeeklyFortune {
     score: number
     is_today: boolean
     is_yesterday: boolean
+    special_day?: string | null
+    ryouhan_active?: boolean
+    is_dark_week?: boolean
   }[]
+  week_warnings?: string[]
   advice: string
   focus?: string
   category_tips?: {
@@ -275,12 +301,19 @@ export interface MonthlyFortune {
     week_end: string
     score: number
     focus: string
+    warnings?: string[]
     daily_overview: {
       date: string
       weekday: string
       score: number
+      special_day?: string | null
+      ryouhan_active?: boolean
+      is_dark_week?: boolean
     }[]
   }[]
+  month_warnings?: string[]
+  ryouhan_info?: { affected_days: number; total_days: number; ratio: number } | null
+  special_days?: { date: string; type: string; name: string }[]
   advice: string
 }
 

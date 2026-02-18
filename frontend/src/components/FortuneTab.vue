@@ -290,6 +290,14 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
           </div>
 
+          <div v-if="dailyFortune.compound_analysis?.length" class="compound-analysis">
+            <div v-for="ca in dailyFortune.compound_analysis" :key="ca.pattern"
+                 class="compound-item" :class="'severity-' + ca.severity">
+              <span class="compound-label">{{ ca.name }}</span>
+              <p class="compound-desc">{{ ca.description }}</p>
+            </div>
+          </div>
+
           <div v-if="dailyFortune.special_day" class="special-day-banner" :class="[dailyFortune.special_day.type, { reversed: dailyFortune.special_day.ryouhan_reversed }]">
             <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
             <span class="special-day-name term-link" @click="emit('navigate-knowledge', 'special-days')">{{ dailyFortune.special_day.name }}</span>
@@ -300,8 +308,10 @@ function exportDecadeReport() {
           </div>
 
           <div v-if="dailyFortune.ryouhan" class="ryouhan-banner">
-            <span class="ryouhan-label term-link" @click="emit('navigate-knowledge', 'ryouhan')">凌犯期間</span>
+            <span class="ryouhan-label term-link" @click="emit('navigate-knowledge', 'ryouhan')">{{ dailyFortune.ryouhan.period_label || '凌犯期間' }}</span>
             <p class="ryouhan-desc">{{ dailyFortune.ryouhan.description }}</p>
+            <p v-if="dailyFortune.fortune.ryouhan_warning" class="ryouhan-warning">{{ dailyFortune.fortune.ryouhan_warning }}</p>
+            <span v-if="dailyFortune.ryouhan.source" class="ryouhan-source">{{ dailyFortune.ryouhan.source }}</span>
           </div>
 
           <div v-if="dailyFortune.rokugai" class="rokugai-banner">
@@ -488,7 +498,7 @@ function exportDecadeReport() {
                 v-for="day in weeklyFortune.daily_overview"
                 :key="day.date"
                 class="daily-item"
-                :class="[getScoreClass(day.score), { 'is-today': day.is_today, 'is-yesterday': day.is_yesterday }]"
+                :class="[getScoreClass(day.score), { 'is-today': day.is_today, 'is-yesterday': day.is_yesterday, 'chip-ryouhan': day.ryouhan_active, 'chip-dark-week': day.is_dark_week }]"
                 :aria-label="`查看 ${formatDate(day.date)} ${day.weekday} 詳細運勢`"
                 @click="emit('selectDay', day.date)"
               >
@@ -497,8 +507,13 @@ function exportDecadeReport() {
                 <span class="day-date">{{ formatDate(day.date) }}</span>
                 <span class="day-weekday">{{ day.weekday }}</span>
                 <span class="day-score">{{ day.score }}</span>
+                <span v-if="day.special_day" class="day-special">{{ day.special_day.charAt(0) }}</span>
               </button>
             </div>
+          </div>
+
+          <div v-if="weeklyFortune.week_warnings?.length" class="week-alerts">
+            <p v-for="w in weeklyFortune.week_warnings" :key="w" class="week-warning-item">{{ w }}</p>
           </div>
 
           <div class="advice-box">
@@ -531,6 +546,13 @@ function exportDecadeReport() {
             </span>
           </div>
           <p v-if="monthlyFortune.relation?.description" class="month-relation-desc">{{ monthlyFortune.relation.description }}</p>
+
+          <div v-if="monthlyFortune.month_warnings?.length || monthlyFortune.ryouhan_info" class="month-alerts">
+            <div v-if="monthlyFortune.ryouhan_info" class="ryouhan-month-info">
+              本月 {{ monthlyFortune.ryouhan_info.affected_days }} / {{ monthlyFortune.ryouhan_info.total_days }} 天處於凌犯期間
+            </div>
+            <p v-for="w in monthlyFortune.month_warnings" :key="w" class="month-warning-item">{{ w }}</p>
+          </div>
 
           <div v-if="monthlyFortune.theme" class="theme-box">
             <h4>{{ monthlyFortune.theme.title }}</h4>
@@ -621,6 +643,10 @@ function exportDecadeReport() {
                       {{ formatDate(w.week_start) }} ~ {{ formatDate(w.week_end) }}
                     </div>
 
+                    <div v-if="w.warnings?.length" class="week-alerts">
+                      <p v-for="ww in w.warnings" :key="ww" class="week-warning-item">{{ ww }}</p>
+                    </div>
+
                     <div class="week-detail-daily">
                       <span class="daily-label">每日：</span>
                       <div class="daily-chips">
@@ -628,11 +654,12 @@ function exportDecadeReport() {
                           v-for="day in w.daily_overview"
                           :key="day.date"
                           class="daily-chip clickable"
-                          :class="getScoreClass(day.score)"
+                          :class="[getScoreClass(day.score), { 'chip-ryouhan': day.ryouhan_active, 'chip-dark-week': day.is_dark_week }]"
                           :aria-label="`${formatDate(day.date)} ${day.weekday} 運勢 ${day.score} 分，點擊查看詳情`"
                           @click="emit('selectDay', day.date)"
                         >
                           {{ formatDate(day.date) }} {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
+                          <span v-if="day.special_day" class="day-special">{{ day.special_day.charAt(0) }}</span>
                         </button>
                       </div>
                     </div>
@@ -1414,6 +1441,92 @@ function exportDecadeReport() {
   line-height: 1.5;
 }
 
+.ryouhan-warning {
+  width: 100%;
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: #7b1fa2;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.ryouhan-source {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.compound-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.compound-item {
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.compound-item.severity-5 {
+  background: linear-gradient(135deg, rgba(128, 0, 128, 0.12), rgba(220, 80, 80, 0.08));
+  border-color: rgba(128, 0, 128, 0.4);
+}
+
+.compound-item.severity-4 {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(200, 140, 0, 0.08));
+  border-color: rgba(200, 140, 0, 0.4);
+}
+
+.compound-item.severity-3 {
+  background: linear-gradient(135deg, rgba(150, 150, 150, 0.10), rgba(120, 120, 120, 0.06));
+  border-color: rgba(120, 120, 120, 0.3);
+}
+
+.compound-item.severity-2,
+.compound-item.severity-1 {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+
+.compound-label {
+  font-size: var(--font-sm);
+  font-weight: 700;
+}
+
+.compound-desc {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.week-alerts,
+.month-alerts {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  background: linear-gradient(135deg, rgba(128, 0, 128, 0.06), rgba(100, 0, 100, 0.03));
+  border: 1px dashed rgba(128, 0, 128, 0.25);
+}
+
+.week-warning-item,
+.month-warning-item {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 2px 0;
+  line-height: 1.4;
+}
+
+.ryouhan-month-info {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #7b1fa2;
+  margin-bottom: var(--space-xs);
+}
+
 .rokugai-banner {
   display: flex;
   flex-wrap: wrap;
@@ -1934,6 +2047,34 @@ function exportDecadeReport() {
   font-size: var(--font-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.day-special {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.daily-item.chip-ryouhan {
+  border-left: 2px solid var(--rasetsu-color);
+}
+
+.daily-item.chip-dark-week:not(.is-today) {
+  background: var(--dark-week-bg);
+}
+
+.daily-chip.chip-ryouhan {
+  border-left-color: var(--rasetsu-color);
+}
+
+.daily-chip.chip-dark-week {
+  background: var(--dark-week-bg);
+}
+
+.daily-chip .day-special {
+  font-size: 10px;
+  margin-left: 2px;
+  color: var(--text-secondary);
 }
 
 .weekly-list {
