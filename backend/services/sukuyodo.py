@@ -1570,11 +1570,8 @@ class SukuyodoService:
             (55, 70)  # 預設：未知關係
         )
 
-        # 設定隨機種子確保同一天同一人結果一致
-        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
-
-        # 基礎分數（根據宿曜關係）
-        base_score = random.randint(score_range[0], score_range[1])
+        # 基礎分數（根據宿曜關係，取中位值）
+        base_score = (score_range[0] + score_range[1]) // 2
 
         # === 次要因素：七曜元素微調 ===
         weekday = target_date.weekday()
@@ -1604,8 +1601,7 @@ class SukuyodoService:
             day_bonus = 2 if day_element in cat_data["favorable_elements"] else 0
             # 宿曜關係影響各項運勢
             relation_factor = (score_range[0] + score_range[1]) // 2 - 65  # 相對於中性的偏移
-            variation = random.randint(-6, 6)
-            return max(30, min(100, 65 + relation_factor + cat_bonus + day_bonus + element_adjustment + variation))
+            return max(30, min(100, 65 + relation_factor + cat_bonus + day_bonus + element_adjustment))
 
         career_score = calc_category_score("career")
         love_score = calc_category_score("love")
@@ -1840,16 +1836,14 @@ class SukuyodoService:
         user_element = mansion["element"]
 
         # 取得該月的月宿（使用月宿傍通曆）
-        # MONTH_START_MANSION 是農曆月份表，需先將西曆轉農曆
         mid_date = date(year, month, 15)
         _, lunar_month_for_mansion, _, _ = self.solar_to_lunar(mid_date)
         month_mansion_index = self.MONTH_START_MANSION.get(lunar_month_for_mansion, 0)
         month_mansion = self.mansions_data[month_mansion_index]
+        month_mansion_elem = month_mansion["element"]
 
-        # 計算本命宿與月宿的關係
+        # 本命宿 vs 月宿關係
         relation = self.get_relation_type(user_index, month_mansion_index)
-
-        # 基於關係類型計算基礎分數
         base_score = relation["score"]
 
         # 月份主題加成
@@ -1858,63 +1852,129 @@ class SukuyodoService:
         if user_element == theme_element:
             base_score = min(100, base_score + 5)
 
-        # 計算各項運勢
-        random.seed(f"{birth_date.isoformat()}{year}{month}")
-
-        def calc_monthly_category(category: str) -> int:
-            cat_data = fortune_data["fortune_categories"][category]
-            cat_bonus = 8 if user_element in cat_data["favorable_elements"] else 0
-            variation = random.randint(-10, 10)
-            return max(30, min(100, base_score + cat_bonus + variation))
-
-        # 計算每週運勢（以該月日期為準，非 ISO 週數）
-        weekly = []
+        # 計算該月天數
         first_day = date(year, month, 1)
-
-        # 計算該月有多少天
         if month == 12:
             next_month_first = date(year + 1, 1, 1)
         else:
             next_month_first = date(year, month + 1, 1)
         days_in_month = (next_month_first - first_day).days
 
-        # 將月份分成每 7 天一週
+        # 收集所有日運資料（凌犯/特殊日/暗黒統計）
+        all_daily = []
+        ryouhan_count = 0
+        special_days_in_month = []
+        dark_week_count = 0
+
+        for d in range(days_in_month):
+            day_date = first_day + timedelta(days=d)
+            daily_fortune = self.calculate_daily_fortune(birth_date, day_date)
+
+            is_ryouhan = daily_fortune.get("ryouhan") is not None
+            special_day = daily_fortune.get("special_day")
+            is_dark = daily_fortune.get("sanki", {}).get("is_dark_week", False)
+
+            if is_ryouhan:
+                ryouhan_count += 1
+            if special_day:
+                special_days_in_month.append({
+                    "date": day_date.isoformat(),
+                    "type": special_day.get("type", ""),
+                    "name": special_day.get("name", "")
+                })
+            if is_dark:
+                dark_week_count += 1
+
+            all_daily.append({
+                "date": day_date.isoformat(),
+                "weekday": daily_fortune["weekday"]["name"],
+                "score": daily_fortune["fortune"]["overall"],
+                "special_day": special_day.get("name") if special_day else None,
+                "ryouhan_active": is_ryouhan,
+                "is_dark_week": is_dark
+            })
+
+        # 凌犯期間影響月分數
+        ryouhan_ratio = ryouhan_count / days_in_month if days_in_month > 0 else 0
+        if ryouhan_ratio > 0.5:
+            base_score = max(40, base_score - 15)
+        elif ryouhan_ratio > 0:
+            base_score = max(40, base_score - 8)
+
+        # 各項運勢（基於元素親和，非隨機數）
+        def calc_monthly_category(category: str) -> int:
+            cat_data = fortune_data["fortune_categories"][category]
+            cat_bonus = 8 if user_element in cat_data["favorable_elements"] else 0
+            month_elem_bonus = 5 if month_mansion_elem in cat_data["favorable_elements"] else 0
+            return max(30, min(100, base_score + cat_bonus + month_elem_bonus))
+
+        # 建構每週資料（從 all_daily 分組，週分數 = 每日平均）
+        weekly = []
         week_num = 0
         day_offset = 0
         while day_offset < days_in_month:
             week_num += 1
-            week_start = first_day + timedelta(days=day_offset)
             week_end_offset = min(day_offset + 6, days_in_month - 1)
-            week_end = first_day + timedelta(days=week_end_offset)
+            week_days = all_daily[day_offset:week_end_offset + 1]
 
-            week_seed = f"{birth_date.isoformat()}{year}{month}week{week_num}"
-            random.seed(week_seed)
-            week_score = max(40, min(100, base_score + random.randint(-15, 15)))
-            categories = ["career", "love", "health", "wealth"]
-            focus = random.choice(categories)
+            # 週分數 = 該週每日分數平均
+            week_score = round(sum(d["score"] for d in week_days) / len(week_days))
+            week_score = max(40, min(100, week_score))
 
-            # 計算該週每日運勢
-            daily_overview = []
-            for d in range(week_end_offset - day_offset + 1):
-                day_date = week_start + timedelta(days=d)
-                daily_fortune = self.calculate_daily_fortune(birth_date, day_date)
-                daily_overview.append({
-                    "date": day_date.isoformat(),
-                    "weekday": daily_fortune["weekday"]["name"],
-                    "score": daily_fortune["fortune"]["overall"]
-                })
+            # 週 focus：根據週首日七曜元素的類別親和決定
+            week_start_date = first_day + timedelta(days=day_offset)
+            week_end_date = first_day + timedelta(days=week_end_offset)
+            week_jp_weekday = (week_start_date.weekday() + 1) % 7
+            week_element = fortune_data["weekday_elements"].get(str(week_jp_weekday), {}).get("element", "土")
+
+            best_focus = "career"
+            for cat in ["career", "love", "health", "wealth"]:
+                if week_element in fortune_data["fortune_categories"][cat]["favorable_elements"]:
+                    best_focus = cat
+                    break
+
+            # 週警告彙整
+            week_warnings = []
+            week_ryouhan = sum(1 for d in week_days if d["ryouhan_active"])
+            week_dark = sum(1 for d in week_days if d["is_dark_week"])
+            week_specials = [d for d in week_days if d["special_day"]]
+
+            if week_ryouhan > 0:
+                week_warnings.append(f"凌犯期間 {week_ryouhan} 日")
+            if week_dark > 0:
+                week_warnings.append(f"暗黒の一週間 {week_dark} 日")
+            for sp in week_specials:
+                week_warnings.append(f"{sp['date'][-5:]} {sp['special_day']}")
 
             weekly.append({
                 "week": week_num,
-                "week_start": week_start.isoformat(),
-                "week_end": week_end.isoformat(),
+                "week_start": week_start_date.isoformat(),
+                "week_end": week_end_date.isoformat(),
                 "score": week_score,
-                "focus": fortune_data["fortune_categories"][focus]["name"],
-                "daily_overview": daily_overview
+                "focus": fortune_data["fortune_categories"][best_focus]["name"],
+                "daily_overview": week_days,
+                "warnings": week_warnings
             })
 
             day_offset += 7
 
+        # 月警告彙整
+        month_warnings = []
+        if ryouhan_count > 0:
+            month_warnings.append(f"本月有 {ryouhan_count} 天處於凌犯期間，吉凶逆轉需特別留意")
+        if dark_week_count > 0:
+            month_warnings.append(f"本月有 {dark_week_count} 天處於暗黒の一週間，判斷力下降宜保守行事")
+        kanro_count = sum(1 for s in special_days_in_month if s["type"] == "kanro")
+        rasetsu_count = sum(1 for s in special_days_in_month if s["type"] == "rasetsu")
+        kongou_count = sum(1 for s in special_days_in_month if s["type"] == "kongou")
+        if kanro_count > 0:
+            month_warnings.append(f"甘露日 {kanro_count} 天")
+        if rasetsu_count > 0:
+            month_warnings.append(f"羅刹日 {rasetsu_count} 天")
+        if kongou_count > 0:
+            month_warnings.append(f"金剛峯日 {kongou_count} 天")
+
+        # 文字描述（seeded random.choice 確保同輸入同結果）
         random.seed(f"{birth_date.isoformat()}{year}{month}")
 
         return {
@@ -1952,6 +2012,13 @@ class SukuyodoService:
                 "health": calc_monthly_category("health"),
                 "wealth": calc_monthly_category("wealth")
             },
+            "ryouhan_info": {
+                "affected_days": ryouhan_count,
+                "total_days": days_in_month,
+                "ratio": round(ryouhan_ratio, 2)
+            } if ryouhan_count > 0 else None,
+            "month_warnings": month_warnings,
+            "special_days": special_days_in_month,
             "weekly": weekly,
             "advice": random.choice(self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], [f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。"]))
         }
@@ -2003,34 +2070,68 @@ class SukuyodoService:
         # 基礎分數
         base_score = 70 + base_bonus
 
-        # 計算各項運勢
-        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
-
+        # 各項運勢（基於元素親和，非隨機數）
         def calc_weekly_category(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
             cat_bonus = 6 if user_element in cat_data["favorable_elements"] else 0
             day_bonus = 4 if center_element in cat_data["favorable_elements"] else 0
-            variation = random.randint(-10, 10)
-            return max(30, min(100, base_score + cat_bonus + day_bonus + variation))
+            return max(30, min(100, base_score + cat_bonus + day_bonus))
 
-        overall_score = max(30, min(100, base_score))
         career_score = calc_weekly_category("career")
         love_score = calc_weekly_category("love")
         health_score = calc_weekly_category("health")
         wealth_score = calc_weekly_category("wealth")
 
-        # 計算每日運勢概覽（8天：昨天 + 今天 + 未來6天）
+        # 收集每日運勢（8天）+ 特殊日/凌犯/暗黒統計
         daily_overview = []
-        for day_offset in range(-1, 7):  # -1 = 昨天, 0 = 今天, 1-6 = 未來
+        week_warnings = []
+        ryouhan_count = 0
+        dark_week_count = 0
+        special_day_entries = []
+
+        for day_offset in range(-1, 7):
             day_date = target_date + timedelta(days=day_offset)
             daily_fortune = self.calculate_daily_fortune(birth_date, day_date)
+
+            is_ryouhan = daily_fortune.get("ryouhan") is not None
+            special_day = daily_fortune.get("special_day")
+            is_dark = daily_fortune.get("sanki", {}).get("is_dark_week", False)
+
+            if is_ryouhan:
+                ryouhan_count += 1
+            if special_day:
+                special_day_entries.append({
+                    "date": day_date.isoformat(),
+                    "name": special_day.get("name", "")
+                })
+            if is_dark:
+                dark_week_count += 1
+
             daily_overview.append({
                 "date": day_date.isoformat(),
                 "weekday": daily_fortune["weekday"]["name"],
                 "score": daily_fortune["fortune"]["overall"],
                 "is_today": day_offset == 0,
-                "is_yesterday": day_offset == -1
+                "is_yesterday": day_offset == -1,
+                "special_day": special_day.get("name") if special_day else None,
+                "ryouhan_active": is_ryouhan,
+                "is_dark_week": is_dark
             })
+
+        # 週整體分數 = 8 天每日分數平均
+        overall_score = round(sum(d["score"] for d in daily_overview) / len(daily_overview))
+        overall_score = max(30, min(100, overall_score))
+
+        # 週警告彙整
+        if ryouhan_count > 0:
+            week_warnings.append(f"凌犯期間 {ryouhan_count} 日")
+        if dark_week_count > 0:
+            week_warnings.append(f"暗黒の一週間 {dark_week_count} 日")
+        for sp in special_day_entries:
+            week_warnings.append(f"{sp['date'][-5:]} {sp['name']}")
+
+        # 文字描述（seeded random.choice 確保同輸入同結果）
+        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
 
         # 選擇建議
         if overall_score >= 85:
@@ -2087,6 +2188,7 @@ class SukuyodoService:
                 "wealth": wealth_score
             },
             "daily_overview": daily_overview,
+            "week_warnings": week_warnings,
             "advice": advice,
             "focus": random.choice(self.WEEKLY_FORTUNE_FOCUS.get(relation_type, self.WEEKLY_FORTUNE_FOCUS["neutral"])),
             "category_tips": category_tips,
@@ -2731,14 +2833,51 @@ class SukuyodoService:
 
         warnings = []
 
-        # 計算每月趨勢
-        random.seed(f"{birth_date.isoformat()}{year}")
+        # 計算每月趨勢（基於實際月宿關係，非隨機數）
         monthly_trend = []
         for m in range(1, 13):
-            month_score = max(40, min(100, base_score + random.randint(-20, 20)))
+            # 取得該月月宿（農曆月份）
+            mid_date = date(year, m, 15)
+            _, lunar_month_for_trend, _, _ = self.solar_to_lunar(mid_date)
+            month_mansion_idx = self.MONTH_START_MANSION.get(lunar_month_for_trend, 0)
+            month_mansion_elem = self.mansions_data[month_mansion_idx]["element"]
+
+            # 本命宿 vs 月宿關係分數
+            month_relation = self.get_relation_type(user_index, month_mansion_idx)
+            month_base = month_relation["score"]
+
+            # 九曜星元素 vs 月宿元素的交叉影響
+            if star_element:
+                _, star_month_bonus = self._calc_fortune_element_relation(month_mansion_elem, star_element)
+                month_base += star_month_bonus // 4  # 九曜對月的微調
+
+            # 凌犯期間抽樣（每月 4 個取樣日）
+            ryouhan_days = 0
+            if m == 12:
+                days_in_m = (date(year + 1, 1, 1) - date(year, m, 1)).days
+            else:
+                days_in_m = (date(year, m + 1, 1) - date(year, m, 1)).days
+            sample_days = [1, 8, 15, 22]
+            sample_count = 0
+            for sd in sample_days:
+                if sd <= days_in_m:
+                    sample_count += 1
+                    ryouhan = self.check_ryouhan_period(date(year, m, sd))
+                    if ryouhan:
+                        ryouhan_days += 1
+
+            ryouhan_ratio = ryouhan_days / sample_count if sample_count > 0 else 0
+            if ryouhan_ratio > 0.5:
+                month_base = max(40, month_base - 12)
+            elif ryouhan_ratio > 0:
+                month_base = max(40, month_base - 6)
+
+            month_score = max(40, min(100, month_base))
             monthly_trend.append({
                 "month": m,
-                "score": month_score
+                "score": month_score,
+                "relation_type": month_relation["type"],
+                "ryouhan_ratio": round(ryouhan_ratio, 2)
             })
 
         # 找出機會月份（分數最高的 3 個月）
@@ -2773,16 +2912,14 @@ class SukuyodoService:
 
         base_score = max(35, min(95, base_score))
 
-        # 各項運勢
-        random.seed(f"{birth_date.isoformat()}{year}categories")
+        # 各項運勢（基於元素親和，非隨機數）
         star_element_for_cat = star_element if star_element else "土"
 
         def calc_yearly_category(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
             cat_bonus = 10 if user_element in cat_data["favorable_elements"] else 0
             year_boost = 5 if star_element_for_cat in cat_data["favorable_elements"] else 0
-            variation = random.randint(-12, 12)
-            return max(35, min(100, base_score + cat_bonus + year_boost + variation))
+            return max(35, min(100, base_score + cat_bonus + year_boost))
 
         # 年度建議（根據九曜星元素與本命元素的關係）
         advice_key = star_relation if star_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
