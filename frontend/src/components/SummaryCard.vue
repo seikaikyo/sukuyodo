@@ -44,12 +44,12 @@ const emit = defineEmits<{
       @click="dailyFortune && emit('navigate-fortune')"
     >
       <template v-if="dailyFortune">
-        <div class="fortune-score" :class="getFortuneLevel(dailyFortune.fortune.overall).class">
+        <div class="fortune-score" :class="getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).class">
           {{ dailyFortune.fortune.overall }}
         </div>
         <div class="fortune-label">今日運勢</div>
-        <div class="fortune-level" :class="getFortuneLevel(dailyFortune.fortune.overall).class">
-          {{ getFortuneLevel(dailyFortune.fortune.overall).text }}
+        <div class="fortune-level" :class="getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).class">
+          {{ dailyFortune.fortune.level_name || getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).text }}
         </div>
       </template>
       <sl-spinner v-else></sl-spinner>

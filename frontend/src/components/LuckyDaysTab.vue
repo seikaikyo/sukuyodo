@@ -541,7 +541,8 @@ function getSpecialDayAdvice(type: string): string {
 
     <!-- 新增對象對話框 -->
     <sl-dialog
-      :open="showAddDialog"
+      v-if="showAddDialog"
+      open
       label="新增收藏對象"
       @sl-request-close="showAddDialog = false"
     >
@@ -593,7 +594,8 @@ function getSpecialDayAdvice(type: string): string {
 
     <!-- 編輯對象對話框 -->
     <sl-dialog
-      :open="showEditDialog"
+      v-if="showEditDialog"
+      open
       label="編輯收藏對象"
       @sl-request-close="showEditDialog = false"
     >

@@ -101,6 +101,10 @@ export interface CompatibilityResult {
 }
 
 export interface FortuneScores {
+  level?: string
+  level_name?: string
+  level_name_ja?: string
+  base_level?: string
   overall: number
   career: number
   love: number

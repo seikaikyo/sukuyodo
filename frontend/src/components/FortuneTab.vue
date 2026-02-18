@@ -286,8 +286,8 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
             <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
           <div v-if="dailyFortune.compound_analysis?.length" class="compound-analysis">
@@ -449,8 +449,8 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
             <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
           <div v-if="weeklyFortune.lucky" class="lucky-info">
@@ -602,8 +602,8 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
             <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
           <div class="weekly-overview">
@@ -876,8 +876,8 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
             <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
           <div v-if="yearlyFortune.advice" class="advice-box">
@@ -1019,8 +1019,8 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
             <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
           <!-- 年度卡片列表 -->

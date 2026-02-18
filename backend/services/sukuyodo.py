@@ -347,8 +347,9 @@ class SukuyodoService:
         elem1_data = self.elements_data.get(mansion1["element"], {})
         elem2_data = self.elements_data.get(mansion2["element"], {})
 
-        # 綜合分數
-        final_score = min(100, relation["score"] + element_bonus)
+        # 綜合分數（等級映射 + 元素加成）
+        rel_level = self.RELATION_LEVEL_MAP.get(relation["type"], "chukichi")
+        final_score = min(100, self.LEVEL_DISPLAY_SCORE[rel_level] + element_bonus)
 
         # 取得距離化描述（如果有）
         dist_type = relation.get("distance_type")
@@ -407,7 +408,7 @@ class SukuyodoService:
             },
             "score": final_score,
             "element_bonus": element_bonus,
-            "summary": self._generate_summary(mansion1, mansion2, relation)
+            "summary": self._generate_summary(mansion1, mansion2, relation, final_score)
         }
 
     def _get_element_relation(self, elem1: str, elem2: str) -> str:
@@ -464,19 +465,19 @@ class SukuyodoService:
         self,
         mansion1: dict,
         mansion2: dict,
-        relation: dict
+        relation: dict,
+        calculated_score: int
     ) -> str:
         """生成相性總結"""
         rel_name = relation["name"]
         name1 = mansion1["name_jp"]
         name2 = mansion2["name_jp"]
-        score = relation["score"]
 
-        if score >= 90:
+        if calculated_score >= 90:
             level = "非常合拍"
-        elif score >= 75:
+        elif calculated_score >= 75:
             level = "相當不錯"
-        elif score >= 60:
+        elif calculated_score >= 60:
             level = "需要磨合"
         else:
             level = "要多小心"
@@ -717,6 +718,102 @@ class SukuyodoService:
         "yusui": (60, 72),    # 友衰 - 中吉偏低 - 舒適但易懈怠
         "kisei": (45, 58),    # 危成 - 小吉 - 需謹慎
         "ankai": (32, 48),    # 安壞 - 凶 - 權力不對等日
+    }
+
+    # === 等級優先制常數（原典依據） ===
+
+    # 日運勢五等級（三九秘法）：index 0 = 最佳, index 4 = 最差
+    FORTUNE_LEVELS = ["daikichi", "kichi", "chukichi", "shokyo", "kyo"]
+
+    # 關係類型 → 等級映射
+    RELATION_LEVEL_MAP = {
+        "eishin": "daikichi",  # 栄親 → 大吉
+        "gyotai": "kichi",     # 業胎 → 吉
+        "mei": "kichi",        # 命 → 吉
+        "yusui": "chukichi",   # 友衰 → 中吉
+        "kisei": "shokyo",     # 危成 → 小凶
+        "ankai": "kyo",        # 安壊 → 凶
+    }
+
+    # 凌犯翻轉（對稱鏡射）
+    RYOUHAN_LEVEL_FLIP = {
+        "daikichi": "kyo",
+        "kichi": "shokyo",
+        "chukichi": "chukichi",  # 中吉不變
+        "shokyo": "kichi",
+        "kyo": "daikichi",
+    }
+
+    # 等級 → 顯示分數（UI 進度條用）
+    LEVEL_DISPLAY_SCORE = {
+        "daikichi": 90,
+        "kichi": 75,
+        "chukichi": 60,
+        "shokyo": 45,
+        "kyo": 35,
+    }
+
+    # 年運月趨勢用映射（宏觀概覽，差距較日運勢小）
+    # 注意：不得超過日運勢的 LEVEL_DISPLAY_SCORE，月趨勢是宏觀參考
+    YEARLY_TREND_SCORE = {
+        "daikichi": 80,
+        "kichi": 70,
+        "chukichi": 60,
+        "shokyo": 50,
+        "kyo": 40,
+    }
+
+    # 等級 → 中日文名稱
+    LEVEL_NAMES = {
+        "daikichi": {"zh": "大吉", "ja": "大吉"},
+        "kichi": {"zh": "吉", "ja": "吉"},
+        "chukichi": {"zh": "中吉", "ja": "中吉"},
+        "shokyo": {"zh": "小凶", "ja": "小凶"},
+        "kyo": {"zh": "凶", "ja": "凶"},
+    }
+
+    # 等級 → effective_interpretation
+    LEVEL_INTERPRETATION = {
+        "daikichi": "excellent",
+        "kichi": "good",
+        "chukichi": "neutral",
+        "shokyo": "challenging",
+        "kyo": "caution",
+    }
+
+    # 等級 → advice key
+    LEVEL_ADVICE_KEY = {
+        "daikichi": "excellent",
+        "kichi": "good",
+        "chukichi": "neutral",
+        "shokyo": "caution",
+        "kyo": "challenging",
+    }
+
+    # 等級 → 描述選擇 key
+    LEVEL_DESC_KEY = {
+        "daikichi": "excellent",
+        "kichi": "good",
+        "chukichi": "fair",
+        "shokyo": "caution",
+        "kyo": "warning",
+    }
+
+    # 凌犯中等級 → 描述選擇 key
+    RYOUHAN_DESC_KEY = {
+        "daikichi": "high_reversal",
+        "kichi": "high_reversal",
+        "chukichi": "mid_reversal",
+        "shokyo": "low_reversal",
+        "kyo": "low_reversal",
+    }
+
+    # 九曜四等級 → 顯示分數（獨立體系）
+    KUYOU_LEVEL_MAP = {
+        "大吉": 85,
+        "半吉": 65,
+        "末吉": 50,
+        "大凶": 35,
     }
 
     # 每日運勢專用描述（區別於雙人配對描述）
@@ -1634,6 +1731,77 @@ class SukuyodoService:
         }
     }
 
+    def _shift_level(self, level: str, direction: int) -> str:
+        """
+        等級位移
+
+        Args:
+            level: 當前等級 key (daikichi/kichi/chukichi/shokyo/kyo)
+            direction: +1 = 提升一級, -1 = 降低一級
+
+        Returns:
+            位移後的等級 key（到頂/到底不再移）
+        """
+        idx = self.FORTUNE_LEVELS.index(level)
+        # FORTUNE_LEVELS index 0 = 最佳(daikichi), 4 = 最差(kyo)
+        # direction +1 表示提升（往 index 小的方向）
+        new_idx = max(0, min(len(self.FORTUNE_LEVELS) - 1, idx - direction))
+        return self.FORTUNE_LEVELS[new_idx]
+
+    def _determine_daily_level(
+        self, relation_type: str, ryouhan: Optional[dict],
+        special_day_type: Optional[str]
+    ) -> tuple[str, str, int]:
+        """
+        核心等級判定流程（原典邏輯）
+
+        1. 本命宿 x 當日宿 → RELATION_LEVEL_MAP → base_level
+        2. 凌犯判定 → RYOUHAN_LEVEL_FLIP
+        3. 特殊日 → _shift_level(±1)
+        4. 六害宿 → 不影響等級（warning only）
+
+        Args:
+            relation_type: 宿曜關係 (eishin/yusui/ankai/...)
+            ryouhan: 凌犯資料（None = 不在凌犯期間）
+            special_day_type: 特殊日類型 (kanro/rasetsu/kongou/None)
+
+        Returns:
+            (final_level, base_level, overflow_bonus) — 最終等級、原始等級、
+            溢出加分（等級已在極值但特殊日仍有加持時的額外分數）
+        """
+        # Step 1: 基礎等級
+        base_level = self.RELATION_LEVEL_MAP.get(relation_type, "chukichi")
+        level = base_level
+
+        # Step 2: 凌犯翻轉
+        if ryouhan:
+            level = self.RYOUHAN_LEVEL_FLIP[level]
+
+        # Step 3: 特殊日位移
+        overflow_bonus = 0
+        if special_day_type:
+            prev_level = level
+            if special_day_type == "kanro":
+                if ryouhan:
+                    level = self._shift_level(level, -1)  # 凌犯中甘露 → 降級
+                else:
+                    level = self._shift_level(level, +1)  # 正常甘露 → 升級
+            elif special_day_type == "rasetsu":
+                if ryouhan:
+                    level = self._shift_level(level, +1)  # 凌犯中羅刹 → 升級
+                else:
+                    level = self._shift_level(level, -1)  # 正常羅刹 → 降級
+            elif special_day_type == "kongou":
+                level = self._shift_level(level, +1)  # 金剛峯 → 升級（不受凌犯影響）
+
+            # 等級已在極值無法位移時，特殊日加持轉為分數溢出
+            if level == prev_level and special_day_type in ("kanro", "kongou") and not ryouhan:
+                overflow_bonus = 10  # 甘露/金剛峯在大吉日的額外加持
+            elif level == prev_level and special_day_type == "rasetsu" and not ryouhan:
+                overflow_bonus = -10  # 羅刹在凶日的額外壓制
+
+        return level, base_level, overflow_bonus
+
     def calculate_daily_fortune(self, birth_date: date, target_date: date) -> dict:
         """
         計算每日運勢
@@ -1664,138 +1832,57 @@ class SukuyodoService:
         mansion_relation = self.get_relation_type(user_index, day_mansion_index)
         mansion_relation_type = mansion_relation["type"]
 
-        # 根據關係類型決定基礎分數範圍
-        score_range = self.RELATION_SCORE_RANGES.get(
-            mansion_relation_type,
-            (55, 70)  # 預設：未知關係
-        )
-
-        # 基礎分數（根據宿曜關係，取中位值）
-        base_score = (score_range[0] + score_range[1]) // 2
-
         # 設定 seed 確保文字描述選擇穩定（同輸入同結果）
         random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
 
-        # === 次要因素：七曜元素微調 ===
+        # === 七曜資訊 ===
         weekday = target_date.weekday()
         jp_weekday = (weekday + 1) % 7
         day_info = fortune_data["weekday_elements"][str(jp_weekday)]
         day_element = day_info["element"]
 
-        # 元素相性微調（-5 到 +5）
+        # === 元素相性（次要因素，用於分類微調） ===
         element_relation_type, element_bonus = self._calc_fortune_element_relation(
             user_element, day_element
         )
-        # 將元素加成縮小為次要因素（截斷除法，避免負數偏移）
         element_adjustment = int(element_bonus / 2)  # ±20→±10, ±10→±5, ±5→±2
         element_desc = fortune_data["element_relations"].get(
             element_relation_type,
             fortune_data["element_relations"]["neutral"]
         )["description"]
 
-        # 最終總分
-        overall_score = max(30, min(100, base_score + element_adjustment))
+        # === 甘露日/金剛峯日/羅刹日判定 ===
+        special_day_key = (jp_weekday, day_mansion_index)
+        special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
 
-        # === 計算各項運勢 ===
+        # === 凌犯期間判定 ===
+        ryouhan = self.check_ryouhan_period(target_date)
+
+        # === 等級優先制：核心判定 ===
+        final_level, base_level, overflow_bonus = self._determine_daily_level(
+            mansion_relation_type, ryouhan, special_day_type
+        )
+
+        # 等級 → 顯示分數（含特殊日溢出加分）
+        level_score = self.LEVEL_DISPLAY_SCORE[final_level]
+        overall_score = max(30, min(100, level_score + element_adjustment + overflow_bonus))
+
+        # === 計算各項運勢（從等級分數衍生 + 分類親和微調） ===
         def calc_category_score(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
-            # 有利元素加成
             cat_bonus = 3 if user_element in cat_data["favorable_elements"] else 0
             day_bonus = 2 if day_element in cat_data["favorable_elements"] else 0
-            # 宿曜關係影響各項運勢
-            relation_factor = (score_range[0] + score_range[1]) // 2 - 65  # 相對於中性的偏移
-            return max(30, min(100, 65 + relation_factor + cat_bonus + day_bonus + element_adjustment))
+            return max(30, min(100, overall_score + cat_bonus + day_bonus))
 
         career_score = calc_category_score("career")
         love_score = calc_category_score("love")
         health_score = calc_category_score("health")
         wealth_score = calc_category_score("wealth")
 
-        # === 各項描述（定義函數，實際呼叫在凌犯判定之後） ===
-        def get_category_desc(category: str, score: int, ryouhan_active: bool = False) -> dict:
-            """回傳 {"zh": "...", "ja": "..."} 或 {"zh": "..."}"""
-            if ryouhan_active:
-                # 凌犯期間：使用凌犯專用描述（dict 格式含 zh/ja）
-                descs = self.RYOUHAN_CATEGORY_DESCRIPTIONS.get(category, {})
-                if score >= 70:
-                    pool = descs.get("high_reversal", [{"zh": ""}])
-                elif score >= 50:
-                    pool = descs.get("mid_reversal", [{"zh": ""}])
-                else:
-                    pool = descs.get("low_reversal", [{"zh": ""}])
-                return random.choice(pool)
-            else:
-                descs = self.DAILY_CATEGORY_DESCRIPTIONS.get(category, {})
-                if score >= 85:
-                    pool = descs.get("excellent", [""])
-                elif score >= 70:
-                    pool = descs.get("good", [""])
-                elif score >= 55:
-                    pool = descs.get("fair", [""])
-                elif score >= 40:
-                    pool = descs.get("caution", [""])
-                else:
-                    pool = descs.get("warning", [""])
-                return {"zh": random.choice(pool)}
-
-        # === 甘露日/金剛峯日/羅刹日判定 ===
-        special_day_key = (jp_weekday, day_mansion_index)
-        special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
-        special_day = None
-
-        # === 凌犯期間判定 ===
-        ryouhan = self.check_ryouhan_period(target_date)
-
-        if special_day_type:
-            special_day = dict(self.SPECIAL_DAY_INFO[special_day_type])
-            special_day["type"] = special_day_type
-
-            if ryouhan:
-                # 凌犯期間中：甘露/羅刹吉凶逆轉，金剛峯不受影響
-                if special_day_type == "kanro":
-                    special_day["ryouhan_reversed"] = True
-                    special_day["original_level"] = special_day["level"]
-                    special_day["level"] = "凶（凌犯逆轉）"
-                    # 甘露日逆轉為凶：原本 +10 變 -15（逆轉力道更強）
-                    overall_score = max(30, overall_score - 15)
-                elif special_day_type == "rasetsu":
-                    special_day["ryouhan_reversed"] = True
-                    special_day["original_level"] = special_day["level"]
-                    special_day["level"] = "吉（凌犯逆轉）"
-                    # 羅刹日逆轉為吉：原本 -10 變 +10
-                    overall_score = min(100, overall_score + 10)
-                else:
-                    # 金剛峯日不受影響
-                    special_day["ryouhan_reversed"] = False
-            else:
-                # 正常期間
-                special_day["ryouhan_reversed"] = False
-                if special_day_type == "kanro":
-                    overall_score = min(100, overall_score + 10)
-                elif special_day_type == "rasetsu":
-                    overall_score = max(30, overall_score - 10)
-
-        # === 凌犯期間全面吉凶逆轉 ===
-        # 凌犯 = 吉凶逆轉，吉日被壓低、凶日被緩和，力道要足以反映在分數上
-        if ryouhan:
-            positive_types = {"eishin", "mei"}  # 栄親/命（大吉型）→ 反轉力道最強
-            mild_positive = {"gyotai", "kisei"}  # 業胎/危成 → 中等反轉
-            mild_negative = {"yusui"}  # 友衰 → 輕微反轉
-            negative_types = {"ankai"}  # 安壊（凶）→ 凶被緩和
-            if mansion_relation_type in positive_types:
-                overall_score = max(30, overall_score - 20)
-            elif mansion_relation_type in mild_positive:
-                overall_score = max(30, overall_score - 12)
-            elif mansion_relation_type in mild_negative:
-                overall_score = max(30, overall_score - 5)
-            elif mansion_relation_type in negative_types:
-                overall_score = min(100, overall_score + 15)
-
-        # === 六害宿判定（凌犯期間中才生效） ===
+        # === 六害宿判定（凌犯期間中才生效，warning flag 不影響等級） ===
         rokugai = None
         if ryouhan:
             rokugai_list = self.get_rokugai_suku(user_index)
-            # 檢查當日宿是否為六害宿之一
             for rg in rokugai_list:
                 if rg["mansion_index"] == day_mansion_index:
                     rokugai = {
@@ -1804,29 +1891,49 @@ class SukuyodoService:
                         "severity": rg["severity"],
                         "description": f"凌犯期間中の六害宿「{rg['name']}」に当たります。本命宿との関係で特に注意が必要な日です。"
                     }
-                    # 六害宿額外減分
-                    penalty = max(5, 15 - rg["severity"] * 2)  # severity 1→13, 2→11, ... 6→3
-                    overall_score = max(30, overall_score - penalty)
                     break
 
-        # === 凌犯對類別分數的影響 ===
-        # 類別分數也必須反映凌犯逆轉，否則 overall 被調但類別仍高會矛盾
-        if ryouhan:
-            ryouhan_cat_adj = overall_score - base_score - element_adjustment  # 複用 overall 的淨調整量
-            career_score = max(30, min(100, career_score + ryouhan_cat_adj))
-            love_score = max(30, min(100, love_score + ryouhan_cat_adj))
-            health_score = max(30, min(100, health_score + ryouhan_cat_adj))
-            wealth_score = max(30, min(100, wealth_score + ryouhan_cat_adj))
+        # === 特殊日資料組裝 ===
+        special_day = None
+        if special_day_type:
+            special_day = dict(self.SPECIAL_DAY_INFO[special_day_type])
+            special_day["type"] = special_day_type
+            if ryouhan:
+                if special_day_type == "kanro":
+                    special_day["ryouhan_reversed"] = True
+                    special_day["original_level"] = special_day["level"]
+                    special_day["level"] = "凶（凌犯逆轉）"
+                elif special_day_type == "rasetsu":
+                    special_day["ryouhan_reversed"] = True
+                    special_day["original_level"] = special_day["level"]
+                    special_day["level"] = "吉（凌犯逆轉）"
+                else:
+                    special_day["ryouhan_reversed"] = False
+            else:
+                special_day["ryouhan_reversed"] = False
 
         # === 三期サイクル ===
         sanki = self.get_sanki_cycle(user_index, day_mansion_index)
 
-        # === 各項描述（凌犯/六害宿/三期判定完成後才選描述） ===
+        # === 各項描述（根據等級選擇，非分數門檻） ===
+        def get_category_desc(category: str, ryouhan_active: bool = False) -> dict:
+            """回傳 {"zh": "...", "ja": "..."} 或 {"zh": "..."}"""
+            if ryouhan_active:
+                descs = self.RYOUHAN_CATEGORY_DESCRIPTIONS.get(category, {})
+                desc_key = self.RYOUHAN_DESC_KEY.get(final_level, "mid_reversal")
+                pool = descs.get(desc_key, [{"zh": ""}])
+                return random.choice(pool)
+            else:
+                descs = self.DAILY_CATEGORY_DESCRIPTIONS.get(category, {})
+                desc_key = self.LEVEL_DESC_KEY.get(final_level, "fair")
+                pool = descs.get(desc_key, [""])
+                return {"zh": random.choice(pool)}
+
         is_ryouhan_active = ryouhan is not None
-        career_descs = get_category_desc("career", career_score, is_ryouhan_active)
-        love_descs = get_category_desc("love", love_score, is_ryouhan_active)
-        health_descs = get_category_desc("health", health_score, is_ryouhan_active)
-        wealth_descs = get_category_desc("wealth", wealth_score, is_ryouhan_active)
+        career_descs = get_category_desc("career", is_ryouhan_active)
+        love_descs = get_category_desc("love", is_ryouhan_active)
+        health_descs = get_category_desc("health", is_ryouhan_active)
+        wealth_descs = get_category_desc("wealth", is_ryouhan_active)
         career_desc = career_descs["zh"]
         love_desc = love_descs["zh"]
         health_desc = health_descs["zh"]
@@ -1836,18 +1943,9 @@ class SukuyodoService:
         health_desc_ja = health_descs.get("ja", "")
         wealth_desc_ja = wealth_descs.get("ja", "")
 
-        # === 選擇建議 ===
-        if overall_score >= 85:
-            advice_list = fortune_data["daily_advice"]["excellent"]
-        elif overall_score >= 70:
-            advice_list = fortune_data["daily_advice"]["good"]
-        elif overall_score >= 55:
-            advice_list = fortune_data["daily_advice"]["neutral"]
-        elif overall_score >= 40:
-            advice_list = fortune_data["daily_advice"]["caution"]
-        else:
-            advice_list = fortune_data["daily_advice"]["challenging"]
-
+        # === 選擇建議（根據等級） ===
+        advice_key = self.LEVEL_ADVICE_KEY.get(final_level, "neutral")
+        advice_list = fortune_data["daily_advice"].get(advice_key, fortune_data["daily_advice"]["neutral"])
         advice = random.choice(advice_list)
 
         # === 多因素交叉分析 ===
@@ -1913,6 +2011,10 @@ class SukuyodoService:
                 "description": element_desc
             },
             "fortune": {
+                "level": final_level,
+                "level_name": self.LEVEL_NAMES[final_level]["zh"],
+                "level_name_ja": self.LEVEL_NAMES[final_level]["ja"],
+                "base_level": base_level,
                 "overall": overall_score,
                 "career": career_score,
                 "love": love_score,
@@ -1929,7 +2031,7 @@ class SukuyodoService:
                 "ryouhan_active": ryouhan is not None,
                 "ryouhan_warning": "凌犯期間中，吉凶判斷可能與平時相反。表面順遂之事暗藏風險，表面困難之事反有轉機。重大決策宜延後。" if ryouhan else None,
                 "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。順調に見える事柄にも注意が必要です。重要な決断は延期をお勧めします。" if ryouhan else None,
-                "effective_interpretation": "caution" if ryouhan else ("excellent" if overall_score >= 85 else "good" if overall_score >= 70 else "neutral" if overall_score >= 55 else "challenging")
+                "effective_interpretation": self.LEVEL_INTERPRETATION.get(final_level, "neutral")
             },
             "advice": advice,
             "lucky": {
@@ -1974,9 +2076,10 @@ class SukuyodoService:
         month_mansion = self.mansions_data[month_mansion_index]
         month_mansion_elem = month_mansion["element"]
 
-        # 本命宿 vs 月宿關係
+        # 本命宿 vs 月宿關係 → 等級映射
         relation = self.get_relation_type(user_index, month_mansion_index)
-        base_score = relation["score"]
+        month_level = self.RELATION_LEVEL_MAP.get(relation["type"], "chukichi")
+        base_score = self.LEVEL_DISPLAY_SCORE[month_level]
 
         # 月份主題加成
         month_theme = fortune_data["monthly_themes"].get(str(month), {})
@@ -2026,12 +2129,14 @@ class SukuyodoService:
                 "is_dark_week": is_dark
             })
 
-        # 凌犯期間影響月分數
+        # 凌犯期間影響月等級（等級位移取代分數減扣）
         ryouhan_ratio = ryouhan_count / days_in_month if days_in_month > 0 else 0
         if ryouhan_ratio > 0.5:
-            base_score = max(40, base_score - 15)
+            month_level = self._shift_level(month_level, -2)  # 降 2 級
+            base_score = self.LEVEL_DISPLAY_SCORE[month_level]
         elif ryouhan_ratio > 0:
-            base_score = max(40, base_score - 8)
+            month_level = self._shift_level(month_level, -1)  # 降 1 級
+            base_score = self.LEVEL_DISPLAY_SCORE[month_level]
 
         # 各項運勢（基於元素親和，非隨機數）
         def calc_monthly_category(category: str) -> int:
@@ -2138,6 +2243,9 @@ class SukuyodoService:
                 "description": random.choice(self.MONTHLY_THEME_DESCRIPTIONS.get(relation["type"], ["本月能量平穩，按照自己的步調前進即可。"]))
             },
             "fortune": {
+                "level": month_level,
+                "level_name": self.LEVEL_NAMES[month_level]["zh"],
+                "level_name_ja": self.LEVEL_NAMES[month_level]["ja"],
                 "overall": base_score,
                 "career": calc_monthly_category("career"),
                 "love": calc_monthly_category("love"),
@@ -2243,6 +2351,7 @@ class SukuyodoService:
                 "date": day_date.isoformat(),
                 "weekday": daily_fortune["weekday"]["name"],
                 "score": daily_fortune["fortune"]["overall"],
+                "level": daily_fortune["fortune"].get("level", ""),
                 "is_today": day_offset == 0,
                 "is_yesterday": day_offset == -1,
                 "special_day": special_day.get("name") if special_day else None,
@@ -2250,7 +2359,7 @@ class SukuyodoService:
                 "is_dark_week": is_dark
             })
 
-        # 週整體分數 = 8 天每日分數平均
+        # 週整體分數 = 8 天每日分數平均（日分數已從等級映射，自然傳遞）
         overall_score = round(sum(d["score"] for d in daily_overview) / len(daily_overview))
         overall_score = max(30, min(100, overall_score))
 
@@ -2265,12 +2374,12 @@ class SukuyodoService:
         # 文字描述（seeded random.choice 確保同輸入同結果）
         random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
 
-        # 選擇建議
-        if overall_score >= 85:
+        # 選擇建議（根據平均分數反推等級）
+        if overall_score >= 83:
             advice_list = fortune_data["daily_advice"]["excellent"]
-        elif overall_score >= 70:
+        elif overall_score >= 68:
             advice_list = fortune_data["daily_advice"]["good"]
-        elif overall_score >= 55:
+        elif overall_score >= 53:
             advice_list = fortune_data["daily_advice"]["neutral"]
         elif overall_score >= 40:
             advice_list = fortune_data["daily_advice"]["caution"]
@@ -2953,7 +3062,10 @@ class SukuyodoService:
         star = self.KUYOU_STARS[star_index]
         star_element = star["element"]
 
-        # 九曜星與本命元素的關係
+        # 九曜等級 → 顯示分數（KUYOU_LEVEL_MAP）
+        kuyou_level_score = self.KUYOU_LEVEL_MAP.get(star["level"], 50)
+
+        # 九曜星與本命元素的關係（僅影響分類，不影響整體等級）
         if star_element:
             star_relation, star_bonus = self._calc_fortune_element_relation(user_element, star_element)
         else:
@@ -2961,7 +3073,7 @@ class SukuyodoService:
             star_relation = "conflicting"
             star_bonus = -10
 
-        base_score = star["base_score"] + star_bonus // 2
+        base_score = kuyou_level_score
 
         warnings = []
 
@@ -2974,14 +3086,9 @@ class SukuyodoService:
             month_mansion_idx = self.MONTH_START_MANSION.get(lunar_month_for_trend, 0)
             month_mansion_elem = self.mansions_data[month_mansion_idx]["element"]
 
-            # 本命宿 vs 月宿關係分數
+            # 本命宿 vs 月宿關係 → 等級
             month_relation = self.get_relation_type(user_index, month_mansion_idx)
-            month_base = month_relation["score"]
-
-            # 九曜星元素 vs 月宿元素的交叉影響
-            if star_element:
-                _, star_month_bonus = self._calc_fortune_element_relation(month_mansion_elem, star_element)
-                month_base += star_month_bonus // 4  # 九曜對月的微調
+            month_rel_level = self.RELATION_LEVEL_MAP.get(month_relation["type"], "chukichi")
 
             # 凌犯期間抽樣（每月 7 個取樣日，每 5 天一次確保月底覆蓋）
             ryouhan_days = 0
@@ -3000,11 +3107,23 @@ class SukuyodoService:
 
             ryouhan_ratio = ryouhan_days / sample_count if sample_count > 0 else 0
             if ryouhan_ratio > 0.5:
-                month_base = max(40, month_base - 12)
+                month_rel_level = self._shift_level(month_rel_level, -2)
             elif ryouhan_ratio > 0:
-                month_base = max(40, month_base - 6)
+                month_rel_level = self._shift_level(month_rel_level, -1)
 
-            month_score = max(40, min(100, month_base))
+            # 等級 → 年趨勢分數（宏觀概覽，差距較小）
+            month_base = self.YEARLY_TREND_SCORE[month_rel_level]
+
+            # 本命元素 vs 月宿元素
+            _, user_month_bonus = self._calc_fortune_element_relation(user_element, month_mansion_elem)
+            month_base += user_month_bonus // 2
+
+            # 九曜星元素 vs 月宿元素的交叉影響
+            if star_element:
+                _, star_month_bonus = self._calc_fortune_element_relation(month_mansion_elem, star_element)
+                month_base += star_month_bonus // 4
+
+            month_score = max(35, min(100, month_base))
             monthly_trend.append({
                 "month": m,
                 "score": month_score,
@@ -3044,14 +3163,15 @@ class SukuyodoService:
 
         base_score = max(35, min(95, base_score))
 
-        # 各項運勢（基於元素親和，非隨機數）
+        # 各項運勢（等級分數 + 元素親和微調）
         star_element_for_cat = star_element if star_element else "土"
 
         def calc_yearly_category(category: str) -> int:
             cat_data = fortune_data["fortune_categories"][category]
             cat_bonus = 10 if user_element in cat_data["favorable_elements"] else 0
             year_boost = 5 if star_element_for_cat in cat_data["favorable_elements"] else 0
-            return max(35, min(100, base_score + cat_bonus + year_boost))
+            star_adj = star_bonus // 4 if star_element else 0  # 九曜元素微調
+            return max(35, min(100, base_score + cat_bonus + year_boost + star_adj))
 
         # 年度建議（根據九曜星元素與本命元素的關係）
         advice_key = star_relation if star_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
@@ -3336,9 +3456,10 @@ class SukuyodoService:
         for i in range(days_ahead):
             check_date = today + timedelta(days=i)
 
-            # 計算當日運勢分數
+            # 計算當日運勢（含等級）
             daily_fortune = self.calculate_daily_fortune(birth_date, check_date)
             score = daily_fortune["fortune"]["overall"]
+            day_level = daily_fortune["fortune"].get("level", "chukichi")
 
             # 取得當日資訊
             weekday = check_date.weekday()
@@ -3365,6 +3486,7 @@ class SukuyodoService:
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": score,
+                        "level": day_level,
                         "reason": f"{relation['name']}日，不宜{action_config['name']}"
                     })
                 continue
@@ -3377,6 +3499,7 @@ class SukuyodoService:
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": score,
+                        "level": day_level,
                         "reason": f"{day_name}不宜{action_config['name']}"
                     })
                 continue
@@ -3388,18 +3511,20 @@ class SukuyodoService:
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": score,
+                        "level": day_level,
                         "reason": "本命宿日，不宜剃髮"
                     })
                 continue
 
-            # 檢查運勢過低
-            if score < 50:
+            # 檢查等級過低（小凶/凶 = 避開）
+            if day_level in ("shokyo", "kyo"):
                 if len(avoid_days) < 5:
                     avoid_days.append({
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": score,
-                        "reason": "運勢低迷，建議避開"
+                        "level": day_level,
+                        "reason": f"運勢{self.LEVEL_NAMES[day_level]['zh']}，建議避開"
                     })
                 continue
 
@@ -3437,8 +3562,8 @@ class SukuyodoService:
                     lucky_reason = f"整體運勢高達{score}分，各方面能量都處於高峰期，適合處理重要事務"
 
             if is_lucky and len(lucky_days) < 8:
-                # 計算評級
-                rating = "大吉" if score >= 85 else "吉" if score >= 70 else "中吉"
+                # 評級直接取等級名稱
+                rating = self.LEVEL_NAMES.get(day_level, {"zh": "中吉"})["zh"]
 
                 # 時段建議
                 time_tip = self._get_personal_time_tip(day_element, user_element, action)
@@ -3447,6 +3572,7 @@ class SukuyodoService:
                     "date": check_date.isoformat(),
                     "weekday": day_name,
                     "score": score,
+                    "level": day_level,
                     "rating": rating,
                     "reason": lucky_reason,
                     "best_time": time_tip["best_time"],
@@ -4330,41 +4456,30 @@ class SukuyodoService:
                 "ryouhan": {"active": True, "lunar_month": ryouhan["lunar_month"]} if ryouhan else None,
             }
 
-            # 個人化層
+            # 個人化層（等級制）
             if user_index is not None:
                 relation = self.get_relation_type(user_index, day_mansion_index)
                 sanki = self.get_sanki_cycle(user_index, day_mansion_index)
 
-                # 簡化運勢分數：用分數範圍中位數 + 元素微調
-                score_range = self.RELATION_SCORE_RANGES.get(relation["type"], (55, 70))
-                base_score = (score_range[0] + score_range[1]) // 2
+                # 等級判定（簡化版，復用 _determine_daily_level）
+                cal_level, cal_base_level, cal_overflow = self._determine_daily_level(
+                    relation["type"], ryouhan, special_day_type
+                )
                 day_element = day_info["element"]
                 _, element_bonus = self._calc_fortune_element_relation(user_element, day_element)
-                fortune_score = max(30, min(100, base_score + int(element_bonus / 2)))
+                fortune_score = max(30, min(100, self.LEVEL_DISPLAY_SCORE[cal_level] + int(element_bonus / 2) + cal_overflow))
 
-                # 特殊日加減
-                if special_day_type:
-                    if ryouhan:
-                        if special_day_type == "kanro":
-                            fortune_score = max(30, fortune_score - 5)
-                        elif special_day_type == "rasetsu":
-                            fortune_score = min(100, fortune_score + 5)
-                    else:
-                        if special_day_type == "kanro":
-                            fortune_score = min(100, fortune_score + 10)
-                        elif special_day_type == "rasetsu":
-                            fortune_score = max(30, fortune_score - 10)
-
-                # 六害宿（凌犯期間中才標記）
+                # 六害宿（凌犯期間中才標記，不影響分數）
                 rokugai = None
                 if ryouhan and day_mansion_index in rokugai_indices:
                     rokugai = True
-                    fortune_score = max(30, fortune_score - 8)
 
                 day_entry["personal"] = {
                     "relation_type": relation["type"],
                     "relation_name": relation["name"],
                     "fortune_score": fortune_score,
+                    "level": cal_level,
+                    "level_name": self.LEVEL_NAMES[cal_level]["zh"],
                     "sanki_period": sanki["period"],
                     "sanki_period_index": sanki["period_index"],
                     "is_dark_week": sanki["is_dark_week"],

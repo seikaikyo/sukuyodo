@@ -33,11 +33,17 @@ function scoreColor(score: number): string {
   return map[cls] || '#a8a29e'
 }
 
-function scoreLevelText(score: number): string {
+function scoreLevelText(score: number, level?: string): string {
+  // 優先使用 API 回傳的 level
+  const levelMap: Record<string, string> = {
+    daikichi: '大吉', kichi: '吉', chukichi: '中吉', shokyo: '小凶', kyo: '凶'
+  }
+  if (level && levelMap[level]) return levelMap[level]
+  // fallback
   if (score >= 90) return '大吉'
   if (score >= 75) return '吉'
   if (score >= 60) return '中吉'
-  if (score >= 45) return '小吉'
+  if (score >= 45) return '小凶'
   return '凶'
 }
 
