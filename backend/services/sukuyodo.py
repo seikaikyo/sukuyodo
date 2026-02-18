@@ -1573,6 +1573,9 @@ class SukuyodoService:
         # 基礎分數（根據宿曜關係，取中位值）
         base_score = (score_range[0] + score_range[1]) // 2
 
+        # 設定 seed 確保文字描述選擇穩定（同輸入同結果）
+        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
+
         # === 次要因素：七曜元素微調 ===
         weekday = target_date.weekday()
         jp_weekday = (weekday + 1) % 7
@@ -1651,12 +1654,14 @@ class SukuyodoService:
                     special_day["ryouhan_reversed"] = True
                     special_day["original_level"] = special_day["level"]
                     special_day["level"] = "凶（凌犯逆轉）"
-                    overall_score = max(30, overall_score - 5)
+                    # 甘露日逆轉為凶：原本 +10 變 -15（逆轉力道更強）
+                    overall_score = max(30, overall_score - 15)
                 elif special_day_type == "rasetsu":
                     special_day["ryouhan_reversed"] = True
                     special_day["original_level"] = special_day["level"]
                     special_day["level"] = "吉（凌犯逆轉）"
-                    overall_score = min(100, overall_score + 5)
+                    # 羅刹日逆轉為吉：原本 -10 變 +10
+                    overall_score = min(100, overall_score + 10)
                 else:
                     # 金剛峯日不受影響
                     special_day["ryouhan_reversed"] = False
@@ -1668,18 +1673,21 @@ class SukuyodoService:
                 elif special_day_type == "rasetsu":
                     overall_score = max(30, overall_score - 10)
 
-        # === 凌犯期間全面吉凶影響 ===
-        # 凌犯期間中，吉日（栄/安/成/友/親）受負面影響，凶日（衰/壊/危）反而緩和
-        if ryouhan and not special_day_type:
-            positive_types = {"eishin", "mei"}  # 栄親/命（大吉型）
-            mild_positive = {"kisei"}  # 危成（半吉型，含成）
-            negative_types = {"ankai"}  # 安壊（含壊）
+        # === 凌犯期間全面吉凶逆轉 ===
+        # 凌犯 = 吉凶逆轉，吉日被壓低、凶日被緩和，力道要足以反映在分數上
+        if ryouhan:
+            positive_types = {"eishin", "mei"}  # 栄親/命（大吉型）→ 反轉力道最強
+            mild_positive = {"gyotai", "kisei"}  # 業胎/危成 → 中等反轉
+            mild_negative = {"yusui"}  # 友衰 → 輕微反轉
+            negative_types = {"ankai"}  # 安壊（凶）→ 凶被緩和
             if mansion_relation_type in positive_types:
-                overall_score = max(30, overall_score - 3)
+                overall_score = max(30, overall_score - 20)
             elif mansion_relation_type in mild_positive:
-                overall_score = max(30, overall_score - 2)
+                overall_score = max(30, overall_score - 12)
+            elif mansion_relation_type in mild_negative:
+                overall_score = max(30, overall_score - 5)
             elif mansion_relation_type in negative_types:
-                overall_score = min(100, overall_score + 2)
+                overall_score = min(100, overall_score + 15)
 
         # === 六害宿判定（凌犯期間中才生效） ===
         rokugai = None
@@ -1698,6 +1706,15 @@ class SukuyodoService:
                     penalty = max(5, 15 - rg["severity"] * 2)  # severity 1→13, 2→11, ... 6→3
                     overall_score = max(30, overall_score - penalty)
                     break
+
+        # === 凌犯對類別分數的影響 ===
+        # 類別分數也必須反映凌犯逆轉，否則 overall 被調但類別仍高會矛盾
+        if ryouhan:
+            ryouhan_cat_adj = overall_score - base_score - element_adjustment  # 複用 overall 的淨調整量
+            career_score = max(30, min(100, career_score + ryouhan_cat_adj))
+            love_score = max(30, min(100, love_score + ryouhan_cat_adj))
+            health_score = max(30, min(100, health_score + ryouhan_cat_adj))
+            wealth_score = max(30, min(100, wealth_score + ryouhan_cat_adj))
 
         # === 三期サイクル ===
         sanki = self.get_sanki_cycle(user_index, day_mansion_index)
