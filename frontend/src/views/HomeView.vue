@@ -547,6 +547,11 @@ onMounted(() => {
 .query-dialog::part(panel) {
   background: var(--bg-surface);
   border: 1px solid var(--border);
+  max-height: 80vh;
+}
+
+.query-dialog::part(body) {
+  overflow-y: auto;
 }
 
 .query-dialog::part(title) {

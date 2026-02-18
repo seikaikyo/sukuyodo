@@ -391,7 +391,7 @@ function getSankiColor(periodIndex: number): string {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 3px;
 }
 
 .weekday-header {
@@ -409,15 +409,15 @@ function getSankiColor(periodIndex: number): string {
 /* 日期格子 */
 .day-cell {
   position: relative;
-  min-height: 56px;
-  padding: 2px;
+  min-height: 64px;
+  padding: 3px;
   background: var(--bg-surface, #292524);
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 2px;
   transition: background-color 0.15s, border-color 0.15s;
   border: 1px solid transparent;
   overflow: hidden;
@@ -465,7 +465,7 @@ function getSankiColor(periodIndex: number): string {
 
 /* 日期數字 */
 .day-number {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary, #fafaf9);
   line-height: 1;
@@ -474,8 +474,8 @@ function getSankiColor(periodIndex: number): string {
 
 /* 宿名 */
 .mansion-abbr {
-  font-size: 10px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -486,9 +486,9 @@ function getSankiColor(periodIndex: number): string {
 }
 
 .tag {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 0 3px;
+  padding: 1px 4px;
   border-radius: 2px;
   line-height: 14px;
 }
@@ -504,9 +504,9 @@ function getSankiColor(periodIndex: number): string {
 }
 
 .jp-tag {
-  font-size: 7px;
+  font-size: 8px;
   color: var(--kongou-color);
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 /* 六害宿標記 */
@@ -522,8 +522,8 @@ function getSankiColor(periodIndex: number): string {
 
 /* 運勢分數 */
 .fortune-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   position: absolute;
   bottom: 3px;
@@ -541,33 +541,33 @@ function getSankiColor(periodIndex: number): string {
 /* 響應式 */
 @media (min-width: 768px) {
   .day-cell {
-    min-height: 80px;
+    min-height: 90px;
     padding: 4px;
     gap: 2px;
   }
 
   .day-number {
-    font-size: 15px;
+    font-size: 16px;
     margin-top: 6px;
   }
 
   .mansion-abbr {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .tag {
-    font-size: 9px;
-    padding: 0 4px;
+    font-size: 10px;
+    padding: 1px 5px;
     line-height: 16px;
   }
 
   .jp-tag {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .fortune-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 }
 
