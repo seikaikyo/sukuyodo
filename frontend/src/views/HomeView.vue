@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useSukuyodo } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES } from '../stores/profile'
 import type { RelationType } from '../stores/profile'
@@ -151,8 +151,29 @@ function deletePartner(id: string) {
   confirmDeleteId.value = null
 }
 
+function handleEscape(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    if (showPartnerDialog.value) {
+      showPartnerDialog.value = false
+    } else if (showQueryDialog.value) {
+      showQueryDialog.value = false
+    }
+  }
+}
+
+watch(showQueryDialog, (open) => {
+  if (!open) showPartnerDialog.value = false
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
 onMounted(() => {
+  document.addEventListener('keydown', handleEscape)
   init()
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleEscape)
+  document.body.style.overflow = ''
 })
 </script>
 
@@ -169,136 +190,145 @@ onMounted(() => {
       </button>
     </header>
 
-    <!-- Query Dialog -->
-    <sl-dialog
-      :open.prop="showQueryDialog"
-      label="查詢本命宿"
-      class="query-dialog"
-      @sl-after-hide="showQueryDialog = false"
-    >
-      <div class="query-content">
-        <!-- 日期輸入（主角） -->
-        <sl-input
-          type="date"
-          :value="birthDate"
-          label="西曆生日"
-          :max="getLocalDateStr()"
-          @sl-input="birthDate = ($event.target as HTMLInputElement).value"
-        ></sl-input>
+    <!-- Query Panel（取代 sl-dialog，實色背景避免文字穿透） -->
+    <Transition name="panel">
+      <div v-if="showQueryDialog" class="query-panel" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <h2 class="panel-title">查詢本命宿</h2>
+          <button class="panel-close" @click="showQueryDialog = false" aria-label="關閉">
+            <sl-icon name="x-lg"></sl-icon>
+          </button>
+        </header>
+        <div class="panel-body">
+          <div class="query-content">
+            <!-- 日期輸入（主角） -->
+            <sl-input
+              type="date"
+              :value="birthDate"
+              label="西曆生日"
+              :max="getLocalDateStr()"
+              @sl-input="birthDate = ($event.target as HTMLInputElement).value"
+            ></sl-input>
 
-        <div v-if="lookupError" class="error-msg">{{ lookupError }}</div>
+            <div v-if="lookupError" class="error-msg">{{ lookupError }}</div>
 
-        <!-- 快速選擇 chip -->
-        <div v-if="myBirthDate || partnersWithBirthDate.length > 0" class="quick-chips">
-          <button
-            v-if="myBirthDate"
-            class="quick-chip"
-            :class="{ active: birthDate === myBirthDate }"
-            @click="quickSelect(myBirthDate)"
-          >我</button>
-          <button
-            v-for="p in partnersWithBirthDate"
-            :key="p.id"
-            class="quick-chip"
-            :class="{ active: birthDate === p.birthDate }"
-            @click="quickSelect(p.birthDate)"
-          >{{ p.nickname }}</button>
+            <!-- 快速選擇 chip -->
+            <div v-if="myBirthDate || partnersWithBirthDate.length > 0" class="quick-chips">
+              <button
+                v-if="myBirthDate"
+                class="quick-chip"
+                :class="{ active: birthDate === myBirthDate }"
+                @click="quickSelect(myBirthDate)"
+              >我</button>
+              <button
+                v-for="p in partnersWithBirthDate"
+                :key="p.id"
+                class="quick-chip"
+                :class="{ active: birthDate === p.birthDate }"
+                @click="quickSelect(p.birthDate)"
+              >{{ p.nickname }}</button>
+            </div>
+
+            <!-- 收藏對象折疊 -->
+            <sl-details :summary="`收藏對象管理 (${profile.partners.length})`">
+              <div v-if="profile.partners.length > 0" class="partner-list">
+                <div v-for="p in profile.partners" :key="p.id" class="partner-item">
+                  <div class="partner-info">
+                    <span class="partner-name">{{ p.nickname }}</span>
+                    <span class="partner-date">{{ p.birthDate }}</span>
+                    <span class="partner-rel">{{ RELATION_TYPES.find(r => r.value === p.relation)?.label }}</span>
+                  </div>
+                  <div class="partner-actions">
+                    <button class="btn-icon" @click="startEditPartner(p.id)" title="編輯" aria-label="編輯">
+                      <sl-icon name="pencil" aria-hidden="true"></sl-icon>
+                    </button>
+                    <button
+                      v-if="confirmDeleteId !== p.id"
+                      class="btn-icon btn-danger"
+                      @click="confirmDeleteId = p.id"
+                      title="刪除"
+                      aria-label="刪除"
+                    >
+                      <sl-icon name="trash" aria-hidden="true"></sl-icon>
+                    </button>
+                    <button
+                      v-else
+                      class="btn-icon btn-danger confirm"
+                      @click="deletePartner(p.id)"
+                    >確認</button>
+                  </div>
+                </div>
+              </div>
+              <p v-else class="partner-empty">尚未新增收藏對象</p>
+              <button
+                class="btn-add-partner"
+                @click="startAddPartner"
+                :disabled="profile.partners.length >= 10"
+              >+ 新增對象</button>
+            </sl-details>
+          </div>
         </div>
+        <footer class="panel-footer">
+          <sl-button variant="default" @click="showQueryDialog = false">取消</sl-button>
+          <sl-button
+            variant="primary"
+            :loading.prop="lookupLoading"
+            :disabled.prop="!birthDate"
+            @click="lookupMansion"
+          >查詢</sl-button>
+        </footer>
+      </div>
+    </Transition>
 
-        <!-- 收藏對象折疊 -->
-        <sl-details :summary="`收藏對象管理 (${profile.partners.length})`">
-          <div v-if="profile.partners.length > 0" class="partner-list">
-            <div v-for="p in profile.partners" :key="p.id" class="partner-item">
-              <div class="partner-info">
-                <span class="partner-name">{{ p.nickname }}</span>
-                <span class="partner-date">{{ p.birthDate }}</span>
-                <span class="partner-rel">{{ RELATION_TYPES.find(r => r.value === p.relation)?.label }}</span>
-              </div>
-              <div class="partner-actions">
-                <button class="btn-icon" @click="startEditPartner(p.id)" title="編輯" aria-label="編輯">
-                  <sl-icon name="pencil" aria-hidden="true"></sl-icon>
-                </button>
-                <button
-                  v-if="confirmDeleteId !== p.id"
-                  class="btn-icon btn-danger"
-                  @click="confirmDeleteId = p.id"
-                  title="刪除"
-                  aria-label="刪除"
-                >
-                  <sl-icon name="trash" aria-hidden="true"></sl-icon>
-                </button>
-                <button
-                  v-else
-                  class="btn-icon btn-danger confirm"
-                  @click="deletePartner(p.id)"
-                >確認</button>
-              </div>
+    <!-- Partner Panel（子面板） -->
+    <Transition name="panel">
+      <div v-if="showPartnerDialog" class="partner-panel" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <h2 class="panel-title">{{ editingPartnerId ? '編輯收藏對象' : '新增收藏對象' }}</h2>
+          <button class="panel-close" @click="showPartnerDialog = false" aria-label="關閉">
+            <sl-icon name="x-lg"></sl-icon>
+          </button>
+        </header>
+        <div class="panel-body">
+          <div class="partner-form-content">
+            <sl-input
+              :value="partnerNickname"
+              label="暱稱"
+              placeholder="例：太太、爸爸"
+              @sl-input="partnerNickname = ($event.target as HTMLInputElement).value"
+            ></sl-input>
+            <sl-input
+              type="date"
+              :value="partnerBirthDate"
+              label="西曆生日"
+              :max="getLocalDateStr()"
+              @sl-input="partnerBirthDate = ($event.target as HTMLInputElement).value"
+            ></sl-input>
+            <div class="form-row">
+              <label class="form-label">關係</label>
+              <sl-select
+                :value="partnerRelation"
+                @sl-change="partnerRelation = ($event.target as HTMLSelectElement).value as RelationType"
+              >
+                <sl-option
+                  v-for="rt in RELATION_TYPES"
+                  :key="rt.value"
+                  :value="rt.value"
+                >{{ rt.label }}</sl-option>
+              </sl-select>
             </div>
           </div>
-          <p v-else class="partner-empty">尚未新增收藏對象</p>
-          <button
-            class="btn-add-partner"
-            @click="startAddPartner"
-            :disabled="profile.partners.length >= 10"
-          >+ 新增對象</button>
-        </sl-details>
-      </div>
-
-      <div slot="footer" class="dialog-footer">
-        <sl-button variant="default" @click="showQueryDialog = false">取消</sl-button>
-        <sl-button
-          variant="primary"
-          :loading.prop="lookupLoading"
-          :disabled.prop="!birthDate"
-          @click="lookupMansion"
-        >查詢</sl-button>
-      </div>
-    </sl-dialog>
-
-    <!-- 子對話框：新增/編輯收藏對象 -->
-    <sl-dialog
-      :open.prop="showPartnerDialog"
-      :label="editingPartnerId ? '編輯收藏對象' : '新增收藏對象'"
-      class="partner-dialog"
-      @sl-after-hide="showPartnerDialog = false"
-    >
-      <div class="partner-form-content">
-        <sl-input
-          :value="partnerNickname"
-          label="暱稱"
-          placeholder="例：太太、爸爸"
-          @sl-input="partnerNickname = ($event.target as HTMLInputElement).value"
-        ></sl-input>
-        <sl-input
-          type="date"
-          :value="partnerBirthDate"
-          label="西曆生日"
-          :max="getLocalDateStr()"
-          @sl-input="partnerBirthDate = ($event.target as HTMLInputElement).value"
-        ></sl-input>
-        <div class="form-row">
-          <label class="form-label">關係</label>
-          <sl-select
-            :value="partnerRelation"
-            @sl-change="partnerRelation = ($event.target as HTMLSelectElement).value as RelationType"
-          >
-            <sl-option
-              v-for="rt in RELATION_TYPES"
-              :key="rt.value"
-              :value="rt.value"
-            >{{ rt.label }}</sl-option>
-          </sl-select>
         </div>
+        <footer class="panel-footer">
+          <sl-button variant="default" @click="showPartnerDialog = false">取消</sl-button>
+          <sl-button
+            variant="primary"
+            :disabled.prop="!partnerNickname.trim() || !partnerBirthDate"
+            @click="savePartner"
+          >{{ editingPartnerId ? '更新' : '新增' }}</sl-button>
+        </footer>
       </div>
-      <div slot="footer" class="dialog-footer">
-        <sl-button variant="default" @click="showPartnerDialog = false">取消</sl-button>
-        <sl-button
-          variant="primary"
-          :disabled.prop="!partnerNickname.trim() || !partnerBirthDate"
-          @click="savePartner"
-        >{{ editingPartnerId ? '更新' : '新增' }}</sl-button>
-      </div>
-    </sl-dialog>
+    </Transition>
 
     <!-- Summary Card -->
     <SummaryCard
@@ -535,25 +565,95 @@ onMounted(() => {
   outline-offset: 2px;
 }
 
-/* Query Dialog - scoped styles */
+/* Full-screen Panel (取代 sl-dialog，實色背景) */
 
-.query-content {
+.query-panel,
+.partner-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-}
-
-.query-content sl-input {
   --sl-input-background-color: var(--bg-elevated);
   --sl-input-border-color: var(--border);
   --sl-input-color: var(--text-primary);
   --sl-input-label-color: var(--text-secondary);
 }
 
-.dialog-footer {
+.partner-panel {
+  z-index: 1001;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0;
+}
+
+.panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.panel-close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+}
+
+.panel-footer {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Panel Transition */
+.panel-enter-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-leave-active {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.panel-enter-from,
+.panel-leave-to {
+  transform: translateY(100%);
+}
+
+/* Query Content */
+.query-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 .error-msg {
@@ -593,22 +693,6 @@ onMounted(() => {
 .quick-chip:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-/* sl-details 深色主題 */
-.query-dialog sl-details::part(base) {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.query-dialog sl-details::part(summary) {
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-}
-
-.query-dialog sl-details::part(content) {
-  padding: var(--space-sm);
 }
 
 /* Partner Management (inside sl-details) */
@@ -725,19 +809,11 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Partner Sub-Dialog */
+/* Partner Form Content */
 .partner-form-content {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-}
-
-.partner-dialog sl-input,
-.partner-dialog sl-select {
-  --sl-input-background-color: var(--bg-elevated);
-  --sl-input-border-color: var(--border);
-  --sl-input-color: var(--text-primary);
-  --sl-input-label-color: var(--text-secondary);
 }
 
 .form-row {
@@ -871,29 +947,18 @@ onMounted(() => {
 
 <!-- Non-scoped: Shoelace shadow DOM ::part() 必須在非 scoped 才能生效 -->
 <style>
-.query-dialog::part(overlay) {
-  background: rgba(0, 0, 0, 0.7);
+.query-panel sl-details::part(base) {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
 
-.query-dialog::part(panel) {
-  background: #292524;
-  border: 1px solid #57534e;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
+.query-panel sl-details::part(summary) {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
 }
 
-.query-dialog::part(body) {
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-}
-
-.query-dialog::part(footer) {
-  flex-shrink: 0;
-}
-
-.query-dialog::part(title) {
-  color: #f59e0b;
+.query-panel sl-details::part(content) {
+  padding: var(--space-sm);
 }
 </style>
