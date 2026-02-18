@@ -1,7 +1,7 @@
 ---
 title: 查詢本命宿對話框重新設計
 type: refactor
-status: in-progress
+status: completed
 created: 2026-02-18
 ---
 

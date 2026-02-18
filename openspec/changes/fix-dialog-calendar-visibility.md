@@ -1,7 +1,7 @@
 ---
 title: 修復查詢對話框遮罩問題與月曆吉凶凌犯可見度
 type: fix
-status: in-progress
+status: completed
 created: 2026-02-18
 ---
 

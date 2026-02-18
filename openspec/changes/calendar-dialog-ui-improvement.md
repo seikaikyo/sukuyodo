@@ -1,7 +1,7 @@
 ---
 title: 月曆可讀性提升與查詢對話框溢出修正
 type: fix
-status: in-progress
+status: completed
 created: 2026-02-18
 ---
 
