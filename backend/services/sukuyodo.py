@@ -2983,13 +2983,13 @@ class SukuyodoService:
                 _, star_month_bonus = self._calc_fortune_element_relation(month_mansion_elem, star_element)
                 month_base += star_month_bonus // 4  # 九曜對月的微調
 
-            # 凌犯期間抽樣（每月 4 個取樣日）
+            # 凌犯期間抽樣（每月 7 個取樣日，每 5 天一次確保月底覆蓋）
             ryouhan_days = 0
             if m == 12:
                 days_in_m = (date(year + 1, 1, 1) - date(year, m, 1)).days
             else:
                 days_in_m = (date(year, m + 1, 1) - date(year, m, 1)).days
-            sample_days = [1, 8, 15, 22]
+            sample_days = [1, 5, 10, 15, 20, 25, 30]
             sample_count = 0
             for sd in sample_days:
                 if sd <= days_in_m:
