@@ -211,6 +211,9 @@ function getSankiColor(periodIndex: number): string {
             'is-ryouhan': cell.ryouhan,
             'is-dark-week': cell.personal?.is_dark_week,
             'has-jp-lucky': cell.japanese_calendar?.is_super_lucky,
+            'score-high': cell.personal && cell.personal.fortune_score >= 75,
+            'score-mid': cell.personal && cell.personal.fortune_score >= 50 && cell.personal.fortune_score < 75,
+            'score-low': cell.personal && cell.personal.fortune_score < 50,
           }"
           @click="emit('selectDay', cell.date)"
         >
@@ -221,41 +224,40 @@ function getSankiColor(periodIndex: number): string {
             :style="{ background: getSankiColor(cell.personal.sanki_period_index) }"
           ></div>
 
-          <!-- 日期數字 -->
-          <span class="day-number">{{ cell.day }}</span>
-
-          <!-- 宿名 -->
-          <span
-            class="mansion-abbr"
-            :style="{ color: elementColors[cell.day_mansion.element] || '#666' }"
-          >{{ getMansionAbbr(cell.day_mansion.name_jp) }}</span>
-
-          <!-- 特殊日標籤 -->
-          <div class="day-tags">
-            <span v-if="cell.special_day?.type === 'kanro'" class="tag kanro">甘</span>
-            <span v-if="cell.special_day?.type === 'kongou'" class="tag kongou">金</span>
-            <span v-if="cell.special_day?.type === 'rasetsu'" class="tag rasetsu">羅</span>
+          <!-- 上排：日期 + 宿名 -->
+          <div class="cell-top">
+            <span class="day-number">{{ cell.day }}</span>
+            <span
+              class="mansion-abbr"
+              :style="{ color: elementColors[cell.day_mansion.element] || '#666' }"
+            >{{ getMansionAbbr(cell.day_mansion.name_jp) }}</span>
           </div>
 
-          <!-- 日本選日標記 -->
-          <div v-if="cell.japanese_calendar?.types?.length" class="jp-tags">
+          <!-- 中排：特殊日 + 選日標籤 -->
+          <div class="cell-mid">
+            <span v-if="cell.special_day?.type === 'kanro'" class="tag kanro">甘露</span>
+            <span v-if="cell.special_day?.type === 'kongou'" class="tag kongou">金剛</span>
+            <span v-if="cell.special_day?.type === 'rasetsu'" class="tag rasetsu">羅刹</span>
+            <template v-if="cell.japanese_calendar?.types?.length">
+              <span
+                v-for="label in cell.japanese_calendar.labels.slice(0, 1)"
+                :key="label"
+                class="jp-tag"
+              >{{ label }}</span>
+            </template>
+          </div>
+
+          <!-- 下排：運勢分數 + 關係名 -->
+          <div v-if="cell.personal" class="cell-bottom">
             <span
-              v-for="label in cell.japanese_calendar.labels.slice(0, 2)"
-              :key="label"
-              class="jp-tag"
-            >{{ label.slice(0, 2) }}</span>
+              class="fortune-score"
+              :style="{ color: getScoreColor(cell.personal.fortune_score) }"
+            >{{ cell.personal.fortune_score }}</span>
+            <span class="relation-name">{{ cell.personal.relation_name }}</span>
           </div>
 
           <!-- 六害宿標記 -->
           <div v-if="cell.personal?.rokugai" class="rokugai-mark"></div>
-
-          <!-- 運勢分數 -->
-          <span
-            v-if="cell.personal"
-            class="fortune-dot"
-            :style="{ background: getScoreColor(cell.personal.fortune_score) }"
-            :title="`${cell.personal.fortune_score}點 ${cell.personal.relation_name}`"
-          ></span>
         </div>
       </template>
     </div>
@@ -409,15 +411,15 @@ function getSankiColor(periodIndex: number): string {
 /* 日期格子 */
 .day-cell {
   position: relative;
-  min-height: 64px;
-  padding: 3px;
+  min-height: 72px;
+  padding: 3px 2px;
   background: var(--bg-surface, #292524);
   border-radius: var(--radius-sm, 4px);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   transition: background-color 0.15s, border-color 0.15s;
   border: 1px solid transparent;
   overflow: hidden;
@@ -454,59 +456,100 @@ function getSankiColor(periodIndex: number): string {
   box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.3);
 }
 
+/* 分數底色 */
+.day-cell.score-high {
+  background: rgba(74, 155, 107, 0.1);
+}
+
+.day-cell.score-low {
+  background: rgba(232, 93, 76, 0.1);
+}
+
+.day-cell.is-ryouhan.score-high {
+  background: linear-gradient(135deg, var(--ryouhan-bg), rgba(74, 155, 107, 0.1));
+}
+
+.day-cell.is-dark-week.score-low {
+  background: linear-gradient(135deg, var(--dark-week-bg), rgba(232, 93, 76, 0.1));
+}
+
 /* 三期色帶 */
 .sanki-bar {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
 }
 
-/* 日期數字 */
-.day-number {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary, #fafaf9);
-  line-height: 1;
+/* 上排：日期 + 宿名 */
+.cell-top {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
   margin-top: 4px;
 }
 
-/* 宿名 */
+.day-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary, #fafaf9);
+  line-height: 1;
+}
+
 .mansion-abbr {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
 }
 
-/* 特殊日標籤 */
-.day-tags {
+/* 中排：特殊日 + 選日 */
+.cell-mid {
   display: flex;
-  gap: 1px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  min-height: 14px;
 }
 
 .tag {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 0 3px;
   border-radius: 2px;
   line-height: 14px;
+  white-space: nowrap;
 }
 
-.tag.kanro { background: rgba(74, 155, 107, 0.3); color: var(--kanro-color); }
-.tag.kongou { background: rgba(212, 175, 55, 0.3); color: var(--kongou-color); }
-.tag.rasetsu { background: rgba(232, 93, 76, 0.3); color: var(--rasetsu-color); }
-
-/* 日本選日 */
-.jp-tags {
-  display: flex;
-  gap: 1px;
-}
+.tag.kanro { background: rgba(74, 155, 107, 0.35); color: var(--kanro-color); }
+.tag.kongou { background: rgba(212, 175, 55, 0.35); color: var(--kongou-color); }
+.tag.rasetsu { background: rgba(232, 93, 76, 0.35); color: var(--rasetsu-color); }
 
 .jp-tag {
   font-size: 8px;
   color: var(--kongou-color);
   opacity: 0.8;
+}
+
+/* 下排：分數 + 關係 */
+.cell-bottom {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin-top: auto;
+  padding-bottom: 1px;
+}
+
+.fortune-score {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.relation-name {
+  font-size: 9px;
+  color: var(--text-secondary, #a8a29e);
+  line-height: 1;
 }
 
 /* 六害宿標記 */
@@ -520,16 +563,6 @@ function getSankiColor(periodIndex: number): string {
   border-top: 5px solid var(--rasetsu-color);
 }
 
-/* 運勢分數 */
-.fortune-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-}
-
 /* 無生日提示 */
 .no-birth-hint {
   text-align: center;
@@ -541,33 +574,39 @@ function getSankiColor(periodIndex: number): string {
 /* 響應式 */
 @media (min-width: 768px) {
   .day-cell {
-    min-height: 90px;
-    padding: 4px;
+    min-height: 92px;
+    padding: 4px 3px;
     gap: 2px;
+  }
+
+  .cell-top {
+    gap: 4px;
+    margin-top: 5px;
   }
 
   .day-number {
     font-size: 16px;
-    margin-top: 6px;
   }
 
   .mansion-abbr {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .tag {
-    font-size: 10px;
-    padding: 1px 5px;
-    line-height: 16px;
+    font-size: 9px;
+    padding: 1px 4px;
   }
 
   .jp-tag {
     font-size: 9px;
   }
 
-  .fortune-dot {
-    width: 10px;
-    height: 10px;
+  .fortune-score {
+    font-size: 15px;
+  }
+
+  .relation-name {
+    font-size: 10px;
   }
 }
 
