@@ -3937,6 +3937,170 @@ class SukuyodoService:
 
         return results
 
+    def get_calendar_month(self, year: int, month: int, birth_date: Optional[date] = None) -> dict:
+        """
+        取得整月的統合月曆資料
+
+        整合宿位、七曜、凌犯期間、甘露/金剛峯/羅刹日，
+        以及（有 birth_date 時的）三期サイクル、六害宿、簡化運勢分數。
+
+        Args:
+            year: 西曆年份
+            month: 西曆月份 (1-12)
+            birth_date: 出生日期（可選）
+
+        Returns:
+            統合月曆資料
+        """
+        import calendar as cal
+
+        fortune_data = self._load_fortune_data()
+        weekday_elements = fortune_data["weekday_elements"]
+
+        days_in_month = cal.monthrange(year, month)[1]
+
+        # 個人資料（若有 birth_date）
+        user_index = None
+        user_element = None
+        user_mansion_info = None
+        rokugai_indices = set()
+        if birth_date:
+            user_mansion = self.get_mansion(birth_date)
+            user_index = user_mansion["index"]
+            user_element = user_mansion["element"]
+            user_mansion_info = {
+                "name_jp": user_mansion["name_jp"],
+                "reading": user_mansion["reading"],
+                "element": user_element,
+                "index": user_index,
+            }
+            # 預算六害宿索引（避免每日重算）
+            for rg in self.get_rokugai_suku(user_index):
+                rokugai_indices.add(rg["mansion_index"])
+
+        days = []
+        stats = {
+            "ryouhan_days": 0,
+            "kanro_count": 0,
+            "kongou_count": 0,
+            "rasetsu_count": 0,
+        }
+
+        for day_num in range(1, days_in_month + 1):
+            target_date = date(year, month, day_num)
+
+            # 農曆轉換
+            try:
+                _, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
+            except Exception:
+                continue
+
+            # 當日宿
+            day_mansion_index = self.get_mansion_index(lunar_m, lunar_d)
+            day_mansion = self.mansions_data[day_mansion_index]
+
+            # 七曜
+            weekday = target_date.weekday()
+            jp_weekday = (weekday + 1) % 7
+            day_info = weekday_elements[str(jp_weekday)]
+
+            # 凌犯判定
+            ryouhan = self.check_ryouhan_period(target_date)
+            if ryouhan:
+                stats["ryouhan_days"] += 1
+
+            # 特殊日
+            special_day_key = (jp_weekday, day_mansion_index)
+            special_day_type = self.SPECIAL_DAY_MAP.get(special_day_key)
+            special_day = None
+            if special_day_type:
+                info = self.SPECIAL_DAY_INFO[special_day_type]
+                level = info["level"]
+                ryouhan_reversed = False
+                if ryouhan:
+                    if special_day_type == "kanro":
+                        level = "凶（凌犯逆轉）"
+                        ryouhan_reversed = True
+                    elif special_day_type == "rasetsu":
+                        level = "吉（凌犯逆轉）"
+                        ryouhan_reversed = True
+                special_day = {
+                    "type": special_day_type,
+                    "name": info["name"],
+                    "level": level,
+                    "ryouhan_reversed": ryouhan_reversed,
+                }
+                stats[f"{special_day_type}_count"] = stats.get(f"{special_day_type}_count", 0) + 1
+
+            # 組裝每日資料
+            day_entry = {
+                "date": target_date.isoformat(),
+                "day": day_num,
+                "weekday": day_info["name"].replace("曜日", ""),
+                "day_mansion": {
+                    "name_jp": day_mansion["name_jp"],
+                    "index": day_mansion_index,
+                    "element": day_mansion["element"],
+                },
+                "special_day": special_day,
+                "ryouhan": {"active": True, "lunar_month": ryouhan["lunar_month"]} if ryouhan else None,
+            }
+
+            # 個人化層
+            if user_index is not None:
+                relation = self.get_relation_type(user_index, day_mansion_index)
+                sanki = self.get_sanki_cycle(user_index, day_mansion_index)
+
+                # 簡化運勢分數：用分數範圍中位數 + 元素微調
+                score_range = self.RELATION_SCORE_RANGES.get(relation["type"], (55, 70))
+                base_score = (score_range[0] + score_range[1]) // 2
+                day_element = day_info["element"]
+                _, element_bonus = self._calc_fortune_element_relation(user_element, day_element)
+                fortune_score = max(30, min(100, base_score + int(element_bonus / 2)))
+
+                # 特殊日加減
+                if special_day_type:
+                    if ryouhan:
+                        if special_day_type == "kanro":
+                            fortune_score = max(30, fortune_score - 5)
+                        elif special_day_type == "rasetsu":
+                            fortune_score = min(100, fortune_score + 5)
+                    else:
+                        if special_day_type == "kanro":
+                            fortune_score = min(100, fortune_score + 10)
+                        elif special_day_type == "rasetsu":
+                            fortune_score = max(30, fortune_score - 10)
+
+                # 六害宿（凌犯期間中才標記）
+                rokugai = None
+                if ryouhan and day_mansion_index in rokugai_indices:
+                    rokugai = True
+                    fortune_score = max(30, fortune_score - 8)
+
+                day_entry["personal"] = {
+                    "relation_type": relation["type"],
+                    "relation_name": relation["name"],
+                    "fortune_score": fortune_score,
+                    "sanki_period": sanki["period"],
+                    "sanki_period_index": sanki["period_index"],
+                    "is_dark_week": sanki["is_dark_week"],
+                    "rokugai": rokugai,
+                }
+
+            days.append(day_entry)
+
+        result = {
+            "year": year,
+            "month": month,
+            "days": days,
+            "statistics": stats,
+        }
+
+        if user_mansion_info:
+            result["personal"] = {"your_mansion": user_mansion_info}
+
+        return result
+
 
 # 全域實例
 sukuyodo_service = SukuyodoService()

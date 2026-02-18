@@ -5,6 +5,7 @@ import { getLocalDateStr } from '../utils/fortune-helpers'
 import SummaryCard from '../components/SummaryCard.vue'
 import FortuneTab from '../components/FortuneTab.vue'
 import MatchTab from '../components/MatchTab.vue'
+import FortuneCalendar from '../components/FortuneCalendar.vue'
 import LuckyDaysTab from '../components/LuckyDaysTab.vue'
 import KnowledgeTab from '../components/KnowledgeTab.vue'
 
@@ -70,6 +71,10 @@ const {
   pairLuckyDays,
   pairLuckyDaysLoading,
 
+  // Calendar
+  calendarData,
+  calendarLoading,
+
   // Computed
   elementColors,
   mansionElementColor,
@@ -82,6 +87,8 @@ const {
   fetchDailyFortuneForDate,
   fetchYearlyRange,
   fetchSpecialDays,
+  fetchCalendarMonth,
+  changeCalendarMonth,
 
   // Event Handlers
   quickSelect,
@@ -201,6 +208,13 @@ onMounted(() => {
       >配對</button>
       <button
         class="tab-btn"
+        :class="{ active: activeMainTab === 'calendar' }"
+        role="tab"
+        :aria-selected="activeMainTab === 'calendar'"
+        @click="activeMainTab = 'calendar'; if (!calendarData) fetchCalendarMonth()"
+      >月曆</button>
+      <button
+        class="tab-btn"
         :class="{ active: activeMainTab === 'lucky' }"
         role="tab"
         :aria-selected="activeMainTab === 'lucky'"
@@ -257,6 +271,15 @@ onMounted(() => {
         @calculate-compatibility="calculateCompatibility"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
+      />
+
+      <FortuneCalendar
+        v-if="activeMainTab === 'calendar'"
+        :calendar-data="calendarData"
+        :loading="calendarLoading"
+        :has-birth-date="!!birthDate"
+        @change-month="changeCalendarMonth"
+        @select-day="(d: string) => { fetchDailyFortuneForDate(d); activeMainTab = 'fortune' }"
       />
 
       <LuckyDaysTab

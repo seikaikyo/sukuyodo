@@ -637,6 +637,76 @@ def get_special_days(
     }
 
 
+@router.get("/calendar/monthly/{year}/{month}")
+def get_calendar_month(
+    year: int,
+    month: int,
+    birth_date: str = None,
+):
+    """
+    取得整月統合月曆
+
+    整合宿位、七曜、凌犯期間、甘露/金剛峯/羅刹日、日本選日。
+    加入 birth_date 參數後疊加個人化資訊（三期、六害宿、運勢分數）。
+
+    Args:
+        year: 年份
+        month: 月份 (1-12)
+        birth_date: 出生日期（可選），格式 YYYY-MM-DD
+    """
+    if month < 1 or month > 12:
+        raise HTTPException(
+            status_code=400,
+            detail="月份必須在 1-12 之間"
+        )
+
+    if year < 1900 or year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    birth = None
+    if birth_date:
+        try:
+            birth = date.fromisoformat(birth_date)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="日期格式錯誤，請使用 YYYY-MM-DD"
+            )
+
+    result = sukuyodo_service.get_calendar_month(year, month, birth)
+
+    # 合併日本選日資料
+    jp_calendar = japanese_calendar_service.get_calendar_days(year, month)
+    jp_day_map = {}
+    for jd in jp_calendar.get("days", []):
+        jp_day_map[jd["date"]] = {
+            "types": jd["types"],
+            "labels": jd["labels"],
+            "is_super_lucky": jd["is_super_lucky"],
+        }
+    for jd in jp_calendar.get("unlucky_days", []):
+        entry = jp_day_map.get(jd["date"], {"types": [], "labels": [], "is_super_lucky": False})
+        entry["types"].append(jd["type"])
+        entry["labels"].append(jd["label"])
+        jp_day_map[jd["date"]] = entry
+
+    for day_entry in result["days"]:
+        jp_info = jp_day_map.get(day_entry["date"])
+        day_entry["japanese_calendar"] = jp_info
+
+    # 合併日本選日統計
+    result["statistics"]["tensya_count"] = jp_calendar["summary"].get("tensya_count", 0)
+    result["statistics"]["ichiryumanbai_count"] = jp_calendar["summary"].get("ichiryumanbai_count", 0)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
 @router.get("/lucky-days/pair/{date1}/{date2}")
 def get_pair_lucky_days(
     date1: str,

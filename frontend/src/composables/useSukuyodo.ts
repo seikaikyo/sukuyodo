@@ -690,7 +690,7 @@ export function useSukuyodo() {
   })
 
   // Tab Navigation
-  const activeMainTab = ref<'fortune' | 'match' | 'lucky' | 'knowledge'>('fortune')
+  const activeMainTab = ref<'fortune' | 'match' | 'calendar' | 'lucky' | 'knowledge'>('fortune')
   const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'decade'>('daily')
   const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
   const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'nature-types' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
@@ -754,6 +754,12 @@ export function useSukuyodo() {
   // Special Days (宿曜特殊日)
   const specialDays = ref<SpecialDaysResult | null>(null)
   const specialDaysLoading = ref(false)
+
+  // Calendar (統合月曆)
+  const calendarData = ref<any>(null)
+  const calendarLoading = ref(false)
+  const calendarYear = ref(new Date().getFullYear())
+  const calendarMonth = ref(new Date().getMonth() + 1)
 
   // Knowledge
   const expandedRelation = ref<string | null>(null)
@@ -820,6 +826,7 @@ export function useSukuyodo() {
           fetchLuckyDaySummary()
           fetchJapaneseCalendar()
           fetchSpecialDays()
+          fetchCalendarMonth()
         } else {
           lookupError.value = data.error || '查詢失敗'
         }
@@ -1048,6 +1055,41 @@ export function useSukuyodo() {
     } finally {
       specialDaysLoading.value = false
     }
+  }
+
+  async function fetchCalendarMonth(year?: number, month?: number) {
+    const targetYear = year ?? calendarYear.value
+    const targetMonth = month ?? calendarMonth.value
+
+    calendarLoading.value = true
+
+    try {
+      let url = getApiUrl(`/calendar/monthly/${targetYear}/${targetMonth}`)
+      if (birthDate.value) {
+        url += `?birth_date=${birthDate.value}`
+      }
+      const res = await fetch(url)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          calendarData.value = data.data
+          calendarYear.value = targetYear
+          calendarMonth.value = targetMonth
+        }
+      }
+    } catch {
+      console.error('Failed to fetch calendar month')
+    } finally {
+      calendarLoading.value = false
+    }
+  }
+
+  function changeCalendarMonth(delta: number) {
+    let y = calendarYear.value
+    let m = calendarMonth.value + delta
+    if (m < 1) { m = 12; y-- }
+    if (m > 12) { m = 1; y++ }
+    fetchCalendarMonth(y, m)
   }
 
   async function fetchPairLuckyDays(partnerId: string) {
@@ -1333,6 +1375,10 @@ export function useSukuyodo() {
     pairLuckyDays,
     pairLuckyDaysLoading,
 
+    // Calendar
+    calendarData,
+    calendarLoading,
+
     // Computed
     elementColors,
     mansionElementColor,
@@ -1356,6 +1402,8 @@ export function useSukuyodo() {
     fetchPartnerCompatibilities,
     fetchDailyFortuneForDate,
     fetchYearlyRange,
+    fetchCalendarMonth,
+    changeCalendarMonth,
 
     // Event Handlers
     handleWheelSelect,
