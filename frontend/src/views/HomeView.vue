@@ -544,14 +544,26 @@ onMounted(() => {
 }
 
 /* Query Dialog */
+.query-dialog::part(overlay) {
+  background: rgba(0, 0, 0, 0.65);
+}
+
 .query-dialog::part(panel) {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  max-height: 80vh;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .query-dialog::part(body) {
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.query-dialog::part(footer) {
+  flex-shrink: 0;
 }
 
 .query-dialog::part(title) {

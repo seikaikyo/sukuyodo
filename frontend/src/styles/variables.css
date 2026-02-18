@@ -108,4 +108,6 @@
 
   --sl-font-sans: var(--font-body);
   --sl-font-serif: var(--font-display);
+
+  --sl-overlay-background-color: rgba(0, 0, 0, 0.65);
 }
