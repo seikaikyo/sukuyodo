@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useSukuyodo } from '../composables/useSukuyodo'
+import { useProfile, RELATION_TYPES } from '../stores/profile'
+import type { RelationType } from '../stores/profile'
 import { getLocalDateStr } from '../utils/fortune-helpers'
 import SummaryCard from '../components/SummaryCard.vue'
 import FortuneTab from '../components/FortuneTab.vue'
@@ -98,6 +100,57 @@ const {
   init
 } = useSukuyodo()
 
+const { addPartner, updatePartner, removePartner, profile } = useProfile()
+
+// Partner management state
+const showPartnerForm = ref(false)
+const editingPartnerId = ref<string | null>(null)
+const partnerNickname = ref('')
+const partnerBirthDate = ref('')
+const partnerRelation = ref<RelationType>('friend')
+const confirmDeleteId = ref<string | null>(null)
+
+function startAddPartner() {
+  editingPartnerId.value = null
+  partnerNickname.value = ''
+  partnerBirthDate.value = ''
+  partnerRelation.value = 'friend'
+  showPartnerForm.value = true
+}
+
+function startEditPartner(id: string) {
+  const p = profile.value.partners.find(x => x.id === id)
+  if (!p) return
+  editingPartnerId.value = id
+  partnerNickname.value = p.nickname
+  partnerBirthDate.value = p.birthDate
+  partnerRelation.value = p.relation
+  showPartnerForm.value = true
+}
+
+function savePartner() {
+  if (!partnerNickname.value.trim() || !partnerBirthDate.value) return
+  if (editingPartnerId.value) {
+    updatePartner(editingPartnerId.value, {
+      nickname: partnerNickname.value.trim(),
+      birthDate: partnerBirthDate.value,
+      relation: partnerRelation.value,
+    })
+  } else {
+    addPartner({
+      nickname: partnerNickname.value.trim(),
+      birthDate: partnerBirthDate.value,
+      relation: partnerRelation.value,
+    })
+  }
+  showPartnerForm.value = false
+}
+
+function deletePartner(id: string) {
+  removePartner(id)
+  confirmDeleteId.value = null
+}
+
 onMounted(() => {
   init()
 })
@@ -121,7 +174,7 @@ onMounted(() => {
       :open.prop="showQueryDialog"
       label="查詢本命宿"
       class="query-dialog"
-      @sl-after-hide="showQueryDialog = false"
+      @sl-after-hide="showQueryDialog = false; showPartnerForm = false"
     >
       <div class="query-content">
         <p class="query-desc">輸入西曆生日，系統會自動轉換為農曆並計算你的本命宿</p>
@@ -157,6 +210,91 @@ onMounted(() => {
         </div>
 
         <div v-if="lookupError" class="error-msg">{{ lookupError }}</div>
+
+        <!-- 收藏對象管理 -->
+        <div class="partner-section">
+          <div class="partner-header">
+            <span class="partner-title">收藏對象</span>
+            <button
+              class="btn-add-partner"
+              @click="startAddPartner"
+              :disabled="profile.partners.length >= 10"
+            >+ 新增</button>
+          </div>
+
+          <!-- Partner List -->
+          <div v-if="profile.partners.length > 0" class="partner-list">
+            <div v-for="p in profile.partners" :key="p.id" class="partner-item">
+              <div class="partner-info">
+                <span class="partner-name">{{ p.nickname }}</span>
+                <span class="partner-date">{{ p.birthDate }}</span>
+                <span class="partner-rel">{{ RELATION_TYPES.find(r => r.value === p.relation)?.label }}</span>
+              </div>
+              <div class="partner-actions">
+                <button class="btn-icon" @click="startEditPartner(p.id)" title="編輯" aria-label="編輯">
+                  <sl-icon name="pencil" aria-hidden="true"></sl-icon>
+                </button>
+                <button
+                  v-if="confirmDeleteId !== p.id"
+                  class="btn-icon btn-danger"
+                  @click="confirmDeleteId = p.id"
+                  title="刪除"
+                  aria-label="刪除"
+                >
+                  <sl-icon name="trash" aria-hidden="true"></sl-icon>
+                </button>
+                <button
+                  v-else
+                  class="btn-icon btn-danger confirm"
+                  @click="deletePartner(p.id)"
+                >確認</button>
+              </div>
+            </div>
+          </div>
+          <p v-else class="partner-empty">尚未新增收藏對象</p>
+
+          <!-- Add/Edit Form -->
+          <div v-if="showPartnerForm" class="partner-form">
+            <div class="form-row">
+              <sl-input
+                :value="partnerNickname"
+                label="暱稱"
+                placeholder="例：太太、爸爸"
+                @sl-input="partnerNickname = ($event.target as HTMLInputElement).value"
+              ></sl-input>
+            </div>
+            <div class="form-row">
+              <sl-input
+                type="date"
+                :value="partnerBirthDate"
+                label="西曆生日"
+                :max="getLocalDateStr()"
+                @sl-input="partnerBirthDate = ($event.target as HTMLInputElement).value"
+              ></sl-input>
+            </div>
+            <div class="form-row">
+              <label class="form-label">關係</label>
+              <sl-select
+                :value="partnerRelation"
+                @sl-change="partnerRelation = ($event.target as HTMLSelectElement).value as RelationType"
+              >
+                <sl-option
+                  v-for="rt in RELATION_TYPES"
+                  :key="rt.value"
+                  :value="rt.value"
+                >{{ rt.label }}</sl-option>
+              </sl-select>
+            </div>
+            <div class="form-actions">
+              <button class="btn-cancel" @click="showPartnerForm = false">取消</button>
+              <button
+                class="btn-save"
+                :disabled="!partnerNickname.trim() || !partnerBirthDate"
+                @click="savePartner"
+              >{{ editingPartnerId ? '更新' : '新增' }}</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div slot="footer" class="dialog-footer">
@@ -488,6 +626,208 @@ onMounted(() => {
   padding: var(--space-sm);
   background: rgba(239, 68, 68, 0.1);
   border-radius: var(--radius-sm);
+}
+
+/* Partner Management */
+.partner-section {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+}
+
+.partner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.partner-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-add-partner {
+  padding: var(--space-xs) var(--space-sm);
+  min-height: 32px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: var(--font-xs);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-add-partner:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.btn-add-partner:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.partner-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.partner-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  gap: var(--space-sm);
+}
+
+.partner-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.partner-name {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.partner-date {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.partner-rel {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+  border-radius: var(--radius-full);
+}
+
+.partner-actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-height: 44px;
+  min-width: 44px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.btn-icon:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-icon.btn-danger:hover,
+.btn-icon.btn-danger.confirm {
+  color: var(--warning);
+}
+
+.btn-icon.btn-danger.confirm {
+  width: auto;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.partner-empty {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  text-align: center;
+  padding: var(--space-sm);
+  margin: 0;
+}
+
+.partner-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-sm);
+}
+
+.partner-form sl-input,
+.partner-form sl-select {
+  --sl-input-background-color: var(--bg-surface);
+  --sl-input-border-color: var(--border);
+  --sl-input-color: var(--text-primary);
+  --sl-input-label-color: var(--text-secondary);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.form-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.btn-cancel,
+.btn-save {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-save {
+  background: var(--accent);
+  border: none;
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+.btn-save:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Empty State */
