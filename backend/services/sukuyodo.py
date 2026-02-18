@@ -1005,6 +1005,17 @@ class SukuyodoService:
         }
     }
 
+    # 因素優先級定義：當多因素同時存在時的判讀優先順序
+    # 數值越大優先度越高，凌犯逆轉一切吉凶
+    FACTOR_PRIORITY = {
+        "ryouhan": 6,       # 凌犯期間（最高）— 逆轉所有吉凶
+        "special_day": 5,   # 特殊日（甘露/金剛峯/羅刹）— 七曜與宿的特殊共鳴
+        "rokugai": 4,       # 六害宿 — 人際層面的干擾
+        "dark_week": 3,     # 暗黒の一週間 — 27 日循環的低潮期
+        "relation": 2,      # 宿關係（榮親/安壊等）— 每日基本盤
+        "sanki_day": 1,     # 三期サイクル日類型 — 最細緻的日常節奏
+    }
+
     # 凌犯期間（七曜陵逼）查表
     # key: (農曆月, 朔日七曜) → (開始日, 結束日)
     # 農曆月: 1-12, 七曜: 0=日,1=月,2=火,3=水,4=木,5=金,6=土
@@ -1814,7 +1825,8 @@ class SukuyodoService:
                 "wealth_desc": wealth_desc,
                 "ryouhan_active": ryouhan is not None,
                 "ryouhan_warning": "凌犯期間中，吉凶判斷可能與平時相反。表面順遂之事暗藏風險，表面困難之事反有轉機。重大決策宜延後。" if ryouhan else None,
-                "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。順調に見える事柄にも注意が必要です。重要な決断は延期をお勧めします。" if ryouhan else None
+                "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。順調に見える事柄にも注意が必要です。重要な決断は延期をお勧めします。" if ryouhan else None,
+                "effective_interpretation": "caution" if ryouhan else ("excellent" if overall_score >= 85 else "good" if overall_score >= 70 else "neutral" if overall_score >= 55 else "challenging")
             },
             "advice": advice,
             "lucky": {

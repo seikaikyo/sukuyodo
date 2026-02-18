@@ -1,7 +1,7 @@
 ---
 title: 本年月份卡片展開週/日資料
 type: feature
-status: in-progress
+status: completed
 created: 2026-02-18
 ---
 
@@ -36,8 +36,8 @@ created: 2026-02-18
 
 ## Checklist
 
-- [ ] useSukuyodo 新增 fetchMonthlyFortuneForMonth
-- [ ] 月份卡片加展開/收合互動
-- [ ] 展開區顯示週次概覽 + 每日 chip
-- [ ] 點日期 chip 觸發 selectDay
-- [ ] 建構驗證通過
+- [x] useSukuyodo 新增 fetchMonthlyFortuneForMonth
+- [x] 月份卡片加展開/收合互動
+- [x] 展開區顯示週次概覽 + 每日 chip
+- [x] 點日期 chip 觸發 selectDay
+- [x] 建構驗證通過

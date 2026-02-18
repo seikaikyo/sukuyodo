@@ -194,11 +194,11 @@ def analyze_compound_factors(
 
 ## Checklist
 
-- [ ] 建立 RYOUHAN_CATEGORY_DESCRIPTIONS 凌犯專用描述池
-- [ ] 修改 get_category_desc 支援凌犯反轉
-- [ ] 實作 analyze_compound_factors 多因素分析函式
-- [ ] 日運端點加入原典描述欄位
-- [ ] fortune 物件加入 ryouhan_active / ryouhan_warning 標記
-- [ ] 定義因素優先級常數
-- [ ] 用 5 個驗證案例測試
-- [ ] API 回傳格式向下相容（新增欄位，不改既有欄位）
+- [x] 建立 RYOUHAN_CATEGORY_DESCRIPTIONS 凌犯專用描述池
+- [x] 修改 get_category_desc 支援凌犯反轉
+- [x] 實作 analyze_compound_factors 多因素分析函式
+- [x] 日運端點加入原典描述欄位
+- [x] fortune 物件加入 ryouhan_active / ryouhan_warning / effective_interpretation 標記
+- [x] 定義因素優先級常數 FACTOR_PRIORITY
+- [x] 用 5 個驗證案例測試
+- [x] API 回傳格式向下相容（新增欄位，不改既有欄位）
