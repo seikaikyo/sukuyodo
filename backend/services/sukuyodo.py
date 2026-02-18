@@ -884,6 +884,70 @@ class SukuyodoService:
         }
     }
 
+    # 凌犯期間專用描述（吉凶逆轉時使用）
+    # score >= 70: high_reversal（表吉實險）
+    # 50-69: mid_reversal（局勢不明）
+    # < 50: low_reversal（表凶有轉機）
+    RYOUHAN_CATEGORY_DESCRIPTIONS = {
+        "career": {
+            "high_reversal": [
+                "表面上工作順利，但凌犯期間中的順遂往往藏著陷阱。今天做的決定可能在幾天後出現意想不到的後果，重要決策建議延後。",
+                "看起來是推進事業的好時機，但凌犯的影響讓判斷力打折扣。尤其是涉及人事異動或合約簽署，等凌犯結束再處理更穩妥。",
+                "職場氣氛不錯，但別被表象迷惑。凌犯期間的「好機會」常常是包裝過的風險，多觀察幾天再行動。",
+            ],
+            "mid_reversal": [
+                "工作上的局勢不太明朗，凌犯期間增添了變數。維持現有進度就好，不要主動發起新計畫或改變方向。",
+                "凌犯的影響讓工作節奏變得不穩定，同事間容易產生誤解。今天的溝通多確認一次，避免假設對方理解你的意思。",
+            ],
+            "low_reversal": [
+                "雖然整體運勢偏低，但凌犯的逆轉效應反而提供了喘息的空間。原本預期的阻礙可能沒那麼嚴重，靜待觀察。",
+                "凌犯期間表凶反吉，看似困難的工作處境可能暗藏轉機。不要急著放棄，先把手邊的事情做好。",
+            ]
+        },
+        "love": {
+            "high_reversal": [
+                "感情方面看起來甜蜜，但凌犯期間容易產生認知偏差。今天的浪漫承諾和衝動告白，過幾天可能會覺得太冒進。",
+                "跟伴侶的互動表面和諧，但凌犯的暗流可能讓小問題在之後放大。有什麼心裡的話想說，等凌犯過後再談比較好。",
+            ],
+            "mid_reversal": [
+                "感情上的判斷力受凌犯影響而模糊。對方的言行可能不是你理解的那個意思，不要過度解讀，也不要在今天做關係的重大決定。",
+                "凌犯期間的感情互動容易失準。今天適合維持日常相處就好，不適合深入討論關係問題或未來規劃。",
+            ],
+            "low_reversal": [
+                "感情運勢雖低，但凌犯的逆轉可能帶來意外的溫暖。之前冷淡的關係有回溫的跡象，把握但不強求。",
+                "看起來不太順利的感情狀態，在凌犯影響下反而有緩和的可能。保持平常心，不要因為暫時的低潮就做出分手的決定。",
+            ]
+        },
+        "health": {
+            "high_reversal": [
+                "身體感覺還行，但凌犯期間容易忽視身體的微弱警訊。今天不要做太激烈的運動，也不要因為「覺得沒事」就忽略不舒服。",
+                "凌犯期間身體的感知會有偏差，自覺良好不代表真的沒問題。飲食清淡一些，早點休息，讓身體有恢復的餘裕。",
+            ],
+            "mid_reversal": [
+                "健康狀態受凌犯影響而不穩定，注意力和反應速度都會下降。開車、操作機具要比平常更小心。",
+                "凌犯期間的健康運勢搖擺不定。不要臨時改變飲食習慣或運動計畫，維持穩定的作息就是最好的養生。",
+            ],
+            "low_reversal": [
+                "身體狀況雖然偏弱，但凌犯的逆轉效應可能讓慢性不適有所緩解。這是調養身體的好時機，順勢而為。",
+                "健康運勢低檔，但凌犯期間的「表凶實緩」效應讓惡化的風險降低。靜養休息、避免過勞即可。",
+            ]
+        },
+        "wealth": {
+            "high_reversal": [
+                "財運看起來不錯，但凌犯期間的「好運」經常是錢來得快去得也快。今天收到的獲利或好消息，可能有後續的隱藏成本。",
+                "表面的財運順遂在凌犯影響下需要打折看待。投資、借貸、大額消費都建議暫緩，等凌犯結束後再評估。",
+            ],
+            "mid_reversal": [
+                "財務狀況在凌犯期間變得不透明，收支可能出現預期外的波動。今天適合整理帳目，不適合做財務決策。",
+                "凌犯的影響讓金錢判斷力下降。看起來划算的東西可能有你沒注意到的問題，購物前多比較幾家。",
+            ],
+            "low_reversal": [
+                "財運偏弱，但凌犯的逆轉讓預期的損失可能不會發生。之前擔心的財務問題有緩解的跡象，不必過度焦慮。",
+                "表面的財運低迷在凌犯效應下可能只是虛驚一場。守住現有資產，不要恐慌性地做出調整。",
+            ]
+        }
+    }
+
     # 甘露日/金剛峯日/羅刹日（宿曜經卷五）
     # key: (jp_weekday, day_mansion_index) → special_day_type
     # jp_weekday: 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
@@ -1548,39 +1612,30 @@ class SukuyodoService:
         health_score = calc_category_score("health")
         wealth_score = calc_category_score("wealth")
 
-        # === 各項描述 ===
-        def get_category_desc(category: str, score: int) -> str:
-            descs = self.DAILY_CATEGORY_DESCRIPTIONS.get(category, {})
-            if score >= 85:
-                pool = descs.get("excellent", [""])
-            elif score >= 70:
-                pool = descs.get("good", [""])
-            elif score >= 55:
-                pool = descs.get("fair", [""])
-            elif score >= 40:
-                pool = descs.get("caution", [""])
+        # === 各項描述（定義函數，實際呼叫在凌犯判定之後） ===
+        def get_category_desc(category: str, score: int, ryouhan_active: bool = False) -> str:
+            if ryouhan_active:
+                # 凌犯期間：使用凌犯專用描述
+                descs = self.RYOUHAN_CATEGORY_DESCRIPTIONS.get(category, {})
+                if score >= 70:
+                    pool = descs.get("high_reversal", [""])
+                elif score >= 50:
+                    pool = descs.get("mid_reversal", [""])
+                else:
+                    pool = descs.get("low_reversal", [""])
             else:
-                pool = descs.get("warning", [""])
+                descs = self.DAILY_CATEGORY_DESCRIPTIONS.get(category, {})
+                if score >= 85:
+                    pool = descs.get("excellent", [""])
+                elif score >= 70:
+                    pool = descs.get("good", [""])
+                elif score >= 55:
+                    pool = descs.get("fair", [""])
+                elif score >= 40:
+                    pool = descs.get("caution", [""])
+                else:
+                    pool = descs.get("warning", [""])
             return random.choice(pool)
-
-        career_desc = get_category_desc("career", career_score)
-        love_desc = get_category_desc("love", love_score)
-        health_desc = get_category_desc("health", health_score)
-        wealth_desc = get_category_desc("wealth", wealth_score)
-
-        # === 選擇建議 ===
-        if overall_score >= 85:
-            advice_list = fortune_data["daily_advice"]["excellent"]
-        elif overall_score >= 70:
-            advice_list = fortune_data["daily_advice"]["good"]
-        elif overall_score >= 55:
-            advice_list = fortune_data["daily_advice"]["neutral"]
-        elif overall_score >= 40:
-            advice_list = fortune_data["daily_advice"]["caution"]
-        else:
-            advice_list = fortune_data["daily_advice"]["challenging"]
-
-        advice = random.choice(advice_list)
 
         # === 甘露日/金剛峯日/羅刹日判定 ===
         special_day_key = (jp_weekday, day_mansion_index)
@@ -1651,6 +1706,32 @@ class SukuyodoService:
         # === 三期サイクル ===
         sanki = self.get_sanki_cycle(user_index, day_mansion_index)
 
+        # === 各項描述（凌犯/六害宿/三期判定完成後才選描述） ===
+        is_ryouhan_active = ryouhan is not None
+        career_desc = get_category_desc("career", career_score, is_ryouhan_active)
+        love_desc = get_category_desc("love", love_score, is_ryouhan_active)
+        health_desc = get_category_desc("health", health_score, is_ryouhan_active)
+        wealth_desc = get_category_desc("wealth", wealth_score, is_ryouhan_active)
+
+        # === 選擇建議 ===
+        if overall_score >= 85:
+            advice_list = fortune_data["daily_advice"]["excellent"]
+        elif overall_score >= 70:
+            advice_list = fortune_data["daily_advice"]["good"]
+        elif overall_score >= 55:
+            advice_list = fortune_data["daily_advice"]["neutral"]
+        elif overall_score >= 40:
+            advice_list = fortune_data["daily_advice"]["caution"]
+        else:
+            advice_list = fortune_data["daily_advice"]["challenging"]
+
+        advice = random.choice(advice_list)
+
+        # === 多因素交叉分析 ===
+        compound_analysis = self._analyze_compound_factors(
+            ryouhan, special_day_type, mansion_relation_type, sanki, rokugai
+        )
+
         # === 幸運物品（每日動態計算） ===
         lucky = fortune_data["lucky_items"]
 
@@ -1692,13 +1773,17 @@ class SukuyodoService:
                 "name_jp": mansion["name_jp"],
                 "reading": mansion["reading"],
                 "element": user_element,
-                "index": mansion["index"]
+                "index": mansion["index"],
+                "personality_classic": mansion.get("personality_classic", ""),
+                "career_classic": mansion.get("career_classic", "")
             },
             "mansion_relation": {
                 "type": mansion_relation_type,
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(mansion_relation_type, mansion_relation["name"]),
                 "reading": mansion_relation.get("reading", ""),
-                "description": random.choice(self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]]))
+                "description": random.choice(self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]])),
+                "description_classic": mansion_relation.get("description_classic", ""),
+                "description_ja": mansion_relation.get("description_ja", "")
             },
             "element_relation": {
                 "type": element_relation_type,
@@ -1713,7 +1798,10 @@ class SukuyodoService:
                 "career_desc": career_desc,
                 "love_desc": love_desc,
                 "health_desc": health_desc,
-                "wealth_desc": wealth_desc
+                "wealth_desc": wealth_desc,
+                "ryouhan_active": ryouhan is not None,
+                "ryouhan_warning": "凌犯期間中，吉凶判斷可能與平時相反。表面順遂之事暗藏風險，表面困難之事反有轉機。重大決策宜延後。" if ryouhan else None,
+                "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。順調に見える事柄にも注意が必要です。重要な決断は延期をお勧めします。" if ryouhan else None
             },
             "advice": advice,
             "lucky": {
@@ -1727,7 +1815,8 @@ class SukuyodoService:
             "special_day": special_day,
             "ryouhan": ryouhan,
             "rokugai": rokugai,
-            "sanki": sanki
+            "sanki": sanki,
+            "compound_analysis": compound_analysis
         }
 
     def calculate_monthly_fortune(self, birth_date: date, year: int, month: int) -> dict:
@@ -3669,6 +3758,110 @@ class SukuyodoService:
             "period_description_classic": cycle_info.get("description_classic", ""),
             "period_description_ja": cycle_info.get("description_ja", "")
         }
+
+    def _analyze_compound_factors(
+        self,
+        ryouhan: dict | None,
+        special_day_type: str | None,
+        mansion_relation_type: str,
+        sanki: dict,
+        rokugai: dict | None
+    ) -> list[dict]:
+        """
+        多因素交叉分析：偵測已知的因素疊加組合
+
+        Returns:
+            list[dict]，按 severity 降序排列。每個 dict 包含：
+            pattern, severity, name, description, description_ja, description_classic
+        """
+        results = []
+        is_dark_week = sanki.get("is_dark_week", False)
+        is_auspicious_relation = mansion_relation_type in ("eishin", "mei")
+        is_mild_auspicious = mansion_relation_type in ("eishin", "mei", "kisei")
+
+        # 1. triple_auspicious：甘露/金剛 + 榮親/命 + 非暗黒
+        if special_day_type in ("kanro", "kongou") and is_auspicious_relation and not is_dark_week:
+            if not ryouhan:
+                results.append({
+                    "pattern": "triple_auspicious",
+                    "severity": 5,
+                    "name": "三重大吉",
+                    "description": "特殊吉日與大吉宿曜關係重疊，多重吉因加持之下，是難得的絕佳時機。把握今天推進重要事項。",
+                    "description_ja": "特殊吉日と大吉の宿曜関係が重なり、三重の吉因が揃う極めて稀な好日。重要な事柄を進めるに最適。",
+                    "description_classic": "吉日吉宿相重，三因具足，百事大吉。此日興造百事，無不成就。"
+                })
+
+        # 2. ryouhan_trap：凌犯 + 榮親/命
+        if ryouhan and is_auspicious_relation:
+            results.append({
+                "pattern": "ryouhan_trap",
+                "severity": 5,
+                "name": "凌犯陷阱",
+                "description": "凌犯期間遇上表面大吉的宿曜關係，看似順遂實則暗藏風險。高分不代表安全，重大決策務必延後。",
+                "description_ja": "凌犯期間中に大吉の宿曜関係が重なる「表吉実険」の配置。好調に見えても判断を誤りやすく、重要な決断は延期すべし。",
+                "description_classic": "凌犯之中遇吉配，表吉實險，如鏡花水月。宜慎之又慎，不可輕信順境。"
+            })
+
+        # 3. ryouhan_kanro_reversed：凌犯 + 甘露日
+        if ryouhan and special_day_type == "kanro":
+            results.append({
+                "pattern": "ryouhan_kanro_reversed",
+                "severity": 4,
+                "name": "甘露逆轉",
+                "description": "本應是甘露大吉日，但凌犯期間使吉凶逆轉。原本的福澤被遮蔽，不宜以吉日心態行事。",
+                "description_ja": "本来は甘露の大吉日なるも、凌犯期間により吉凶逆転。福徳が覆われ、吉日としての効力を失う。",
+                "description_classic": "甘露遇凌犯，法雨化毒霧。本吉反凶，不可妄動。"
+            })
+
+        # 4. ryouhan_rokugai：凌犯 + 六害宿
+        if ryouhan and rokugai:
+            results.append({
+                "pattern": "ryouhan_rokugai",
+                "severity": 4,
+                "name": "凌犯六害",
+                "description": "凌犯期間又逢六害宿，雙重凶因疊加。今日需格外謹慎，避免重要行動，靜守為宜。",
+                "description_ja": "凌犯期間中に六害宿が重なり、二重の凶因が作用する。格別の注意を要し、重要な行動を控え静かに過ごすべし。",
+                "description_classic": "凌犯六害相重，禍不單行。宜閉門靜守，不可興作。"
+            })
+
+        # 5. compounded_negative：安壊 + 暗黒の一週間
+        if mansion_relation_type == "ankai" and is_dark_week:
+            results.append({
+                "pattern": "compounded_negative",
+                "severity": 4,
+                "name": "凶因重疊",
+                "description": "安壊的破壞性與暗黒の一週間的低迷期重疊，運勢處於谷底。今天不是行動的日子，專注在不需要外界配合的事情上。",
+                "description_ja": "安壊の破壊性と暗黒の一週間の低迷期が重なり、運勢は最低点に。行動を控え、外部との関わりを最小限に留めるべし。",
+                "description_classic": "安壞逢暗黑，凶上加凶。宜靜守本分，不可妄動求進。"
+            })
+
+        # 6. dark_rasetsu：羅刹日 + 暗黒の一週間
+        if special_day_type == "rasetsu" and is_dark_week:
+            if not ryouhan:  # 凌犯中羅刹已逆轉為吉，不算此組合
+                results.append({
+                    "pattern": "dark_rasetsu",
+                    "severity": 3,
+                    "name": "暗黒羅刹",
+                    "description": "羅刹日的障礙加上暗黒の一週間的低迷，今天做什麼都容易卡住。放低期待，處理簡單的例行事務就好。",
+                    "description_ja": "羅刹日の障碍と暗黒の一週間の低迷が重なる。何事も停滞しやすく、期待値を下げて日常の事務に専念すべし。",
+                    "description_classic": "羅刹逢暗黑，障碍重重。宜低首靜行，不可強求。"
+                })
+
+        # 7. double_auspicious：金剛峯 + 榮親/命
+        if special_day_type == "kongou" and is_auspicious_relation:
+            if not ryouhan:  # 凌犯中已觸發 ryouhan_trap，不重複
+                results.append({
+                    "pattern": "double_auspicious",
+                    "severity": 3,
+                    "name": "雙重吉配",
+                    "description": "金剛峯日的堅固守護加上大吉的宿曜關係，今天啟動的計畫特別容易持續下去。適合做需要長期堅持的決定。",
+                    "description_ja": "金剛峯日の堅固なる守護と大吉の宿曜関係が重なる好配置。この日に始めたことは持続しやすく、長期的な決断に最適。",
+                    "description_classic": "金剛遇吉配，堅牢雙成。此日興造，久長不壞。"
+                })
+
+        # 按 severity 降序排列
+        results.sort(key=lambda x: x["severity"], reverse=True)
+        return results
 
     def get_special_days_for_month(self, year: int, month: int) -> list[dict]:
         """
