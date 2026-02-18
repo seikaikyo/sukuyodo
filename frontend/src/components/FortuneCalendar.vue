@@ -235,6 +235,7 @@ function getSankiColor(periodIndex: number): string {
 
           <!-- 中排：特殊日 + 選日標籤 -->
           <div class="cell-mid">
+            <span v-if="cell.ryouhan" class="tag ryouhan">凌犯</span>
             <span v-if="cell.special_day?.type === 'kanro'" class="tag kanro">甘露</span>
             <span v-if="cell.special_day?.type === 'kongou'" class="tag kongou">金剛</span>
             <span v-if="cell.special_day?.type === 'rasetsu'" class="tag rasetsu">羅刹</span>
@@ -513,9 +514,9 @@ function getSankiColor(periodIndex: number): string {
 }
 
 .tag {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 0 3px;
+  padding: 1px 4px;
   border-radius: 2px;
   line-height: 14px;
   white-space: nowrap;
@@ -524,6 +525,7 @@ function getSankiColor(periodIndex: number): string {
 .tag.kanro { background: rgba(74, 155, 107, 0.35); color: var(--kanro-color); }
 .tag.kongou { background: rgba(212, 175, 55, 0.35); color: var(--kongou-color); }
 .tag.rasetsu { background: rgba(232, 93, 76, 0.35); color: var(--rasetsu-color); }
+.tag.ryouhan { background: rgba(255, 80, 80, 0.4); color: #ff9999; }
 
 .jp-tag {
   font-size: 8px;
@@ -593,8 +595,8 @@ function getSankiColor(periodIndex: number): string {
   }
 
   .tag {
-    font-size: 9px;
-    padding: 1px 4px;
+    font-size: 10px;
+    padding: 1px 5px;
   }
 
   .jp-tag {
