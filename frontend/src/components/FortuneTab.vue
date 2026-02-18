@@ -6,7 +6,7 @@ import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 import { generateDecadeReport } from '../utils/report-generator'
 
 const props = defineProps<{
-  activeTab: 'daily' | 'weekly' | 'monthly' | 'decade'
+  activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'
   dailyFortune: DailyFortune | null
   weeklyFortune: WeeklyFortune | null
   monthlyFortune: MonthlyFortune | null
@@ -20,7 +20,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:activeTab': [value: 'daily' | 'weekly' | 'monthly' | 'decade']
+  'update:activeTab': [value: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade']
   'toggleWeek': [week: number]
   'selectDay': [date: string]
   'fetchYearlyRange': [startYear: number, endYear: number]
@@ -123,6 +123,42 @@ function shortStarName(name: string): string {
   return name.replace('曜星', '').replace('星', '')
 }
 
+// 本年月度折線圖計算
+const currentMonth = new Date().getMonth() + 1
+
+const monthlySvgWidth = 620
+const monthlySvgHeight = 200
+const monthlyPadLeft = 40
+const monthlyPadRight = 20
+const monthlyPadTop = 25
+const monthlyPadBottom = 25
+const monthlyChartWidth = monthlySvgWidth - monthlyPadLeft - monthlyPadRight
+const monthlyChartHeight = monthlySvgHeight - monthlyPadTop - monthlyPadBottom
+
+function monthScoreToY(score: number): number {
+  return monthlyPadTop + monthlyChartHeight - ((score - minScore) / (maxScore - minScore)) * monthlyChartHeight
+}
+
+function monthToX(index: number): number {
+  return monthlyPadLeft + (index / 11) * monthlyChartWidth
+}
+
+const monthlyTrendPath = computed(() => {
+  const trend = props.yearlyFortune?.monthly_trend
+  if (!trend || trend.length === 0) return ''
+  return trend
+    .map((m, i) => `${i === 0 ? 'M' : 'L'}${monthToX(i).toFixed(1)},${monthScoreToY(m.score).toFixed(1)}`)
+    .join(' ')
+})
+
+const monthYGridLines = computed(() => {
+  const lines = []
+  for (let s = 40; s <= 100; s += 20) {
+    lines.push({ score: s, y: monthScoreToY(s) })
+  }
+  return lines
+})
+
 function exportDecadeReport() {
   if (!props.mansion || props.yearlyRange.length === 0) return
   generateDecadeReport({
@@ -163,6 +199,14 @@ function exportDecadeReport() {
         aria-controls="panel-fortune-monthly"
         @click="emit('update:activeTab', 'monthly')"
       >本月</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'yearly' }"
+        role="tab"
+        :aria-selected="activeTab === 'yearly'"
+        aria-controls="panel-fortune-yearly"
+        @click="emit('update:activeTab', 'yearly')"
+      >本年</button>
       <button
         class="pill-btn"
         :class="{ active: activeTab === 'decade' }"
@@ -608,6 +652,134 @@ function exportDecadeReport() {
       </div>
     </div>
 
+    <!-- Yearly Fortune (本年) -->
+    <div v-if="activeTab === 'yearly'" id="panel-fortune-yearly" class="fortune-content" role="tabpanel">
+      <template v-if="yearlyFortune">
+        <div class="fortune-card">
+          <!-- 當年九曜星摘要 -->
+          <h3 class="fortune-title">{{ yearlyFortune.year }} 年運勢</h3>
+          <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
+            <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')">{{ yearlyFortune.kuyou_star.name }}</span>
+            <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
+            <span class="current-year-score" :class="getScoreClass(yearlyFortune.fortune.overall)">{{ yearlyFortune.fortune.overall }}</span>
+          </div>
+          <p v-if="yearlyFortune.kuyou_star" class="current-year-desc">{{ yearlyFortune.kuyou_star.description }}</p>
+          <div class="current-year-scores" style="margin-bottom: var(--space-md)">
+            <div class="mini-score-item">
+              <span class="mini-label">事業</span>
+              <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.career)">{{ yearlyFortune.fortune.career }}</span>
+            </div>
+            <div class="mini-score-item">
+              <span class="mini-label">感情</span>
+              <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.love)">{{ yearlyFortune.fortune.love }}</span>
+            </div>
+            <div class="mini-score-item">
+              <span class="mini-label">健康</span>
+              <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.health)">{{ yearlyFortune.fortune.health }}</span>
+            </div>
+            <div class="mini-score-item">
+              <span class="mini-label">財運</span>
+              <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.wealth)">{{ yearlyFortune.fortune.wealth }}</span>
+            </div>
+          </div>
+
+          <!-- 各月運勢卡片 -->
+          <h4 class="monthly-section-title">各月運勢</h4>
+          <div v-if="yearlyFortune.monthly_trend?.length" class="monthly-card-list">
+            <div
+              v-for="m in yearlyFortune.monthly_trend"
+              :key="m.month"
+              class="monthly-card"
+              :class="{ 'is-current-month': m.month === currentMonth }"
+            >
+              <span class="monthly-month">{{ m.month }}月</span>
+              <div class="monthly-bar-wrapper">
+                <div class="monthly-bar-fill" :class="getScoreClass(m.score)" :style="{ width: m.score + '%' }"></div>
+              </div>
+              <span class="monthly-score" :class="getScoreClass(m.score)">{{ m.score }}</span>
+              <p v-if="m.tip" class="monthly-tip">{{ m.tip }}</p>
+            </div>
+          </div>
+
+          <!-- 月度趨勢折線圖 -->
+          <div v-if="yearlyFortune.monthly_trend?.length" class="yearly-chart-wrapper">
+            <h4 class="chart-title">月度趨勢</h4>
+            <div class="chart-scroll-container">
+              <svg
+                :viewBox="`0 0 ${monthlySvgWidth} ${monthlySvgHeight}`"
+                class="yearly-chart"
+                role="img"
+                aria-label="月度運勢折線圖"
+              >
+                <!-- 背景帶 -->
+                <rect
+                  :x="monthlyPadLeft" :y="monthScoreToY(100)" :width="monthlyChartWidth" :height="monthScoreToY(75) - monthScoreToY(100)"
+                  fill="rgba(80, 180, 80, 0.08)"
+                />
+                <rect
+                  :x="monthlyPadLeft" :y="monthScoreToY(55)" :width="monthlyChartWidth" :height="monthScoreToY(minScore) - monthScoreToY(55)"
+                  fill="rgba(220, 80, 80, 0.08)"
+                />
+
+                <!-- 格線 -->
+                <g v-for="line in monthYGridLines" :key="line.score">
+                  <line
+                    :x1="monthlyPadLeft" :y1="line.y" :x2="monthlyPadLeft + monthlyChartWidth" :y2="line.y"
+                    stroke="var(--border)" stroke-width="0.5" stroke-dasharray="4,4"
+                  />
+                  <text
+                    :x="monthlyPadLeft - 6" :y="line.y + 4"
+                    text-anchor="end" fill="var(--text-secondary)" font-size="11"
+                  >{{ line.score }}</text>
+                </g>
+
+                <!-- 折線 -->
+                <path
+                  :d="monthlyTrendPath"
+                  fill="none" stroke="var(--accent)" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round"
+                />
+
+                <!-- 節點 -->
+                <g v-for="(m, i) in yearlyFortune.monthly_trend" :key="'mdot-' + m.month">
+                  <circle
+                    :cx="monthToX(i)" :cy="monthScoreToY(m.score)" r="4"
+                    :fill="m.month === currentMonth ? 'var(--accent)' : 'var(--bg-surface)'"
+                    stroke="var(--accent)" stroke-width="2"
+                  />
+                  <text
+                    :x="monthToX(i)" :y="monthScoreToY(m.score) - 10"
+                    text-anchor="middle" fill="var(--text-primary)" font-size="11" font-weight="600"
+                  >{{ m.score }}</text>
+                  <text
+                    :x="monthToX(i)" :y="monthlySvgHeight - 4"
+                    text-anchor="middle" fill="var(--text-secondary)" font-size="11"
+                    :font-weight="m.month === currentMonth ? '700' : '400'"
+                  >{{ m.month }}月</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="score-legend">
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小吉</span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 注意</span>
+          </div>
+
+          <div v-if="yearlyFortune.advice" class="advice-box">
+            <h4>本年建議</h4>
+            <p>{{ yearlyFortune.advice }}</p>
+          </div>
+        </div>
+      </template>
+      <div v-else class="loading-state">
+        <sl-spinner></sl-spinner>
+      </div>
+    </div>
+
     <!-- Decade Fortune (流年) -->
     <div v-if="activeTab === 'decade'" id="panel-fortune-decade" class="fortune-content" role="tabpanel">
       <div class="fortune-card">
@@ -639,58 +811,6 @@ function exportDecadeReport() {
             class="export-btn"
             @click="exportDecadeReport"
           >匯出報告</button>
-        </div>
-
-        <!-- 當年摘要 -->
-        <div v-if="yearlyFortune" class="current-year-summary">
-          <h3 class="current-year-title">{{ yearlyFortune.year }} 年運勢</h3>
-          <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
-            <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')">{{ yearlyFortune.kuyou_star.name }}</span>
-            <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
-            <span class="current-year-score" :class="getScoreClass(yearlyFortune.fortune.overall)">{{ yearlyFortune.fortune.overall }}</span>
-          </div>
-          <template v-if="isPractitioner && yearlyFortune.shingon">
-            <p class="current-year-desc">{{ yearlyFortune.shingon.description }}</p>
-            <div class="current-year-scores">
-              <div class="mini-score-item">
-                <span class="mini-label">{{ yearlyFortune.shingon.category_labels.career }}</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.career)">{{ yearlyFortune.fortune.career }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">{{ yearlyFortune.shingon.category_labels.love }}</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.love)">{{ yearlyFortune.fortune.love }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">{{ yearlyFortune.shingon.category_labels.health }}</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.health)">{{ yearlyFortune.fortune.health }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">{{ yearlyFortune.shingon.category_labels.wealth }}</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.wealth)">{{ yearlyFortune.fortune.wealth }}</span>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <p v-if="yearlyFortune.kuyou_star" class="current-year-desc">{{ yearlyFortune.kuyou_star.description }}</p>
-            <div class="current-year-scores">
-              <div class="mini-score-item">
-                <span class="mini-label">事業</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.career)">{{ yearlyFortune.fortune.career }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">感情</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.love)">{{ yearlyFortune.fortune.love }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">健康</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.health)">{{ yearlyFortune.fortune.health }}</span>
-              </div>
-              <div class="mini-score-item">
-                <span class="mini-label">財運</span>
-                <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.wealth)">{{ yearlyFortune.fortune.wealth }}</span>
-              </div>
-            </div>
-          </template>
         </div>
 
         <template v-if="yearlyRangeLoading">
@@ -2137,6 +2257,102 @@ function exportDecadeReport() {
   justify-content: center;
   align-items: center;
   padding: var(--space-2xl);
+}
+
+/* ============================================================
+   Yearly (本年) Tab
+   ============================================================ */
+.monthly-section-title {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: 0 0 var(--space-sm);
+}
+
+.monthly-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-md);
+}
+
+.monthly-card {
+  display: grid;
+  grid-template-columns: 36px 1fr 32px;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.monthly-card.is-current-month {
+  border-left-color: var(--accent);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.monthly-month {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.monthly-card.is-current-month .monthly-month {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.monthly-bar-wrapper {
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.monthly-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: width 0.5s ease;
+}
+
+.monthly-bar-fill.excellent { background: var(--stellar); }
+.monthly-bar-fill.good { background: var(--success); }
+.monthly-bar-fill.fair { background: var(--info); }
+.monthly-bar-fill.caution { background: #eab308; }
+.monthly-bar-fill.warning { background: var(--warning); }
+
+.monthly-score {
+  font-size: var(--font-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.monthly-score.excellent { color: var(--stellar); font-weight: 600; }
+.monthly-score.good { color: var(--success); font-weight: 600; }
+.monthly-score.fair { color: var(--info); }
+.monthly-score.caution { color: #eab308; }
+.monthly-score.warning { color: var(--warning); }
+
+.monthly-tip {
+  grid-column: 1 / -1;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  padding-left: calc(36px + var(--space-sm));
+}
+
+.yearly-chart-wrapper {
+  margin-bottom: var(--space-md);
+}
+
+.yearly-chart {
+  width: 100%;
+  min-width: 480px;
+  height: auto;
+  display: block;
 }
 
 /* ============================================================

@@ -102,7 +102,8 @@ const {
 
 const { addPartner, updatePartner, removePartner, profile } = useProfile()
 
-// Partner management state
+// Profile & Partner management state
+const showProfilePanel = ref(false)
 const showPartnerDialog = ref(false)
 const editingPartnerId = ref<string | null>(null)
 const partnerNickname = ref('')
@@ -155,15 +156,20 @@ function handleEscape(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     if (showPartnerDialog.value) {
       showPartnerDialog.value = false
+    } else if (showProfilePanel.value) {
+      showProfilePanel.value = false
     } else if (showQueryDialog.value) {
       showQueryDialog.value = false
     }
   }
 }
 
-watch(showQueryDialog, (open) => {
+watch([showQueryDialog, showProfilePanel], ([query, profile]) => {
+  document.body.style.overflow = (query || profile) ? 'hidden' : ''
+})
+
+watch(showProfilePanel, (open) => {
   if (!open) showPartnerDialog.value = false
-  document.body.style.overflow = open ? 'hidden' : ''
 })
 
 onMounted(() => {
@@ -184,10 +190,15 @@ onUnmounted(() => {
       <h1 class="header-title">
         <ruby>宿曜道<rp>(</rp><rt>しゅくようどう</rt><rp>)</rp></ruby>
       </h1>
-      <button class="btn-query" @click="showQueryDialog = true">
-        <sl-icon name="search" aria-hidden="true"></sl-icon>
-        <span>查詢本命宿</span>
-      </button>
+      <div class="header-actions">
+        <button class="btn-header-icon" @click="showProfilePanel = true" aria-label="檔案管理">
+          <sl-icon name="person" aria-hidden="true"></sl-icon>
+        </button>
+        <button class="btn-query" @click="showQueryDialog = true">
+          <sl-icon name="search" aria-hidden="true"></sl-icon>
+          <span>查詢本命宿</span>
+        </button>
+      </div>
     </header>
 
     <!-- Query Panel（取代 sl-dialog，實色背景避免文字穿透） -->
@@ -229,43 +240,6 @@ onUnmounted(() => {
               >{{ p.nickname }}</button>
             </div>
 
-            <!-- 收藏對象折疊 -->
-            <sl-details :summary="`收藏對象管理 (${profile.partners.length})`">
-              <div v-if="profile.partners.length > 0" class="partner-list">
-                <div v-for="p in profile.partners" :key="p.id" class="partner-item">
-                  <div class="partner-info">
-                    <span class="partner-name">{{ p.nickname }}</span>
-                    <span class="partner-date">{{ p.birthDate }}</span>
-                    <span class="partner-rel">{{ RELATION_TYPES.find(r => r.value === p.relation)?.label }}</span>
-                  </div>
-                  <div class="partner-actions">
-                    <button class="btn-icon" @click="startEditPartner(p.id)" title="編輯" aria-label="編輯">
-                      <sl-icon name="pencil" aria-hidden="true"></sl-icon>
-                    </button>
-                    <button
-                      v-if="confirmDeleteId !== p.id"
-                      class="btn-icon btn-danger"
-                      @click="confirmDeleteId = p.id"
-                      title="刪除"
-                      aria-label="刪除"
-                    >
-                      <sl-icon name="trash" aria-hidden="true"></sl-icon>
-                    </button>
-                    <button
-                      v-else
-                      class="btn-icon btn-danger confirm"
-                      @click="deletePartner(p.id)"
-                    >確認</button>
-                  </div>
-                </div>
-              </div>
-              <p v-else class="partner-empty">尚未新增收藏對象</p>
-              <button
-                class="btn-add-partner"
-                @click="startAddPartner"
-                :disabled="profile.partners.length >= 10"
-              >+ 新增對象</button>
-            </sl-details>
           </div>
         </div>
         <footer class="panel-footer">
@@ -327,6 +301,67 @@ onUnmounted(() => {
             @click="savePartner"
           >{{ editingPartnerId ? '更新' : '新增' }}</sl-button>
         </footer>
+      </div>
+    </Transition>
+
+    <!-- Profile Panel（檔案管理面板） -->
+    <Transition name="panel">
+      <div v-if="showProfilePanel" class="profile-panel" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <h2 class="panel-title">檔案管理</h2>
+          <button class="panel-close" @click="showProfilePanel = false" aria-label="關閉">
+            <sl-icon name="x-lg"></sl-icon>
+          </button>
+        </header>
+        <div class="panel-body">
+          <div class="profile-content">
+            <!-- 我的生日 -->
+            <div class="profile-section">
+              <h3 class="profile-section-title">我的生日</h3>
+              <p v-if="myBirthDate" class="my-birthday">{{ myBirthDate }}</p>
+              <p v-else class="my-birthday-empty">尚未設定（查詢本命宿時自動儲存）</p>
+            </div>
+
+            <!-- 收藏對象 -->
+            <div class="profile-section">
+              <h3 class="profile-section-title">收藏對象 ({{ profile.partners.length }})</h3>
+              <div v-if="profile.partners.length > 0" class="partner-list">
+                <div v-for="p in profile.partners" :key="p.id" class="partner-item">
+                  <div class="partner-info">
+                    <span class="partner-name">{{ p.nickname }}</span>
+                    <span class="partner-date">{{ p.birthDate }}</span>
+                    <span class="partner-rel">{{ RELATION_TYPES.find(r => r.value === p.relation)?.label }}</span>
+                  </div>
+                  <div class="partner-actions">
+                    <button class="btn-icon" @click="startEditPartner(p.id)" title="編輯" aria-label="編輯">
+                      <sl-icon name="pencil" aria-hidden="true"></sl-icon>
+                    </button>
+                    <button
+                      v-if="confirmDeleteId !== p.id"
+                      class="btn-icon btn-danger"
+                      @click="confirmDeleteId = p.id"
+                      title="刪除"
+                      aria-label="刪除"
+                    >
+                      <sl-icon name="trash" aria-hidden="true"></sl-icon>
+                    </button>
+                    <button
+                      v-else
+                      class="btn-icon btn-danger confirm"
+                      @click="deletePartner(p.id)"
+                    >確認</button>
+                  </div>
+                </div>
+              </div>
+              <p v-else class="partner-empty">尚未新增收藏對象</p>
+              <button
+                class="btn-add-partner"
+                @click="startAddPartner"
+                :disabled="profile.partners.length >= 10"
+              >+ 新增對象</button>
+            </div>
+          </div>
+        </div>
       </div>
     </Transition>
 
@@ -541,6 +576,38 @@ onUnmounted(() => {
   color: var(--text-secondary);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  font-size: var(--font-lg);
+}
+
+.btn-header-icon:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.btn-header-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .btn-query {
   display: flex;
   align-items: center;
@@ -568,7 +635,8 @@ onUnmounted(() => {
 /* Full-screen Panel (取代 sl-dialog，實色背景) */
 
 .query-panel,
-.partner-panel {
+.partner-panel,
+.profile-panel {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -582,6 +650,10 @@ onUnmounted(() => {
 }
 
 .partner-panel {
+  z-index: 1002;
+}
+
+.profile-panel {
   z-index: 1001;
 }
 
@@ -915,6 +987,44 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
+/* Profile Panel */
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.profile-section-title {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0;
+}
+
+.my-birthday {
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.my-birthday-empty {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
 /* Responsive */
 @media (max-width: 767px) {
   .sukuyodo-v2 {
@@ -945,20 +1055,3 @@ onUnmounted(() => {
 }
 </style>
 
-<!-- Non-scoped: Shoelace shadow DOM ::part() 必須在非 scoped 才能生效 -->
-<style>
-.query-panel sl-details::part(base) {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.query-panel sl-details::part(summary) {
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-}
-
-.query-panel sl-details::part(content) {
-  padding: var(--space-sm);
-}
-</style>
