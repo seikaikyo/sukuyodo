@@ -169,11 +169,17 @@ onMounted(() => {
       </button>
     </header>
 
+    <!-- Query Dialog backdrop -->
+    <Transition name="fade">
+      <div v-if="showQueryDialog" class="dialog-backdrop" @click="showQueryDialog = false"></div>
+    </Transition>
+
     <!-- Query Dialog -->
     <sl-dialog
       :open.prop="showQueryDialog"
       label="查詢本命宿"
       class="query-dialog"
+      style="--sl-overlay-background-color: transparent"
       @sl-after-hide="showQueryDialog = false; showPartnerForm = false"
     >
       <div class="query-content">
@@ -541,6 +547,24 @@ onMounted(() => {
 .btn-query:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Dialog Backdrop */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 600;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 /* Query Dialog - scoped styles */
