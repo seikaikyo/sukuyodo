@@ -1,4 +1,4 @@
-import type { YearlyFortune, CompatibilityResult } from '../composables/useSukuyodo'
+import type { YearlyFortune, CompatibilityResult, DailyFortune } from '../composables/useSukuyodo'
 import { getScoreClass, getScoreLevel } from './fortune-helpers'
 
 // --- 共用工具 ---
@@ -992,4 +992,762 @@ ${yearSections}
 </html>`
 
   downloadHtml(html, `report-paired-${startYear}-${endYear}.html`)
+}
+
+// --- Multi-person Report ---
+
+export interface ReportPerson {
+  name: string
+  birthDate: string
+  role?: string
+}
+
+export interface ReportEvent {
+  date: string
+  label: string
+  description?: string
+}
+
+export interface MultiPersonReportOptions {
+  people: ReportPerson[]
+  yearRange: [number, number]
+  events?: ReportEvent[]
+  title?: string
+  apiUrl: string
+  onProgress?: (step: string, current: number, total: number) => void
+}
+
+interface CollectedMansion {
+  name_jp: string
+  reading: string
+  element: string
+  index: number
+  personality?: string
+  keywords?: string[]
+}
+
+interface CollectedCompat {
+  i: number
+  j: number
+  result: CompatibilityResult
+}
+
+const PERSON_COLORS = [
+  '#f59e0b', '#7CB3D9', '#4a9b6b', '#ef4444',
+  '#a78bfa', '#f472b6', '#22d3ee', '#fb923c'
+]
+
+function getMultiPersonCSS(): string {
+  return `
+    body { max-width: 1200px; }
+    .person-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px; margin: 16px 0;
+    }
+    .person-card .p-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .person-card .p-mansion { font-size: 18px; font-weight: 700; color: #f59e0b; margin: 4px 0; }
+    .person-card .p-role { font-size: 12px; color: #a8a29e; margin-top: 4px; }
+
+    .matrix-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    .matrix-table th, .matrix-table td { padding: 8px; border: 1px solid #57534e; text-align: center; }
+    .matrix-table th { background: #292524; color: #f59e0b; font-weight: 600; }
+    .matrix-table td { background: #1c1917; }
+    .matrix-table td.self { background: #292524; color: #57534e; }
+
+    .rel-eishin { color: #d4a017; }
+    .rel-yusui { color: #4a9b6b; }
+    .rel-kisei { color: #eab308; }
+    .rel-ankai { color: #ef4444; }
+    .rel-gyotai { color: #3b82f6; }
+    .rel-mei { color: #a78bfa; }
+
+    .glossary {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px; margin: 16px 0;
+    }
+    .glossary-item { background: #292524; border: 1px solid #57534e; border-radius: 8px; padding: 12px; }
+    .glossary-item .term { font-weight: 700; margin-bottom: 4px; }
+    .glossary-item .def { font-size: 13px; color: #a8a29e; }
+
+    .yearly-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+    .yearly-table th, .yearly-table td { padding: 6px 8px; border: 1px solid #57534e; text-align: center; }
+    .yearly-table th { background: #292524; color: #a8a29e; font-weight: 600; font-size: 11px; }
+    .yearly-table .year-col { font-weight: 700; color: #fafaf9; }
+
+    .event-card { background: #292524; border: 1px solid #57534e; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    .event-date-label { font-weight: 700; color: #f59e0b; }
+    .event-title { font-size: 16px; font-weight: 600; margin: 4px 0; }
+    .event-desc { font-size: 13px; color: #a8a29e; }
+    .event-scores { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+    .event-person-score { background: #44403c; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 80px; }
+    .event-person-score .eps-name { font-size: 11px; color: #a8a29e; }
+    .event-person-score .eps-score { font-size: 20px; font-weight: 700; }
+    .event-person-score .eps-flags { font-size: 10px; margin-top: 2px; }
+
+    .structure-person { background: #292524; border: 1px solid #57534e; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    .structure-person h4 { margin-top: 0; }
+    .structure-group { margin: 8px 0; }
+    .structure-group .group-label { font-size: 12px; color: #a8a29e; font-weight: 600; margin-bottom: 4px; }
+    .group-items { display: flex; gap: 8px; flex-wrap: wrap; }
+    .group-item { padding: 4px 12px; border-radius: 8px; font-size: 13px; }
+    .group-supporter { background: rgba(74,155,107,0.2); color: #4a9b6b; }
+    .group-threat { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .group-neutral { background: rgba(168,162,158,0.2); color: #a8a29e; }
+
+    .commentary {
+      background: #292524; border-left: 3px solid #57534e;
+      padding: 14px 18px; margin: 14px 0; font-size: 14px; line-height: 1.8; color: #d6d3d1;
+    }
+    .commentary strong { color: #f59e0b; }
+
+    .multi-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0; font-size: 13px; color: #a8a29e; }
+    .multi-legend-item { display: flex; align-items: center; gap: 6px; }
+    .multi-legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+    .flag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; margin: 0 2px; }
+    .flag-ryo { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .flag-dark { background: rgba(99,102,241,0.2); color: #818cf8; }
+    .flag-kanro { background: rgba(212,160,23,0.2); color: #d4a017; }
+    .flag-kongou { background: rgba(74,155,107,0.2); color: #4a9b6b; }
+    .flag-rasetsu { background: rgba(239,68,68,0.2); color: #ef4444; }
+
+    @media print {
+      .person-card { background: #fff; border-color: #d6d3d1; }
+      .matrix-table th { background: #f5f5f4; }
+      .matrix-table td { background: #fff; }
+      .event-card { background: #fff; border-color: #d6d3d1; }
+      .structure-person { background: #fff; border-color: #d6d3d1; }
+      .commentary { background: #f5f5f4; }
+      .glossary-item { background: #fff; border-color: #d6d3d1; }
+      .event-person-score { background: #f5f5f4; }
+    }
+
+    @media (max-width: 768px) {
+      .person-grid { grid-template-columns: repeat(2, 1fr); }
+      .matrix-table { font-size: 11px; }
+      .matrix-table th, .matrix-table td { padding: 4px; }
+      .yearly-table { font-size: 10px; }
+      .yearly-table th, .yearly-table td { padding: 4px; }
+      .glossary { grid-template-columns: 1fr; }
+    }
+  `
+}
+
+// --- Multi-person: Analysis ---
+
+function analyzeYearlyPatterns(
+  people: ReportPerson[],
+  yearlyData: Map<number, YearlyFortune[]>
+): string[] {
+  const patterns: string[] = []
+
+  for (let i = 0; i < people.length; i++) {
+    for (let j = i + 1; j < people.length; j++) {
+      const dataI = yearlyData.get(i)
+      const dataJ = yearlyData.get(j)
+      if (!dataI || !dataJ) continue
+
+      let alternateCount = 0
+      let bothHighCount = 0
+      let bothLowCount = 0
+
+      for (let k = 0; k < Math.min(dataI.length, dataJ.length); k++) {
+        const si = dataI[k].fortune.overall
+        const sj = dataJ[k].fortune.overall
+        if ((si >= 75 && sj < 55) || (sj >= 75 && si < 55)) alternateCount++
+        if (si >= 75 && sj >= 75) bothHighCount++
+        if (si < 55 && sj < 55) bothLowCount++
+      }
+
+      if (alternateCount >= 3) {
+        patterns.push(`${people[i].name} 與 ${people[j].name} 九曜呈交替互補，${alternateCount} 年一方高運時另一方低運`)
+      }
+      if (bothHighCount >= 2) {
+        patterns.push(`${people[i].name} 與 ${people[j].name} 有 ${bothHighCount} 年同時高運期，是共同行動的黃金窗口`)
+      }
+      if (bothLowCount >= 2) {
+        patterns.push(`${people[i].name} 與 ${people[j].name} 有 ${bothLowCount} 年同時低運期，須留意系統性風險`)
+      }
+    }
+  }
+
+  return patterns
+}
+
+function getStructureGroups(
+  personIndex: number,
+  people: ReportPerson[],
+  compats: CollectedCompat[]
+): { supporters: string[]; threats: string[]; neutral: string[] } {
+  const supporters: string[] = []
+  const threats: string[] = []
+  const neutral: string[] = []
+
+  for (const c of compats) {
+    if (c.i !== personIndex && c.j !== personIndex) continue
+    const otherIdx = c.i === personIndex ? c.j : c.i
+    const otherName = people[otherIdx].name
+    const relType = c.result.relation.type
+    const direction = c.result.relation.direction
+    const isP1 = c.i === personIndex
+
+    if (relType === 'eishin') {
+      supporters.push(`${otherName}(${c.result.relation.name})`)
+    } else if (relType === 'yusui') {
+      const myDir = isP1 ? direction : (directionPairs[direction || ''] || direction)
+      if (myDir === '衰') {
+        supporters.push(`${otherName}(友方)`)
+      } else {
+        neutral.push(`${otherName}(友→對方)`)
+      }
+    } else if (relType === 'ankai') {
+      threats.push(`${otherName}(${c.result.relation.name})`)
+    } else if (relType === 'kisei') {
+      threats.push(`${otherName}(${c.result.relation.name})`)
+    } else {
+      neutral.push(`${otherName}(${c.result.relation.name})`)
+    }
+  }
+
+  return { supporters, threats, neutral }
+}
+
+// --- Multi-person: HTML Builders ---
+
+function buildMpGlossary(): string {
+  return `<h2>閱讀指南</h2>
+  <div class="glossary">
+    <div class="glossary-item">
+      <div class="term rel-eishin">栄親（えいしん）85-95</div>
+      <div class="def">最佳關係。「栄」方受提升光彩，「親」方給予滋養。雙方相處自然舒適。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term rel-yusui">友衰（ゆうすい）60-65</div>
+      <div class="def">單向付出。「友」方主動給予支持，「衰」方被動接受。長期需留意友方消耗。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term rel-kisei">危成（きせい）45-55</div>
+      <div class="def">互補帶風險。「成」方促使「危」方成長，過程帶有壓力和考驗。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term rel-ankai">安壊（あんかい）35-40</div>
+      <div class="def">消耗型關係。「安」方看似無害，「壊」方持續被消耗。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term rel-gyotai">業胎（ぎょうたい）70-75</div>
+      <div class="def">因果深厚。前世因緣、注定相遇，關係深刻但不一定順遂。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term rel-mei">命（めい）75-80</div>
+      <div class="def">本命共鳴。同宿或鏡像宿，價值觀高度契合。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term">九曜流年</div>
+      <div class="def">以數え年除 9 對應九星循環。大吉（日/月/木曜）80-85，半吉（土/金曜）62-63，末吉（水曜）58，大凶（羅喉/火/計都）42-48。</div>
+    </div>
+    <div class="glossary-item">
+      <div class="term">凌犯期間</div>
+      <div class="def">農曆特定月份與曜日組合觸發的特殊期間（共 23 組）。凌犯期間吉凶逆轉。</div>
+    </div>
+  </div>`
+}
+
+function buildMpProfiles(people: ReportPerson[], mansions: (CollectedMansion | null)[]): string {
+  const cards = people.map((p, i) => {
+    const m = mansions[i]
+    const color = PERSON_COLORS[i % PERSON_COLORS.length]
+    if (!m) {
+      return `<div class="card person-card">
+        <div class="p-name" style="color:${color}">${escHtml(p.name)}</div>
+        <div class="p-role">${escHtml(p.birthDate)}</div>
+        <div style="color:#ef4444;font-size:12px">資料載入失敗</div>
+      </div>`
+    }
+    const elColor = elementColorMap[m.element] || '#a8a29e'
+    return `<div class="card person-card">
+      <div class="p-name" style="color:${color}">${escHtml(p.name)}</div>
+      <div class="p-mansion">${escHtml(m.name_jp)}</div>
+      <span class="tag" style="background:${elColor}33;color:${elColor}">${escHtml(m.element)}</span>
+      <div class="p-role">${escHtml(p.birthDate)}${p.role ? ` | ${escHtml(p.role)}` : ''}</div>
+    </div>`
+  }).join('')
+
+  // Element interaction
+  const genMap: Record<string, string> = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' }
+  const interactions: string[] = []
+  for (let i = 0; i < people.length; i++) {
+    for (let j = i + 1; j < people.length; j++) {
+      const ei = mansions[i]?.element
+      const ej = mansions[j]?.element
+      if (!ei || !ej || ei === ej) continue
+      if (genMap[ei] === ej) interactions.push(`${people[i].name}(${ei}) 生 ${people[j].name}(${ej})`)
+      else if (genMap[ej] === ei) interactions.push(`${people[j].name}(${ej}) 生 ${people[i].name}(${ei})`)
+    }
+  }
+  const elHtml = interactions.length > 0
+    ? `<div class="commentary"><p>元素互動：${interactions.join('、')}</p></div>`
+    : ''
+
+  return `<h2>人物檔案</h2>
+  <div class="person-grid">${cards}</div>
+  ${elHtml}`
+}
+
+function buildMpMatrix(people: ReportPerson[], compats: CollectedCompat[]): string {
+  const lookup = new Map<string, CollectedCompat>()
+  for (const c of compats) {
+    lookup.set(`${c.i}-${c.j}`, c)
+    lookup.set(`${c.j}-${c.i}`, c)
+  }
+
+  let headerCells = '<th></th>'
+  for (let j = 0; j < people.length; j++) {
+    const color = PERSON_COLORS[j % PERSON_COLORS.length]
+    headerCells += `<th style="color:${color}">${escHtml(people[j].name)}</th>`
+  }
+
+  let rows = ''
+  for (let i = 0; i < people.length; i++) {
+    const color = PERSON_COLORS[i % PERSON_COLORS.length]
+    let cells = `<th style="color:${color}">${escHtml(people[i].name)}</th>`
+    for (let j = 0; j < people.length; j++) {
+      if (i === j) { cells += '<td class="self">-</td>'; continue }
+      const c = lookup.get(`${i}-${j}`)
+      if (!c) { cells += '<td>-</td>'; continue }
+      const relClass = `rel-${c.result.relation.type}`
+      let dirLabel = ''
+      if (c.result.relation.direction) {
+        dirLabel = c.i === i
+          ? c.result.relation.direction
+          : (directionPairs[c.result.relation.direction] || c.result.relation.direction)
+      }
+      cells += `<td>
+        <span class="${relClass}">${escHtml(c.result.relation.name)}</span><br>
+        <span style="font-size:11px;color:#a8a29e">${dirLabel ? escHtml(dirLabel) + ' | ' : ''}${c.result.score}</span>
+      </td>`
+    }
+    rows += `<tr>${cells}</tr>`
+  }
+
+  return `<h2>相性矩陣</h2>
+  <table class="matrix-table">
+    <thead><tr>${headerCells}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`
+}
+
+function buildMpMultiLineSvg(
+  people: ReportPerson[],
+  yearlyData: Map<number, YearlyFortune[]>,
+  yearRange: [number, number]
+): string {
+  const years: number[] = []
+  for (let y = yearRange[0]; y <= yearRange[1]; y++) years.push(y)
+  if (years.length < 2) return ''
+
+  const w = 700, h = 260
+  const pl = 55, pr = 35, pt = 30, pb = 28
+  const cw = w - pl - pr, ch = h - pt - pb
+  const minS = 30, maxS = 100
+  const toY = (s: number) => pt + ch - ((s - minS) / (maxS - minS)) * ch
+  const toX = (i: number) => pl + (i / (years.length - 1)) * cw
+
+  const gridLines = [40, 55, 70, 85, 100].map(s => {
+    const y = toY(s).toFixed(1)
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="${s === 55 || s === 70 ? '0' : '3,3'}"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="10" dominant-baseline="middle">${s}</text>`
+  }).join('')
+
+  const bgTop = `<rect x="${pl}" y="${toY(100).toFixed(1)}" width="${cw}" height="${(toY(75) - toY(100)).toFixed(1)}" fill="rgba(74,155,107,0.06)" rx="2"/>`
+  const bgBot = `<rect x="${pl}" y="${toY(55).toFixed(1)}" width="${cw}" height="${(toY(minS) - toY(55)).toFixed(1)}" fill="rgba(239,68,68,0.06)" rx="2"/>`
+
+  let paths = ''
+  let dots = ''
+
+  for (let pi = 0; pi < people.length; pi++) {
+    const data = yearlyData.get(pi)
+    if (!data) continue
+    const color = PERSON_COLORS[pi % PERSON_COLORS.length]
+
+    const pathPoints = years.map((year, yi) => {
+      const yf = data.find(d => d.year === year)
+      if (!yf) return null
+      return { x: toX(yi), y: toY(yf.fortune.overall), score: yf.fortune.overall }
+    }).filter((p): p is { x: number; y: number; score: number } => p !== null)
+
+    if (pathPoints.length < 2) continue
+    const pathD = pathPoints.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    paths += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`
+    for (const p of pathPoints) {
+      dots += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${color}" stroke="#1c1917" stroke-width="1.5"/>`
+    }
+  }
+
+  const xLabels = years.map((year, i) =>
+    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="10">${year}</text>`
+  ).join('')
+
+  return `<div class="chart-container">
+    <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+      ${bgTop}${bgBot}${gridLines}${paths}${dots}${xLabels}
+    </svg>
+  </div>`
+}
+
+function buildMpYearlyOverview(
+  people: ReportPerson[],
+  yearlyData: Map<number, YearlyFortune[]>,
+  yearRange: [number, number]
+): string {
+  const chart = buildMpMultiLineSvg(people, yearlyData, yearRange)
+
+  const legend = people.map((p, i) => {
+    const color = PERSON_COLORS[i % PERSON_COLORS.length]
+    return `<span class="multi-legend-item"><span class="multi-legend-dot" style="background:${color}"></span> ${escHtml(p.name)}</span>`
+  }).join('')
+
+  const years: number[] = []
+  for (let y = yearRange[0]; y <= yearRange[1]; y++) years.push(y)
+
+  let headerCells = '<th>年</th>'
+  for (let i = 0; i < people.length; i++) {
+    const color = PERSON_COLORS[i % PERSON_COLORS.length]
+    headerCells += `<th colspan="2" style="color:${color}">${escHtml(people[i].name)}</th>`
+  }
+
+  let tableRows = ''
+  for (const year of years) {
+    let cells = `<td class="year-col">${year}</td>`
+    for (let i = 0; i < people.length; i++) {
+      const data = yearlyData.get(i)
+      const yf = data?.find(d => d.year === year)
+      if (!yf) { cells += '<td>-</td><td>-</td>'; continue }
+      const tagClass = kuyouTagClass(yf.kuyou_star.level)
+      const starShort = yf.kuyou_star.name.replace('曜星', '')
+      const cls = tableScoreClass(yf.fortune.overall)
+      cells += `<td><span class="tag ${tagClass}" style="font-size:10px">${escHtml(starShort)}</span></td>`
+      cells += `<td class="${cls}">${yf.fortune.overall}</td>`
+    }
+    tableRows += `<tr>${cells}</tr>`
+  }
+
+  return `<h2>九曜流年總覽</h2>
+  <div class="multi-legend">${legend}</div>
+  ${chart}
+  <table class="yearly-table">
+    <thead><tr>${headerCells}</tr></thead>
+    <tbody>${tableRows}</tbody>
+  </table>`
+}
+
+function buildMpMonthlyDetails(
+  people: ReportPerson[],
+  yearlyData: Map<number, YearlyFortune[]>,
+  yearRange: [number, number]
+): string {
+  const years: number[] = []
+  for (let y = yearRange[0]; y <= yearRange[1]; y++) years.push(y)
+
+  let html = '<h2>月度明細</h2>'
+
+  for (const year of years) {
+    let headerCells = '<th>月</th>'
+    for (let i = 0; i < people.length; i++) {
+      const color = PERSON_COLORS[i % PERSON_COLORS.length]
+      headerCells += `<th style="color:${color}">${escHtml(people[i].name)}</th>`
+    }
+
+    let rows = ''
+    for (let m = 1; m <= 12; m++) {
+      let cells = `<td>${m}月</td>`
+      for (let i = 0; i < people.length; i++) {
+        const data = yearlyData.get(i)
+        const yf = data?.find(d => d.year === year)
+        const mt = yf?.monthly_trend?.find(t => t.month === m)
+        if (!mt) { cells += '<td>-</td>'; continue }
+        const cls = tableScoreClass(mt.score)
+        let flags = ''
+        if (mt.ryouhan_ratio && mt.ryouhan_ratio > 0) {
+          flags = ' <span class="flag flag-ryo">凌</span>'
+        }
+        cells += `<td class="${cls}">${mt.score}${flags}</td>`
+      }
+      rows += `<tr>${cells}</tr>`
+    }
+
+    html += `<h3>${year} 年</h3>
+    <table class="yearly-table">
+      <thead><tr>${headerCells}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+  }
+
+  return html
+}
+
+function buildMpEventAnalysis(
+  people: ReportPerson[],
+  events: ReportEvent[],
+  eventData: Map<string, Map<number, DailyFortune>>
+): string {
+  let html = '<h2>關鍵日期分析</h2>'
+
+  for (const evt of events) {
+    const personData = eventData.get(evt.date)
+
+    html += `<div class="event-card">
+      <div class="event-date-label">${escHtml(evt.date)}</div>
+      <div class="event-title">${escHtml(evt.label)}</div>
+      ${evt.description ? `<div class="event-desc">${escHtml(evt.description)}</div>` : ''}
+      <div class="event-scores">`
+
+    for (let i = 0; i < people.length; i++) {
+      const df = personData?.get(i)
+      const color = PERSON_COLORS[i % PERSON_COLORS.length]
+
+      if (!df) {
+        html += `<div class="event-person-score">
+          <div class="eps-name" style="color:${color}">${escHtml(people[i].name)}</div>
+          <div class="eps-score" style="color:#57534e">-</div>
+        </div>`
+        continue
+      }
+
+      const score = df.fortune.overall
+      let flags = ''
+      if (df.sanki?.is_dark_week) flags += '<span class="flag flag-dark">暗黒</span>'
+      if (df.ryouhan?.active) flags += '<span class="flag flag-ryo">凌犯</span>'
+      if (df.special_day) {
+        if (df.special_day.type === 'kanro') flags += '<span class="flag flag-kanro">甘露</span>'
+        if (df.special_day.type === 'kongou') flags += '<span class="flag flag-kongou">金剛峯</span>'
+        if (df.special_day.type === 'rasetsu') flags += '<span class="flag flag-rasetsu">羅刹</span>'
+      }
+
+      html += `<div class="event-person-score">
+        <div class="eps-name" style="color:${color}">${escHtml(people[i].name)}</div>
+        <div class="eps-score" style="color:${scoreColor(score)}">${score}</div>
+        ${flags ? `<div class="eps-flags">${flags}</div>` : ''}
+      </div>`
+    }
+
+    html += '</div></div>'
+  }
+
+  return html
+}
+
+function buildMpStructure(people: ReportPerson[], compats: CollectedCompat[]): string {
+  let html = '<h2>勢力結構</h2>'
+
+  for (let i = 0; i < people.length; i++) {
+    const groups = getStructureGroups(i, people, compats)
+    const color = PERSON_COLORS[i % PERSON_COLORS.length]
+
+    html += `<div class="structure-person">
+      <h4 style="color:${color}">${escHtml(people[i].name)} 的關係結構</h4>`
+
+    if (groups.supporters.length > 0) {
+      html += `<div class="structure-group">
+        <div class="group-label">支持者</div>
+        <div class="group-items">${groups.supporters.map(s => `<span class="group-item group-supporter">${escHtml(s)}</span>`).join('')}</div>
+      </div>`
+    }
+    if (groups.threats.length > 0) {
+      html += `<div class="structure-group">
+        <div class="group-label">威脅 / 消耗</div>
+        <div class="group-items">${groups.threats.map(s => `<span class="group-item group-threat">${escHtml(s)}</span>`).join('')}</div>
+      </div>`
+    }
+    if (groups.neutral.length > 0) {
+      html += `<div class="structure-group">
+        <div class="group-label">中性</div>
+        <div class="group-items">${groups.neutral.map(s => `<span class="group-item group-neutral">${escHtml(s)}</span>`).join('')}</div>
+      </div>`
+    }
+
+    html += '</div>'
+  }
+
+  return html
+}
+
+function buildMpConclusion(
+  people: ReportPerson[],
+  compats: CollectedCompat[],
+  yearRange: [number, number]
+): string {
+  const totalPairs = compats.length
+  const highCompat = compats.filter(c => c.result.score >= 75).length
+  const lowCompat = compats.filter(c => c.result.score < 45).length
+
+  let summary = `<p>本報告分析 ${people.length} 人、${totalPairs} 組關係、${yearRange[1] - yearRange[0] + 1} 年流年數據。`
+  if (highCompat > 0) summary += `其中 ${highCompat} 組高相性（75+）。`
+  if (lowCompat > 0) summary += `${lowCompat} 組需謹慎應對（<45）。`
+  summary += '以上分析基於大正藏 T21n1299 宿曜經。</p>'
+
+  return `<h2>結語</h2><div class="commentary">${summary}</div>`
+}
+
+// --- Multi-person: Main Generator ---
+
+export async function generateMultiPersonReport(options: MultiPersonReportOptions): Promise<void> {
+  const { people, yearRange, events, title, apiUrl, onProgress } = options
+  const [startYear, endYear] = yearRange
+  const pairCount = people.length * (people.length - 1) / 2
+  const eventCalls = (events?.length || 0) * people.length
+  const totalSteps = people.length + pairCount + people.length + eventCalls
+  let currentStep = 0
+
+  const progress = (step: string) => {
+    currentStep++
+    onProgress?.(step, currentStep, totalSteps)
+  }
+
+  // 1. Mansion data
+  const mansions: (CollectedMansion | null)[] = new Array(people.length).fill(null)
+  await Promise.all(people.map(async (p, i) => {
+    try {
+      const res = await fetch(`${apiUrl}/mansion/${p.birthDate}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.data) {
+          mansions[i] = {
+            name_jp: data.data.name_jp,
+            reading: data.data.reading,
+            element: data.data.element,
+            index: data.data.index,
+            personality: data.data.personality,
+            keywords: data.data.keywords
+          }
+        }
+      }
+    } catch { /* partial failure OK */ }
+    progress(`${p.name} 本命宿`)
+  }))
+
+  // 2. Compatibility for each pair
+  const compats: CollectedCompat[] = []
+  const compatPairs: [number, number][] = []
+  for (let i = 0; i < people.length; i++) {
+    for (let j = i + 1; j < people.length; j++) {
+      compatPairs.push([i, j])
+    }
+  }
+
+  await Promise.all(compatPairs.map(async ([i, j]) => {
+    try {
+      const res = await fetch(`${apiUrl}/compatibility`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date1: people[i].birthDate, date2: people[j].birthDate })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && data.data) {
+          compats.push({ i, j, result: data.data })
+        }
+      }
+    } catch { /* partial failure OK */ }
+    progress(`${people[i].name} x ${people[j].name}`)
+  }))
+
+  // 3. Yearly range for each person
+  const yearlyData = new Map<number, YearlyFortune[]>()
+  await Promise.all(people.map(async (p, i) => {
+    try {
+      const res = await fetch(
+        `${apiUrl}/fortune/yearly-range?birth_date=${p.birthDate}&start_year=${startYear}&end_year=${endYear}`
+      )
+      if (res.ok) {
+        const raw = await res.json()
+        yearlyData.set(i, raw.data ?? raw)
+      }
+    } catch { /* partial failure OK */ }
+    progress(`${p.name} 流年`)
+  }))
+
+  // 4. Daily fortune for events
+  const eventData = new Map<string, Map<number, DailyFortune>>()
+  if (events?.length) {
+    const dailyPromises: Promise<void>[] = []
+    for (const evt of events) {
+      eventData.set(evt.date, new Map())
+      for (let i = 0; i < people.length; i++) {
+        dailyPromises.push((async () => {
+          try {
+            const res = await fetch(`${apiUrl}/fortune/daily/${evt.date}?birth_date=${people[i].birthDate}`)
+            if (res.ok) {
+              const data = await res.json()
+              if (data.success && data.data) {
+                eventData.get(evt.date)!.set(i, data.data)
+              }
+            }
+          } catch { /* partial failure OK */ }
+          progress(`${evt.label} - ${people[i].name}`)
+        })())
+      }
+    }
+    await Promise.all(dailyPromises)
+  }
+
+  // --- Build HTML sections ---
+  const reportTitle = title || '宿曜道 多人關係分析報告'
+  const cover = `<div class="cover">
+    <h1>${escHtml(reportTitle)}</h1>
+    <p class="subtitle">${startYear} - ${endYear} | ${people.length} 人分析 | 生成日期：${todayStr()}</p>
+  </div>`
+
+  const glossary = buildMpGlossary()
+  const profiles = buildMpProfiles(people, mansions)
+  const matrix = buildMpMatrix(people, compats)
+  const yearly = buildMpYearlyOverview(people, yearlyData, yearRange)
+  const monthly = buildMpMonthlyDetails(people, yearlyData, yearRange)
+
+  let eventsHtml = ''
+  if (events?.length) {
+    eventsHtml = `<hr class="section-divider">${buildMpEventAnalysis(people, events, eventData)}`
+  }
+
+  const structure = buildMpStructure(people, compats)
+
+  const patterns = analyzeYearlyPatterns(people, yearlyData)
+  let patternsHtml = ''
+  if (patterns.length > 0) {
+    patternsHtml = `<hr class="section-divider">
+    <h2>模式分析</h2>
+    <div class="commentary"><ul>${patterns.map(p => `<li>${escHtml(p)}</li>`).join('')}</ul></div>`
+  }
+
+  const conclusion = buildMpConclusion(people, compats, yearRange)
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escHtml(reportTitle)}</title>
+<style>${getReportCSS()}${getMultiPersonCSS()}</style>
+</head>
+<body>
+${cover}
+${glossary}
+<hr class="section-divider">
+${profiles}
+<hr class="section-divider">
+${matrix}
+<hr class="section-divider">
+${yearly}
+<hr class="section-divider">
+${monthly}
+${eventsHtml}
+<hr class="section-divider">
+${structure}
+${patternsHtml}
+<hr class="section-divider">
+${conclusion}
+<div class="footer">宿曜道 多人關係分析 | ${todayStr()} 生成</div>
+</body>
+</html>`
+
+  downloadHtml(html, `report-multi-${people.length}p-${startYear}-${endYear}.html`)
 }
