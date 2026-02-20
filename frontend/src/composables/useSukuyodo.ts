@@ -271,6 +271,28 @@ export interface WeeklyFortune {
   }
 }
 
+export interface MonthlyStrategyDay {
+  date: string
+  weekday: string
+  score: number
+  reason?: string
+  reasons?: string[]
+}
+
+export interface MonthlyActionWindow {
+  start_date: string
+  end_date: string
+  days: number
+  avg_score: number
+  description: string
+}
+
+export interface MonthlyStrategy {
+  best_days: MonthlyStrategyDay[]
+  avoid_days: MonthlyStrategyDay[]
+  action_windows: MonthlyActionWindow[]
+}
+
 export interface MonthlyFortune {
   year: number
   month: number
@@ -318,7 +340,49 @@ export interface MonthlyFortune {
   month_warnings?: string[]
   ryouhan_info?: { affected_days: number; total_days: number; ratio: number } | null
   special_days?: { date: string; type: string; name: string }[]
+  strategy?: MonthlyStrategy
   advice: string
+}
+
+export interface YearlySafeHaven {
+  start_month: number
+  end_month: number
+  avg_score: number
+  cluster_type: string | null
+  description: string
+}
+
+export interface YearlyBestMonth {
+  month: number
+  score: number
+  relation_type: string
+  description: string
+}
+
+export interface YearlyCautionMonth {
+  month: number
+  score: number
+  reasons: string[]
+  description: string
+}
+
+export interface YearlyStrategy {
+  safe_havens: YearlySafeHaven[]
+  best_months: YearlyBestMonth[]
+  caution_months: YearlyCautionMonth[]
+  ryouhan_outlook: {
+    affected_months: number[]
+    total_ratio: number
+    consecutive_groups: number[][]
+    description: string
+  }
+  yearly_rhythm: {
+    type: string
+    first_half_avg: number
+    second_half_avg: number
+    description: string
+  }
+  dynamic_tips: Record<number, string>
 }
 
 export interface YearlyFortune {
@@ -353,11 +417,14 @@ export interface YearlyFortune {
   monthly_trend: {
     month: number
     score: number
+    relation_type?: string
+    ryouhan_ratio?: number
     tip?: string
   }[]
   opportunities: string[]
   warnings: string[]
   advice: string
+  strategy?: YearlyStrategy
   shingon?: {
     practice_name: string
     practice_level: string

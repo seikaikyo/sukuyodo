@@ -606,6 +606,49 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
           </div>
 
+          <!-- 本月策略 -->
+          <div v-if="monthlyFortune.strategy" class="strategy-section monthly-strategy">
+            <h4 class="strategy-title">本月策略</h4>
+
+            <!-- 最佳行動區間 -->
+            <div v-if="monthlyFortune.strategy.action_windows.length" class="strategy-block best-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon best-icon">&#9679;</span>
+                <span class="strategy-label">行動區間</span>
+              </div>
+              <div v-for="(w, i) in monthlyFortune.strategy.action_windows" :key="i" class="strategy-item">
+                <span class="strategy-months safe-tag">{{ formatDate(w.start_date) }}~{{ formatDate(w.end_date) }}</span>
+                <span class="strategy-avg">{{ w.days }}天 均分{{ w.avg_score }}</span>
+              </div>
+            </div>
+
+            <!-- 最佳日 + 迴避日 -->
+            <div class="strategy-days-row">
+              <div v-if="monthlyFortune.strategy.best_days.length" class="strategy-days-col">
+                <span class="strategy-label best-label">推薦日</span>
+                <div class="strategy-day-tags">
+                  <span
+                    v-for="d in monthlyFortune.strategy.best_days"
+                    :key="d.date"
+                    class="strategy-day-tag best-day-tag"
+                    :title="d.reason"
+                  >{{ formatDate(d.date) }} {{ d.weekday?.replace('曜日', '') }} {{ d.score }}</span>
+                </div>
+              </div>
+              <div v-if="monthlyFortune.strategy.avoid_days.length" class="strategy-days-col">
+                <span class="strategy-label caution-label">迴避日</span>
+                <div class="strategy-day-tags">
+                  <span
+                    v-for="d in monthlyFortune.strategy.avoid_days"
+                    :key="d.date"
+                    class="strategy-day-tag avoid-day-tag"
+                    :title="d.reasons?.join('、')"
+                  >{{ formatDate(d.date) }} {{ d.weekday?.replace('曜日', '') }} {{ d.score }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="weekly-overview">
             <h4>每週概覽</h4>
             <div class="weekly-list">
@@ -878,6 +921,72 @@ function exportDecadeReport() {
             <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
             <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
             <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+          </div>
+
+          <!-- 趨吉避凶策略 -->
+          <div v-if="yearlyFortune.strategy" class="strategy-section">
+            <h4 class="strategy-title">趨吉避凶策略</h4>
+
+            <!-- 年度節奏 -->
+            <div v-if="yearlyFortune.strategy.yearly_rhythm" class="strategy-block rhythm-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon">&#x2014;</span>
+                <span class="strategy-label">年度節奏</span>
+                <span class="rhythm-halves">
+                  上半年 {{ yearlyFortune.strategy.yearly_rhythm.first_half_avg }} / 下半年 {{ yearlyFortune.strategy.yearly_rhythm.second_half_avg }}
+                </span>
+              </div>
+              <p class="strategy-desc">{{ yearlyFortune.strategy.yearly_rhythm.description }}</p>
+            </div>
+
+            <!-- 避風港 -->
+            <div v-if="yearlyFortune.strategy.safe_havens.length" class="strategy-block safe-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon safe-icon">&#9650;</span>
+                <span class="strategy-label">避風港月份</span>
+              </div>
+              <div v-for="h in yearlyFortune.strategy.safe_havens" :key="h.start_month" class="strategy-item safe-item">
+                <span class="strategy-months safe-tag">{{ h.start_month }}-{{ h.end_month }}月</span>
+                <span class="strategy-avg">均分 {{ h.avg_score }}</span>
+                <p class="strategy-item-desc">{{ h.description }}</p>
+              </div>
+            </div>
+
+            <!-- 最佳行動月 -->
+            <div v-if="yearlyFortune.strategy.best_months.length" class="strategy-block best-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon best-icon">&#9679;</span>
+                <span class="strategy-label">最佳行動月</span>
+              </div>
+              <div v-for="b in yearlyFortune.strategy.best_months" :key="b.month" class="strategy-item best-item">
+                <span class="strategy-months best-tag">{{ b.month }}月</span>
+                <span class="strategy-score" :class="getScoreClass(b.score)">{{ b.score }}</span>
+                <p class="strategy-item-desc">{{ b.description }}</p>
+              </div>
+            </div>
+
+            <!-- 警戒月 -->
+            <div v-if="yearlyFortune.strategy.caution_months.length" class="strategy-block caution-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon caution-icon">&#9660;</span>
+                <span class="strategy-label">警戒月份</span>
+              </div>
+              <div v-for="c in yearlyFortune.strategy.caution_months" :key="c.month" class="strategy-item caution-item">
+                <span class="strategy-months caution-tag">{{ c.month }}月</span>
+                <span class="strategy-score" :class="getScoreClass(c.score)">{{ c.score }}</span>
+                <p class="strategy-item-desc">{{ c.description }}</p>
+              </div>
+            </div>
+
+            <!-- 凌犯概覽 -->
+            <div v-if="yearlyFortune.strategy.ryouhan_outlook.affected_months.length" class="strategy-block ryouhan-block">
+              <div class="strategy-block-header">
+                <span class="strategy-icon ryouhan-icon">&#9888;</span>
+                <span class="strategy-label">凌犯概覽</span>
+                <span class="ryouhan-months-list">{{ yearlyFortune.strategy.ryouhan_outlook.affected_months.map(m => m + '月').join('、') }}</span>
+              </div>
+              <p class="strategy-desc">{{ yearlyFortune.strategy.ryouhan_outlook.description }}</p>
+            </div>
           </div>
 
           <div v-if="yearlyFortune.advice" class="advice-box">
@@ -3231,5 +3340,159 @@ function exportDecadeReport() {
   .decade-card-detail {
     animation: none;
   }
+}
+
+/* === Strategy Section === */
+.strategy-section {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.strategy-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-md) 0;
+}
+
+.strategy-block {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light, rgba(128, 128, 128, 0.15));
+}
+
+.strategy-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.strategy-block-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.strategy-icon {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.safe-icon { color: #50b050; }
+.best-icon { color: var(--accent); }
+.caution-icon { color: #e07040; }
+.ryouhan-icon { color: #cc4444; }
+
+.strategy-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rhythm-halves,
+.ryouhan-months-list {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.strategy-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: var(--space-xs) 0 0 0;
+}
+
+.strategy-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-xs);
+}
+
+.strategy-months {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.safe-tag {
+  background: rgba(80, 176, 80, 0.12);
+  color: #50b050;
+}
+
+.best-tag {
+  background: rgba(var(--accent-rgb, 59, 130, 246), 0.12);
+  color: var(--accent);
+}
+
+.caution-tag {
+  background: rgba(224, 112, 64, 0.12);
+  color: #e07040;
+}
+
+.strategy-score {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.strategy-avg {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.strategy-item-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+  flex-basis: 100%;
+}
+
+/* Monthly Strategy */
+.strategy-days-row {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.strategy-days-col {
+  flex: 1;
+  min-width: 140px;
+}
+
+.best-label { color: #50b050; }
+.caution-label { color: #e07040; }
+
+.strategy-day-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: var(--space-xs);
+}
+
+.strategy-day-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.best-day-tag {
+  background: rgba(80, 176, 80, 0.12);
+  color: #50b050;
+}
+
+.avoid-day-tag {
+  background: rgba(224, 112, 64, 0.12);
+  color: #e07040;
 }
 </style>

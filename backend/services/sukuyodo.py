@@ -2219,6 +2219,9 @@ class SukuyodoService:
         if kongou_count > 0:
             month_warnings.append(f"金剛峯日 {kongou_count} 天")
 
+        # 月度策略分析
+        monthly_strategy = self._generate_monthly_strategy(weekly, all_daily, ryouhan_count, days_in_month)
+
         # 文字描述（seeded random.choice 確保同輸入同結果）
         random.seed(f"{birth_date.isoformat()}{year}{month}")
 
@@ -2268,6 +2271,7 @@ class SukuyodoService:
             "month_warnings": month_warnings,
             "special_days": special_days_in_month,
             "weekly": weekly,
+            "strategy": monthly_strategy,
             "advice": random.choice(self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], [f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。"]))
         }
 
@@ -3206,23 +3210,12 @@ class SukuyodoService:
             cat_descs = self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}).get(cat_key, [""])
             category_descriptions[cat] = random.choice(cat_descs)
 
-        # 月趨勢加入提示
-        month_tips = {
-            1: "新年開局，設定目標比急著行動更有價值",
-            2: "承接年初的能量，開始具體推進計畫",
-            3: "春天適合播種，把想做的事情付諸行動",
-            4: "穩定推進期，專注於手上最重要的事",
-            5: "年度中間點，做一次階段性的進度盤點",
-            6: "上半年的收尾，整理成果並調整下半年的方向",
-            7: "下半年的起點，重新評估優先順序",
-            8: "執行力高峰期，適合全力衝刺關鍵目標",
-            9: "秋天的收穫期，善用前幾個月累積的成果",
-            10: "進入年度倒數，集中精力完成年初設定的目標",
-            11: "減法的月份，砍掉做不完的項目，聚焦核心",
-            12: "年度總結，盤點收穫、反思不足、規劃明年"
-        }
+        # 年度策略分析
+        strategy = self._generate_yearly_strategy(monthly_trend, star["level"], birth_date, year)
+
+        # 月趨勢加入動態提示（取代固定 tip）
         for item in monthly_trend:
-            item["tip"] = month_tips.get(item["month"], "")
+            item["tip"] = strategy["dynamic_tips"].get(item["month"], "")
 
         return {
             "year": year,
@@ -3258,7 +3251,8 @@ class SukuyodoService:
             "opportunities": opportunities,
             "warnings": warnings,
             "advice": advice,
-            "shingon": self._build_shingon_data(star["name"])
+            "shingon": self._build_shingon_data(star["name"]),
+            "strategy": strategy
         }
 
     def _build_shingon_data(self, star_name: str) -> dict:
@@ -3289,6 +3283,377 @@ class SukuyodoService:
             "warnings": data.get("warnings", []),
             "opportunities": data.get("opportunities", [])
         }
+
+    def _generate_yearly_strategy(self, monthly_trend: list, kuyou_level: str, birth_date: date, year: int) -> dict:
+        """
+        年度趨吉避凶策略分析
+
+        基於 monthly_trend 資料（score, relation_type, ryouhan_ratio）生成
+        結構化的可行動建議。
+
+        Args:
+            monthly_trend: 12 個月的趨勢資料
+            kuyou_level: 九曜等級（大吉/半吉/末吉/大凶）
+            birth_date: 出生日期
+            year: 年份
+
+        Returns:
+            策略分析 dict
+        """
+        # === 1. safe_havens：連續 2+ 個月 score >= 65 的區段 ===
+        safe_havens = []
+        streak_start = None
+        for m in monthly_trend:
+            if m["score"] >= 65:
+                if streak_start is None:
+                    streak_start = m["month"]
+            else:
+                if streak_start is not None:
+                    streak_end = monthly_trend[monthly_trend.index(m) - 1]["month"]
+                    if streak_end - streak_start + 1 >= 2:
+                        # 判斷是否為榮親或業胎集群
+                        cluster_months = [x for x in monthly_trend if streak_start <= x["month"] <= streak_end]
+                        eishin_count = sum(1 for x in cluster_months if x["relation_type"] == "eishin")
+                        gyotai_count = sum(1 for x in cluster_months if x["relation_type"] == "gyotai")
+                        cluster_type = None
+                        if eishin_count >= len(cluster_months) // 2:
+                            cluster_type = "eishin_cluster"
+                        elif gyotai_count >= len(cluster_months) // 2:
+                            cluster_type = "gyotai_cluster"
+                        safe_havens.append({
+                            "start_month": streak_start,
+                            "end_month": streak_end,
+                            "avg_score": round(sum(x["score"] for x in cluster_months) / len(cluster_months)),
+                            "cluster_type": cluster_type,
+                            "description": self._safe_haven_description(streak_start, streak_end, cluster_type)
+                        })
+                    streak_start = None
+        # 收尾：年末仍在連續高分
+        if streak_start is not None:
+            streak_end = monthly_trend[-1]["month"]
+            if streak_end - streak_start + 1 >= 2:
+                cluster_months = [x for x in monthly_trend if streak_start <= x["month"] <= streak_end]
+                eishin_count = sum(1 for x in cluster_months if x["relation_type"] == "eishin")
+                gyotai_count = sum(1 for x in cluster_months if x["relation_type"] == "gyotai")
+                cluster_type = None
+                if eishin_count >= len(cluster_months) // 2:
+                    cluster_type = "eishin_cluster"
+                elif gyotai_count >= len(cluster_months) // 2:
+                    cluster_type = "gyotai_cluster"
+                safe_havens.append({
+                    "start_month": streak_start,
+                    "end_month": streak_end,
+                    "avg_score": round(sum(x["score"] for x in cluster_months) / len(cluster_months)),
+                    "cluster_type": cluster_type,
+                    "description": self._safe_haven_description(streak_start, streak_end, cluster_type)
+                })
+
+        # === 2. best_months：score top 3 且無凌犯 ===
+        candidates = [m for m in monthly_trend if m["ryouhan_ratio"] == 0]
+        if len(candidates) < 3:
+            candidates = sorted(monthly_trend, key=lambda x: (-x["score"], x["ryouhan_ratio"]))
+        else:
+            candidates = sorted(candidates, key=lambda x: -x["score"])
+        best_months = []
+        for m in candidates[:3]:
+            rel_name = self.DAILY_FORTUNE_RELATION_NAMES.get(m["relation_type"], "平")
+            best_months.append({
+                "month": m["month"],
+                "score": m["score"],
+                "relation_type": m["relation_type"],
+                "description": self._best_month_description(m)
+            })
+
+        # === 3. caution_months：ryouhan >= 0.5 或安壊且 score < 45 ===
+        caution_months = []
+        for m in monthly_trend:
+            reasons = []
+            if m["ryouhan_ratio"] >= 0.5:
+                pct = int(m["ryouhan_ratio"] * 100)
+                reasons.append(f"凌犯佔比 {pct}%")
+            if m["relation_type"] == "ankai" and m["score"] < 45:
+                reasons.append("安壊低分")
+            if m["score"] < 45:
+                reasons.append(f"分數偏低（{m['score']}）")
+            if reasons:
+                caution_months.append({
+                    "month": m["month"],
+                    "score": m["score"],
+                    "reasons": reasons,
+                    "description": self._caution_month_description(m, reasons)
+                })
+
+        # === 4. ryouhan_outlook：全年凌犯概覽 ===
+        ryouhan_months = [m for m in monthly_trend if m["ryouhan_ratio"] > 0]
+        total_ryouhan_ratio = sum(m["ryouhan_ratio"] for m in monthly_trend) / 12
+        ryouhan_month_nums = [m["month"] for m in ryouhan_months]
+
+        # 找連續凌犯群
+        consecutive_groups = []
+        if ryouhan_month_nums:
+            group = [ryouhan_month_nums[0]]
+            for i in range(1, len(ryouhan_month_nums)):
+                if ryouhan_month_nums[i] == ryouhan_month_nums[i - 1] + 1:
+                    group.append(ryouhan_month_nums[i])
+                else:
+                    if len(group) >= 2:
+                        consecutive_groups.append(group)
+                    group = [ryouhan_month_nums[i]]
+            if len(group) >= 2:
+                consecutive_groups.append(group)
+
+        ryouhan_outlook = {
+            "affected_months": ryouhan_month_nums,
+            "total_ratio": round(total_ryouhan_ratio, 2),
+            "consecutive_groups": consecutive_groups,
+            "description": self._ryouhan_outlook_description(ryouhan_month_nums, consecutive_groups, total_ryouhan_ratio)
+        }
+
+        # === 5. yearly_rhythm：年度節奏 ===
+        first_half = [m["score"] for m in monthly_trend if m["month"] <= 6]
+        second_half = [m["score"] for m in monthly_trend if m["month"] > 6]
+        avg_first = sum(first_half) / len(first_half) if first_half else 60
+        avg_second = sum(second_half) / len(second_half) if second_half else 60
+
+        # 找最低點位置來判斷 V 型
+        scores = [m["score"] for m in monthly_trend]
+        min_month_idx = scores.index(min(scores))
+        max_month_idx = scores.index(max(scores))
+
+        diff = avg_first - avg_second
+        if diff >= 10:
+            rhythm_type = "front_heavy"
+        elif diff <= -10:
+            rhythm_type = "back_heavy"
+        elif min_month_idx in range(3, 9) and avg_first > min(scores) + 10 and avg_second > min(scores) + 10:
+            rhythm_type = "v_shape"
+        elif max_month_idx in range(3, 9) and avg_first < max(scores) - 10 and avg_second < max(scores) - 10:
+            rhythm_type = "inv_v_shape"
+        else:
+            rhythm_type = "stable"
+
+        rhythm_descriptions = {
+            "front_heavy": "上半年氣勢較強，建議把重要決策和行動集中在前六個月，下半年轉為守成鞏固。",
+            "back_heavy": "下半年運勢漸入佳境，上半年先做好準備和累積，等時機成熟再全力推進。",
+            "v_shape": f"年中（{min_month_idx + 1}月前後）是低谷期，前後兩端相對穩定。低谷期專注內省和調整，不急著做決定。",
+            "inv_v_shape": f"年中（{max_month_idx + 1}月前後）是全年高峰，把握中段黃金期集中火力，年頭年尾則放慢步調。",
+            "stable": "全年節奏平穩，沒有太大起伏，適合持續穩定地推進長期目標。"
+        }
+
+        yearly_rhythm = {
+            "type": rhythm_type,
+            "first_half_avg": round(avg_first),
+            "second_half_avg": round(avg_second),
+            "description": rhythm_descriptions[rhythm_type]
+        }
+
+        # === 6. dynamic_tips：取代固定月度提示 ===
+        dynamic_tips = {}
+        for m in monthly_trend:
+            dynamic_tips[m["month"]] = self._generate_dynamic_tip(m)
+
+        return {
+            "safe_havens": safe_havens,
+            "best_months": best_months,
+            "caution_months": caution_months,
+            "ryouhan_outlook": ryouhan_outlook,
+            "yearly_rhythm": yearly_rhythm,
+            "dynamic_tips": dynamic_tips
+        }
+
+    def _safe_haven_description(self, start: int, end: int, cluster_type: str | None) -> str:
+        """避風港區段的描述文字"""
+        period = f"{start}-{end}月"
+        if cluster_type == "eishin_cluster":
+            return f"{period}連續榮親高分，這段期間是全年最穩固的避風港，適合推進重要事項。"
+        elif cluster_type == "gyotai_cluster":
+            return f"{period}連續業胎月，前世因緣深厚的時期，人際合作和共同事業特別順利。"
+        return f"{period}連續高分段，運勢穩定向好，適合積極行動和做出重要決定。"
+
+    def _best_month_description(self, m: dict) -> str:
+        """最佳月份的建議文字"""
+        rel = m["relation_type"]
+        score = m["score"]
+        month = m["month"]
+
+        if rel == "eishin":
+            return f"{month}月榮親月（{score}分），全年最佳行動期之一，大膽推進計畫。"
+        elif rel == "gyotai":
+            return f"{month}月業胎月（{score}分），適合合作、簽約、建立夥伴關係。"
+        elif rel == "mei":
+            return f"{month}月命月（{score}分），本命能量強化，適合開創性的行動。"
+        elif score >= 75:
+            return f"{month}月高分（{score}分），運勢良好，把握機會積極行動。"
+        return f"{month}月（{score}分），相對穩定的時期，可安排重要事務。"
+
+    def _caution_month_description(self, m: dict, reasons: list) -> str:
+        """警戒月的描述文字"""
+        month = m["month"]
+        if m["ryouhan_ratio"] >= 0.5:
+            return f"{month}月凌犯嚴重，吉凶逆轉機率高，避免重大決策和簽約。守勢為主，等待時機。"
+        elif m["relation_type"] == "ankai":
+            return f"{month}月安壊月，關係容易破裂，避免衝突和冒險，低調行事。"
+        return f"{month}月運勢偏低（{m['score']}分），保守行事，不宜冒進。"
+
+    def _ryouhan_outlook_description(self, months: list, groups: list, ratio: float) -> str:
+        """全年凌犯概覽描述"""
+        if not months:
+            return "今年沒有凌犯月份，全年運勢走向清晰可預測。"
+
+        parts = []
+        if groups:
+            for g in groups:
+                parts.append(f"{g[0]}-{g[-1]}月連續{len(g)}個月凌犯")
+        scattered = [m for m in months if not any(m in g for g in groups)]
+        if scattered:
+            parts.append(f"{', '.join(str(m) for m in scattered)}月零星凌犯")
+
+        advice = ""
+        if ratio >= 0.3:
+            advice = "凌犯佔比偏高，今年整體需謹慎行事，重要決策盡量安排在非凌犯月。"
+        elif groups:
+            longest = max(groups, key=len)
+            advice = f"留意{longest[0]}-{longest[-1]}月連續凌犯期，這段期間盡量避開重大行動。"
+        else:
+            advice = "凌犯零星分布，影響有限，留意個別月份即可。"
+
+        return "。".join(parts) + "。" + advice
+
+    def _generate_dynamic_tip(self, m: dict) -> str:
+        """根據月份數據動態生成月度提示"""
+        score = m["score"]
+        rel = m["relation_type"]
+        ryouhan = m["ryouhan_ratio"]
+
+        # 高分 + 榮親
+        if score >= 80 and rel == "eishin":
+            return "榮親高分月，放手去做想做的事，成功率高。"
+        # 高分 + 業胎
+        if score >= 80 and rel == "gyotai":
+            return "業胎高分月，人際合作會帶來好結果，主動出擊。"
+        # 高分 + 凌犯
+        if score >= 70 and ryouhan > 0.3:
+            return "分數不錯但有凌犯干擾，好事多磨，耐心處理意外狀況。"
+        # 高分一般
+        if score >= 75:
+            return "運勢穩定偏高，適合推進計畫和做決定。"
+        # 中等 + 無凌犯
+        if 60 <= score < 75 and ryouhan == 0:
+            return "中等穩定，按部就班推進，不急不緩。"
+        # 中等 + 凌犯
+        if 60 <= score < 75 and ryouhan > 0:
+            return "運勢中等偏有凌犯波動，遇到反覆屬正常，穩住心態。"
+        # 低分 + 重凌犯
+        if score < 50 and ryouhan >= 0.5:
+            return "凌犯嚴重加上低分，守勢為主，避免冒險和重大決策。"
+        # 低分 + 安壊
+        if score < 50 and rel == "ankai":
+            return "安壊低分月，人際關係容易緊張，低調行事、遠離是非。"
+        # 低分一般
+        if score < 50:
+            return "運勢偏低，養精蓄銳，為下個高峰期做準備。"
+        # 中偏低
+        return "運勢平穩，做好手邊的事，不需要太大動作。"
+
+    def _generate_monthly_strategy(self, weekly_data: list, all_daily: list, ryouhan_count: int, days_in_month: int) -> dict:
+        """
+        月度趨吉避凶策略分析
+
+        基於每日運勢資料生成 best_days、avoid_days、action_windows。
+
+        Args:
+            weekly_data: 週次資料列表
+            all_daily: 每日概覽資料列表
+            ryouhan_count: 凌犯天數
+            days_in_month: 該月天數
+
+        Returns:
+            月度策略 dict
+        """
+        # === 1. best_days：top 3 高分日（score >= 70，無凌犯/暗黒/羅刹） ===
+        clean_high = [d for d in all_daily
+                      if d["score"] >= 70
+                      and not d.get("ryouhan_active", False)
+                      and not d.get("is_dark_week", False)
+                      and not (d.get("special_day") and "羅刹" in (d.get("special_day") or ""))]
+        clean_high.sort(key=lambda x: -x["score"])
+        best_days = []
+        for d in clean_high[:3]:
+            best_days.append({
+                "date": d["date"],
+                "weekday": d["weekday"],
+                "score": d["score"],
+                "reason": self._best_day_reason(d)
+            })
+
+        # === 2. avoid_days：安壊+凌犯、暗黒+羅刹等危險組合 ===
+        avoid_days = []
+        for d in all_daily:
+            dangers = []
+            if d.get("ryouhan_active") and d.get("is_dark_week"):
+                dangers.append("凌犯+暗黒の一週間")
+            elif d.get("ryouhan_active") and d.get("special_day") and "羅刹" in (d.get("special_day") or ""):
+                dangers.append("凌犯+羅刹日")
+            elif d.get("is_dark_week") and d.get("special_day") and "羅刹" in (d.get("special_day") or ""):
+                dangers.append("暗黒+羅刹日")
+            elif d["score"] < 40 and d.get("ryouhan_active"):
+                dangers.append("凌犯低分")
+
+            if dangers:
+                avoid_days.append({
+                    "date": d["date"],
+                    "weekday": d["weekday"],
+                    "score": d["score"],
+                    "reasons": dangers
+                })
+
+        # === 3. action_windows：連續 3+ 天 score >= 60 的最佳行動區間 ===
+        action_windows = []
+        window_start = None
+        window_days = []
+        for d in all_daily:
+            if d["score"] >= 60 and not d.get("ryouhan_active", False):
+                if window_start is None:
+                    window_start = d["date"]
+                window_days.append(d)
+            else:
+                if window_start is not None and len(window_days) >= 3:
+                    avg = round(sum(x["score"] for x in window_days) / len(window_days))
+                    action_windows.append({
+                        "start_date": window_start,
+                        "end_date": window_days[-1]["date"],
+                        "days": len(window_days),
+                        "avg_score": avg,
+                        "description": f"連續 {len(window_days)} 天穩定期（均分 {avg}），適合安排重要事務。"
+                    })
+                window_start = None
+                window_days = []
+        # 收尾
+        if window_start is not None and len(window_days) >= 3:
+            avg = round(sum(x["score"] for x in window_days) / len(window_days))
+            action_windows.append({
+                "start_date": window_start,
+                "end_date": window_days[-1]["date"],
+                "days": len(window_days),
+                "avg_score": avg,
+                "description": f"連續 {len(window_days)} 天穩定期（均分 {avg}），適合安排重要事務。"
+            })
+
+        return {
+            "best_days": best_days,
+            "avoid_days": avoid_days,
+            "action_windows": action_windows
+        }
+
+    def _best_day_reason(self, d: dict) -> str:
+        """最佳日的理由文字"""
+        parts = [f"運勢 {d['score']} 分"]
+        if d.get("special_day"):
+            if "甘露" in d["special_day"]:
+                parts.append("甘露日加持")
+            elif "金剛" in d["special_day"]:
+                parts.append("金剛峯日加持")
+        return "，".join(parts)
 
     def calculate_yearly_fortune_range(self, birth_date: date, start_year: int, end_year: int) -> list:
         """
