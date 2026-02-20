@@ -420,6 +420,7 @@ export interface YearlyFortune {
     relation_type?: string
     ryouhan_ratio?: number
     tip?: string
+    special_day_counts?: { kanro: number; kongou: number; rasetsu: number }
   }[]
   opportunities: string[]
   warnings: string[]

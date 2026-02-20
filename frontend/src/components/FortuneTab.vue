@@ -170,8 +170,8 @@ function shortStarName(name: string): string {
 // 本年月度折線圖計算
 const currentMonth = new Date().getMonth() + 1
 
-const monthlySvgWidth = 620
-const monthlySvgHeight = 200
+const monthlySvgWidth = 560
+const monthlySvgHeight = 160
 const monthlyPadLeft = 40
 const monthlyPadRight = 20
 const monthlyPadTop = 25
@@ -924,6 +924,11 @@ function exportDecadeReport() {
                   <div class="monthly-bar-fill" :class="getScoreClass(m.score)" :style="{ width: m.score + '%' }"></div>
                 </div>
                 <span class="monthly-score" :class="getScoreClass(m.score)">{{ m.score }}</span>
+                <span v-if="m.special_day_counts" class="monthly-special-days">
+                  <span v-if="m.special_day_counts.kanro" class="sd-badge kanro" :title="`甘露日 ${m.special_day_counts.kanro} 日`">甘{{ m.special_day_counts.kanro }}</span>
+                  <span v-if="m.special_day_counts.kongou" class="sd-badge kongou" :title="`金剛峯日 ${m.special_day_counts.kongou} 日`">金{{ m.special_day_counts.kongou }}</span>
+                  <span v-if="m.special_day_counts.rasetsu" class="sd-badge rasetsu" :title="`羅刹日 ${m.special_day_counts.rasetsu} 日`">羅{{ m.special_day_counts.rasetsu }}</span>
+                </span>
                 <p v-if="m.tip" class="monthly-tip">{{ m.tip }}</p>
               </button>
 
@@ -2873,6 +2878,24 @@ function exportDecadeReport() {
 .monthly-score.fair { color: var(--info); }
 .monthly-score.caution { color: #eab308; }
 .monthly-score.warning { color: var(--warning); }
+
+.monthly-special-days {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.sd-badge {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.sd-badge.kanro { background: rgba(74, 155, 107, 0.25); color: var(--kanro-color); }
+.sd-badge.kongou { background: rgba(212, 175, 55, 0.25); color: var(--kongou-color); }
+.sd-badge.rasetsu { background: rgba(232, 93, 76, 0.25); color: var(--rasetsu-color); }
 
 .monthly-tip {
   grid-column: 1 / -1;

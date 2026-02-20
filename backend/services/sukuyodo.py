@@ -3170,11 +3170,29 @@ class SukuyodoService:
                 month_base += star_month_bonus // 4
 
             month_score = max(35, min(100, month_base))
+
+            # 統計每月特殊日數量（甘露/金剛峯/羅刹）
+            sd_counts = {"kanro": 0, "kongou": 0, "rasetsu": 0}
+            for d in range(1, days_in_m + 1):
+                try:
+                    check_date = date(year, m, d)
+                    wd = check_date.weekday()
+                    jp_wd = (wd + 1) % 7
+                    _, lm, ld, _ = self.solar_to_lunar(check_date)
+                    start_idx = self.MONTH_START_MANSION.get(lm, 0)
+                    mansion_idx = (start_idx + ld - 1) % 27
+                    sd_type = self.SPECIAL_DAY_MAP.get((jp_wd, mansion_idx))
+                    if sd_type in sd_counts:
+                        sd_counts[sd_type] += 1
+                except Exception:
+                    pass
+
             monthly_trend.append({
                 "month": m,
                 "score": month_score,
                 "relation_type": month_relation["type"],
-                "ryouhan_ratio": round(ryouhan_ratio, 2)
+                "ryouhan_ratio": round(ryouhan_ratio, 2),
+                "special_day_counts": sd_counts
             })
 
         # 找出機會月份（分數最高的 3 個月）

@@ -1,11 +1,11 @@
 /* 宿曜道 - 設計系統變數 */
 
 :root {
-  /* 基底色 - 星空深夜 */
-  --cosmos-void: #0D0B14;
-  --cosmos-night: #1A1625;
-  --cosmos-dusk: #2A2438;
-  --cosmos-twilight: #3D3650;
+  /* 基底色 - 星空夜 */
+  --cosmos-void: #161222;
+  --cosmos-night: #221D30;
+  --cosmos-dusk: #332D42;
+  --cosmos-twilight: #48415A;
 
   /* 主色 - 星語紫 */
   --astral-deep: #4A3B6B;

@@ -544,10 +544,10 @@ onUnmounted(() => {
 <style scoped>
 /* Design System - CSS Variables */
 .sukuyodo-v2 {
-  --bg-primary: #1c1917;
-  --bg-surface: #292524;
-  --bg-elevated: #44403c;
-  --border: #57534e;
+  --bg-primary: #231f1d;
+  --bg-surface: #302b29;
+  --bg-elevated: #4a4543;
+  --border: #635e5b;
   --text-primary: #fafaf9;
   --text-secondary: #a8a29e;
   --accent: #f59e0b;

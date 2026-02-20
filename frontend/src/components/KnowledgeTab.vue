@@ -386,6 +386,8 @@ function getKuyouRowClass(level: string) {
         <div class="history-sections">
           <div v-for="(section, i) in metadata.ryouhan_knowledge.sections" :key="'rh-' + i" class="history-item">
             <h4>{{ section.title }}</h4>
+            <div v-if="section.content_classic" class="classic-quote">{{ section.content_classic }}</div>
+            <div v-if="section.content_ja" class="ja-text">{{ section.content_ja }}</div>
             <p>{{ section.content }}</p>
           </div>
         </div>
@@ -428,6 +430,11 @@ function getKuyouRowClass(level: string) {
     <div v-if="activeTab === 'calendar'" id="panel-knowledge-calendar" class="knowledge-content" role="tabpanel">
       <div class="calendar-info">
         <h3>月宿傍通曆</h3>
+        <div v-if="metadata?.month_mansion_table?.source_classic" class="classic-quote">
+          {{ metadata.month_mansion_table.source_classic }}
+          <div class="classic-source">{{ metadata.month_mansion_table.source_ref }}</div>
+        </div>
+        <div v-if="metadata?.month_mansion_table?.source_ja" class="ja-text">{{ metadata.month_mansion_table.source_ja }}</div>
         <p v-if="metadata?.month_mansion_table?.calendar_description">{{ metadata.month_mansion_table.calendar_description }}</p>
         <template v-else>
           <p>宿曜道使用的是「月宿傍通曆」，根據農曆月份和日期來對應二十七宿。</p>
