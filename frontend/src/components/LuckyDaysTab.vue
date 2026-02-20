@@ -652,11 +652,6 @@ function getSpecialDayAdvice(type: string): string {
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* 子分頁 */
 .sub-tabs {
   display: flex;
@@ -687,6 +682,11 @@ function getSpecialDayAdvice(type: string): string {
   color: var(--accent);
   border-bottom: 2px solid var(--accent);
   margin-bottom: -1px;
+}
+
+.sub-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* 通用 */
@@ -798,7 +798,7 @@ function getSpecialDayAdvice(type: string): string {
 .day-chip.excellent { border-left: 3px solid var(--stellar); }
 .day-chip.good { border-left: 3px solid var(--success); }
 .day-chip.fair { border-left: 3px solid var(--info); }
-.day-chip.caution { border-left: 3px solid #eab308; }
+.day-chip.caution { border-left: 3px solid var(--caution); }
 
 .day-cards {
   display: flex;
@@ -815,7 +815,7 @@ function getSpecialDayAdvice(type: string): string {
 .day-card.excellent { border-left: 3px solid var(--stellar); }
 .day-card.good { border-left: 3px solid var(--success); }
 .day-card.fair { border-left: 3px solid var(--info); }
-.day-card.caution { border-left: 3px solid #eab308; }
+.day-card.caution { border-left: 3px solid var(--caution); }
 
 .day-card-header {
   display: flex;
@@ -871,7 +871,7 @@ function getSpecialDayAdvice(type: string): string {
 
 .day-chip.caution .chip-rating {
   background: rgba(234, 179, 8, 0.15);
-  color: #eab308;
+  color: var(--caution);
 }
 
 .no-lucky-days {
@@ -913,7 +913,7 @@ function getSpecialDayAdvice(type: string): string {
   background: linear-gradient(135deg,
     rgba(234, 179, 8, 0.15),
     rgba(220, 38, 38, 0.1));
-  border-color: #eab308;
+  border-color: var(--caution);
 }
 
 .senjitsu-date-row {
@@ -934,7 +934,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .super-mark {
-  color: #eab308;
+  color: var(--caution);
   font-size: var(--font-sm);
 }
 
@@ -963,14 +963,14 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .senjitsu-label.tora {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
   color: #d97706;
 }
 
 .senjitsu-label.mi,
 .senjitsu-label.tsuchinoto-mi {
   background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
+  color: var(--success);
 }
 
 /* 凶日警示 */
@@ -991,7 +991,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .unlucky-title sl-icon {
-  color: #eab308;
+  color: var(--caution);
 }
 
 .unlucky-chips {
@@ -1051,6 +1051,11 @@ function getSpecialDayAdvice(type: string): string {
   background: var(--bg-elevated);
 }
 
+.legend-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .legend-card-header {
   display: flex;
   align-items: center;
@@ -1095,7 +1100,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .legend-dot.tensya {
-  background: #eab308;
+  background: var(--caution);
 }
 
 .legend-dot.ichiryumanbai {
@@ -1103,7 +1108,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .legend-dot.tora {
-  background: #f59e0b;
+  background: #8B6914;
 }
 
 .legend-dot.mi {
@@ -1111,7 +1116,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .legend-dot.tsuchinoto-mi {
-  background: linear-gradient(135deg, #22c55e, #eab308);
+  background: linear-gradient(135deg, #22c55e, var(--caution));
 }
 
 .legend-dot.fujoubyou {
@@ -1157,7 +1162,12 @@ function getSpecialDayAdvice(type: string): string {
 
 .partner-chip.selected {
   border-color: var(--accent);
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(139, 105, 20, 0.08);
+}
+
+.partner-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .partner-name {
@@ -1263,12 +1273,12 @@ function getSpecialDayAdvice(type: string): string {
 .compat-score.excellent { color: var(--stellar); }
 .compat-score.good { color: var(--success); }
 .compat-score.fair { color: var(--info); }
-.compat-score.caution { color: #eab308; }
+.compat-score.caution { color: var(--caution); }
 
 .mini-score-bar {
   width: 80px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -1282,7 +1292,7 @@ function getSpecialDayAdvice(type: string): string {
 .mini-score-fill.excellent { background: var(--stellar); }
 .mini-score-fill.good { background: var(--success); }
 .mini-score-fill.fair { background: var(--info); }
-.mini-score-fill.caution { background: #eab308; }
+.mini-score-fill.caution { background: var(--caution); }
 
 .pair-actions {
   display: flex;
@@ -1314,12 +1324,12 @@ function getSpecialDayAdvice(type: string): string {
 
 .pair-day-rating.top {
   background: linear-gradient(135deg, #b45309, #d97706);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 
 .pair-day-rating.good {
-  background: #16a34a;
-  color: #fff;
+  background: var(--success);
+  color: var(--text-on-accent);
 }
 
 .pair-day-rating.mid {
@@ -1351,7 +1361,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .time-row.best .time-label {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .time-row.avoid .time-label {
@@ -1413,7 +1423,7 @@ function getSpecialDayAdvice(type: string): string {
 }
 
 .relation-option.selected {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
   border-color: var(--accent);
 }
 

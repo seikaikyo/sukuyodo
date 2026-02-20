@@ -542,39 +542,8 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Design System - CSS Variables */
+/* Layout */
 .sukuyodo-v2 {
-  --bg-primary: #231f1d;
-  --bg-surface: #302b29;
-  --bg-elevated: #4a4543;
-  --border: #635e5b;
-  --text-primary: #fafaf9;
-  --text-secondary: #a8a29e;
-  --accent: #f59e0b;
-  --accent-hover: #d97706;
-  --stellar: #d4a017;
-  --success: #4a9b6b;
-  --warning: #ef4444;
-  --info: #3b82f6;
-
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
-  --space-2xl: 48px;
-
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
-
-  --font-xs: 12px;
-  --font-sm: 14px;
-  --font-base: 16px;
-  --font-lg: 18px;
-  --font-xl: 24px;
-
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
@@ -716,7 +685,7 @@ onUnmounted(() => {
 
 .panel-close:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .panel-body {
@@ -759,7 +728,7 @@ onUnmounted(() => {
   color: var(--warning);
   font-size: var(--font-sm);
   padding: var(--space-sm);
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(197, 48, 48, 0.08);
   border-radius: var(--radius-sm);
 }
 
@@ -785,7 +754,7 @@ onUnmounted(() => {
 .quick-chip:hover,
 .quick-chip.active {
   background: var(--accent);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   border-color: var(--accent);
 }
 
@@ -810,7 +779,7 @@ onUnmounted(() => {
 }
 
 .btn-add-partner:hover:not(:disabled) {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(139, 105, 20, 0.1);
 }
 
 .btn-add-partner:disabled {
@@ -856,7 +825,7 @@ onUnmounted(() => {
 .partner-rel {
   font-size: 10px;
   padding: 1px 6px;
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
   color: var(--accent);
   border-radius: var(--radius-full);
 }
@@ -871,21 +840,24 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-height: 44px;
-  min-width: 44px;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .btn-icon:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .btn-icon.btn-danger:hover,
@@ -965,7 +937,7 @@ onUnmounted(() => {
   background: var(--accent);
   border: none;
   border-radius: var(--radius-md);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -1078,7 +1050,7 @@ onUnmounted(() => {
 .practitioner-btn.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-weight: 600;
 }
 

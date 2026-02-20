@@ -343,6 +343,7 @@ function getKuyouRowClass(level: string) {
             </table>
           </div>
         </div>
+        <div v-if="metadata.special_days_knowledge.source" class="source-citation">{{ metadata.special_days_knowledge.source }}</div>
       </div>
     </div>
 
@@ -408,6 +409,7 @@ function getKuyouRowClass(level: string) {
             </table>
           </div>
         </div>
+        <div v-if="metadata.ryouhan_knowledge.source" class="source-citation">{{ metadata.ryouhan_knowledge.source }}</div>
       </div>
     </div>
 
@@ -423,6 +425,7 @@ function getKuyouRowClass(level: string) {
             <p>{{ section.content }}</p>
           </div>
         </div>
+        <div v-if="metadata.sanki_knowledge.source" class="source-citation">{{ metadata.sanki_knowledge.source }}</div>
       </div>
     </div>
 
@@ -494,7 +497,10 @@ function getKuyouRowClass(level: string) {
           <h3 class="section-subtitle">核心概念</h3>
           <div v-for="(concept, i) in metadata.key_concepts" :key="'kc-' + i" class="history-item">
             <h4>{{ concept.title }}</h4>
+            <div v-if="concept.content_classic" class="classic-quote">{{ concept.content_classic }}</div>
+            <div v-if="concept.content_ja" class="ja-text">{{ concept.content_ja }}</div>
             <p>{{ concept.content }}</p>
+            <div v-if="concept.source" class="source-citation">{{ concept.source }}</div>
           </div>
         </div>
         <div v-if="metadata.practical_guide?.length" class="history-sections">
@@ -537,42 +543,8 @@ function getKuyouRowClass(level: string) {
   gap: var(--space-xs);
 }
 
-.pill-btn {
-  padding: var(--space-sm) var(--space-md);
-  min-height: 44px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.pill-btn:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
-
-.pill-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg-primary);
-}
-
-.pill-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .knowledge-content {
   animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .mansion-info-card {
@@ -600,7 +572,7 @@ function getKuyouRowClass(level: string) {
 .element-badge {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-weight: 600;
 }
 
@@ -608,7 +580,7 @@ function getKuyouRowClass(level: string) {
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   background: var(--text-muted);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-size: var(--font-xs);
   font-weight: 600;
 }
@@ -697,7 +669,7 @@ function getKuyouRowClass(level: string) {
 
 .relation-header:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 .relation-header .relation-name {
@@ -773,7 +745,7 @@ function getKuyouRowClass(level: string) {
 
 .element-header {
   padding: var(--space-sm) var(--space-md);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .element-name {
@@ -789,7 +761,7 @@ function getKuyouRowClass(level: string) {
 .my-element-tag {
   margin-left: auto;
   font-size: var(--font-xs);
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.15);
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-weight: 600;
@@ -1007,7 +979,7 @@ function getKuyouRowClass(level: string) {
   border-left: 3px solid var(--stellar-gold);
   padding: var(--space-3) var(--space-4);
   margin: var(--space-2) 0;
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(184, 134, 11, 0.06);
   font-family: var(--font-display);
   font-style: italic;
   color: var(--stellar-soft);
@@ -1020,7 +992,7 @@ function getKuyouRowClass(level: string) {
   border-left: 3px solid var(--moon-silver);
   padding: var(--space-2) var(--space-4);
   margin: var(--space-2) 0;
-  background: rgba(184, 196, 208, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.7;
@@ -1032,6 +1004,16 @@ function getKuyouRowClass(level: string) {
   color: var(--text-muted);
   margin-top: var(--space-1);
   font-style: normal;
+}
+
+/* 區塊出處引用 */
+.source-citation {
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+  line-height: 1.6;
 }
 
 .stage-quote {

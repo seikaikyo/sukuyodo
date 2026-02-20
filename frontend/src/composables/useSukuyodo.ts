@@ -886,11 +886,11 @@ export function useSukuyodo() {
     '水': '#5B8FA8',
     '木': '#7CB3D9',
     '金': '#E89B3C',
-    '土': '#a8a29e'
+    '土': '#8B7355'
   }
 
   const mansionElementColor = computed(() => {
-    return mansion.value ? elementColors[mansion.value.element] || '#f59e0b' : '#f59e0b'
+    return mansion.value ? elementColors[mansion.value.element] || '#8B6914' : '#8B6914'
   })
 
   const relationKeys = [

@@ -24,13 +24,13 @@ function escHtml(str: string): string {
 function scoreColor(score: number): string {
   const cls = getScoreClass(score)
   const map: Record<string, string> = {
-    excellent: '#d4a017',
+    excellent: '#9B7B1C',
     good: '#4a9b6b',
     fair: '#3b82f6',
-    caution: '#eab308',
+    caution: '#9B7B1C',
     warning: '#ef4444'
   }
-  return map[cls] || '#a8a29e'
+  return map[cls] || '#6B6560'
 }
 
 function scoreLevelText(score: number, level?: string): string {
@@ -48,14 +48,14 @@ function scoreLevelText(score: number, level?: string): string {
 }
 
 function kuyouLevelColor(level: string): string {
-  if (level === '大吉') return '#d4a017'
+  if (level === '大吉') return '#9B7B1C'
   if (level === '吉') return '#4a9b6b'
   if (level === '半吉') return '#3b82f6'
   return '#ef4444'
 }
 
 function practiceLevelColor(level: string): string {
-  if (level === '弘法') return '#d4a017'
+  if (level === '弘法') return '#9B7B1C'
   if (level === '增上') return '#4a9b6b'
   if (level === '調和') return '#3b82f6'
   return '#9333ea'
@@ -73,27 +73,27 @@ function getReportCSS(): string {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: "Hiragino Sans", "Noto Sans TC", "Noto Sans JP", sans-serif;
-      background: #1c1917; color: #fafaf9;
+      background: #F8F6F0; color: #2C2520;
       line-height: 1.7; padding: 24px; max-width: 800px; margin: 0 auto;
     }
-    h1, h2, h3, h4, h5 { color: #fafaf9; line-height: 1.4; }
+    h1, h2, h3, h4, h5 { color: #2C2520; line-height: 1.4; }
     h1 { font-size: 24px; margin-bottom: 8px; }
-    h2 { font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #57534e; padding-bottom: 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #D5CFC5; padding-bottom: 8px; }
     h3 { font-size: 18px; margin: 24px 0 8px; }
-    h4 { font-size: 16px; margin: 16px 0 6px; color: #f59e0b; }
-    h5 { font-size: 14px; margin: 12px 0 4px; color: #a8a29e; }
+    h4 { font-size: 16px; margin: 16px 0 6px; color: #8B6914; }
+    h5 { font-size: 14px; margin: 12px 0 4px; color: #6B6560; }
     p { margin: 6px 0; }
     ul { padding-left: 20px; margin: 6px 0; }
     li { margin: 4px 0; }
 
-    .cover { text-align: center; padding: 48px 0 32px; border-bottom: 2px solid #f59e0b; margin-bottom: 32px; }
-    .cover h1 { font-size: 28px; color: #f59e0b; }
-    .cover .subtitle { color: #a8a29e; font-size: 14px; margin-top: 8px; }
+    .cover { text-align: center; padding: 48px 0 32px; border-bottom: 2px solid #8B6914; margin-bottom: 32px; }
+    .cover h1 { font-size: 28px; color: #8B6914; }
+    .cover .subtitle { color: #6B6560; font-size: 14px; margin-top: 8px; }
     .cover .mansion-name { font-size: 20px; margin-top: 16px; }
-    .cover .mansion-reading { color: #a8a29e; font-size: 14px; }
+    .cover .mansion-reading { color: #6B6560; font-size: 14px; }
 
     .card {
-      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 12px;
       padding: 16px; margin-bottom: 16px;
     }
     .card-header {
@@ -111,8 +111,8 @@ function getReportCSS(): string {
     }
 
     .score-bar-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
-    .score-bar-label { width: 48px; font-size: 13px; color: #a8a29e; text-align: right; flex-shrink: 0; }
-    .score-bar { flex: 1; height: 8px; background: #44403c; border-radius: 4px; overflow: hidden; }
+    .score-bar-label { width: 48px; font-size: 13px; color: #6B6560; text-align: right; flex-shrink: 0; }
+    .score-bar { flex: 1; height: 8px; background: #F0EDE5; border-radius: 4px; overflow: hidden; }
     .score-bar-fill { height: 100%; border-radius: 4px; }
     .score-bar-value { width: 32px; font-size: 13px; text-align: right; flex-shrink: 0; }
 
@@ -120,66 +120,66 @@ function getReportCSS(): string {
       display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0;
     }
     .kuyou-cell {
-      background: #292524; border: 1px solid #57534e; border-radius: 8px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 8px;
       padding: 8px; text-align: center; font-size: 13px;
     }
-    .kuyou-cell .cell-year { display: block; color: #a8a29e; font-size: 12px; }
+    .kuyou-cell .cell-year { display: block; color: #6B6560; font-size: 12px; }
     .kuyou-cell .cell-star { display: block; font-weight: 600; margin: 2px 0; }
     .kuyou-cell .cell-level { display: block; font-size: 11px; font-weight: 700; }
 
     .chart-container { margin: 16px 0; text-align: center; }
     .chart-container svg { max-width: 100%; height: auto; }
 
-    .section-divider { border: none; border-top: 1px solid #57534e; margin: 24px 0; }
+    .section-divider { border: none; border-top: 1px solid #D5CFC5; margin: 24px 0; }
 
     .mantra-box {
-      background: #1c1917; border: 1px solid #57534e; border-radius: 8px;
+      background: #F8F6F0; border: 1px solid #D5CFC5; border-radius: 8px;
       margin: 8px 0; overflow: hidden;
     }
     .mantra-bija-section {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
-      padding: 16px 12px 8px; border-bottom: 1px solid #57534e;
+      padding: 16px 12px 8px; border-bottom: 1px solid #D5CFC5;
     }
-    .bija-iast { font-size: 14px; color: #a8a29e; font-style: italic; }
-    .bija-reading { font-size: 12px; color: #a8a29e; }
-    .bija-buddha { font-size: 14px; font-weight: 700; color: #fafaf9; }
+    .bija-iast { font-size: 14px; color: #6B6560; font-style: italic; }
+    .bija-reading { font-size: 12px; color: #6B6560; }
+    .bija-buddha { font-size: 14px; font-weight: 700; color: #2C2520; }
     .mantra-text-section { padding: 8px 12px; text-align: center; }
     .mantra-text { font-size: 16px; letter-spacing: 2px; word-break: break-all; }
-    .mantra-reading { color: #a8a29e; font-size: 13px; margin-top: 4px; }
+    .mantra-reading { color: #6B6560; font-size: 13px; margin-top: 4px; }
 
     .homa-box {
       display: flex; gap: 8px; align-items: baseline; margin: 8px 0;
       font-size: 14px;
     }
-    .homa-type { font-weight: 700; color: #f59e0b; }
+    .homa-type { font-weight: 700; color: #8B6914; }
 
-    .tag { display: inline-block; background: #44403c; border-radius: 9999px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; }
+    .tag { display: inline-block; background: #F0EDE5; border-radius: 9999px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; }
 
     .monthly-grid {
       display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 8px 0;
     }
     .monthly-cell {
-      background: #1c1917; border: 1px solid #57534e; border-radius: 6px;
+      background: #F8F6F0; border: 1px solid #D5CFC5; border-radius: 6px;
       padding: 6px; font-size: 12px;
     }
     .monthly-cell .cell-month { font-weight: 600; }
-    .monthly-cell .cell-tip { color: #a8a29e; font-size: 11px; margin-top: 2px; }
+    .monthly-cell .cell-tip { color: #6B6560; font-size: 11px; margin-top: 2px; }
 
     .persons-row { display: flex; gap: 16px; justify-content: center; align-items: center; margin: 16px 0; flex-wrap: wrap; }
     .person-box {
-      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 12px;
       padding: 16px; text-align: center; min-width: 120px;
     }
-    .person-box h5 { color: #a8a29e; margin-bottom: 4px; }
+    .person-box h5 { color: #6B6560; margin-bottom: 4px; }
     .person-box .mansion { font-size: 18px; font-weight: 700; }
     .relation-box { text-align: center; }
-    .relation-name { font-size: 18px; font-weight: 700; color: #f59e0b; }
-    .relation-reading { color: #a8a29e; font-size: 13px; display: block; }
-    .distance-tag { font-size: 12px; background: #44403c; padding: 2px 8px; border-radius: 9999px; }
+    .relation-name { font-size: 18px; font-weight: 700; color: #8B6914; }
+    .relation-reading { color: #6B6560; font-size: 13px; display: block; }
+    .distance-tag { font-size: 12px; background: #F0EDE5; padding: 2px 8px; border-radius: 9999px; }
 
     .direction-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
-    .direction-table td { padding: 6px 12px; border: 1px solid #57534e; }
-    .direction-table .label { color: #a8a29e; width: 80px; }
+    .direction-table td { padding: 6px 12px; border: 1px solid #D5CFC5; }
+    .direction-table .label { color: #6B6560; width: 80px; }
 
     .tips-list, .avoid-list { margin: 8px 0; }
     .tips-list h5 { color: #4a9b6b; }
@@ -187,23 +187,23 @@ function getReportCSS(): string {
 
     .good-for-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 
-    .footer { text-align: center; color: #57534e; font-size: 12px; margin-top: 48px; padding-top: 16px; border-top: 1px solid #57534e; }
+    .footer { text-align: center; color: #D5CFC5; font-size: 12px; margin-top: 48px; padding-top: 16px; border-top: 1px solid #D5CFC5; }
 
     @media print {
-      body { background: #fff; color: #1c1917; padding: 12px; }
-      h1, h2, h3, h4, h5, p, li, span, td { color: #1c1917 !important; }
+      body { background: #fff; color: #2C2520; padding: 12px; }
+      h1, h2, h3, h4, h5, p, li, span, td { color: #2C2520 !important; }
       h4 { color: #92400e !important; }
       .cover h1 { color: #92400e !important; }
       .cover { border-bottom-color: #92400e; }
-      .card { background: #fff; border-color: #d6d3d1; }
-      .kuyou-cell { background: #fff; border-color: #d6d3d1; }
-      .mantra-box { background: #f5f5f4; border-color: #d6d3d1; }
-      .monthly-cell { background: #f5f5f4; border-color: #d6d3d1; }
-      .person-box { background: #fff; border-color: #d6d3d1; }
+      .card { background: #fff; border-color: #D5CFC5; }
+      .kuyou-cell { background: #fff; border-color: #D5CFC5; }
+      .mantra-box { background: #f5f5f4; border-color: #D5CFC5; }
+      .monthly-cell { background: #f5f5f4; border-color: #D5CFC5; }
+      .person-box { background: #fff; border-color: #D5CFC5; }
       .score-bar { background: #e7e5e4; }
       .tag { background: #e7e5e4; }
       .distance-tag { background: #e7e5e4; }
-      .footer { color: #a8a29e !important; border-top-color: #d6d3d1; }
+      .footer { color: #6B6560 !important; border-top-color: #D5CFC5; }
       .card { page-break-inside: avoid; }
       h2 { page-break-before: auto; page-break-after: avoid; }
     }
@@ -249,8 +249,8 @@ function buildSvgChart(yearlyRange: YearlyFortune[], isPractitioner: boolean): s
 
   const gridLines = [40, 50, 60, 70, 80, 90, 100].map(s => {
     const y = toY(s).toFixed(1)
-    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="${s % 20 === 0 ? '0' : '3,3'}"/>
-      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="11" dominant-baseline="middle">${s}</text>`
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#D5CFC5" stroke-width="0.5" stroke-dasharray="${s % 20 === 0 ? '0' : '3,3'}"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#6B6560" font-size="11" dominant-baseline="middle">${s}</text>`
   }).join('')
 
   const path = yearlyRange
@@ -261,9 +261,9 @@ function buildSvgChart(yearlyRange: YearlyFortune[], isPractitioner: boolean): s
     const x = toX(i).toFixed(1)
     const yPos = toY(y.fortune.overall).toFixed(1)
     const color = scoreColor(y.fortune.overall)
-    return `<circle cx="${x}" cy="${yPos}" r="4" fill="${color}" stroke="#1c1917" stroke-width="2"/>
+    return `<circle cx="${x}" cy="${yPos}" r="4" fill="${color}" stroke="#F8F6F0" stroke-width="2"/>
       <text x="${x}" y="${(parseFloat(yPos) - 10).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="11" font-weight="600">${y.fortune.overall}</text>
-      <text x="${x}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="11">${String(y.year).slice(-2)}</text>`
+      <text x="${x}" y="${h - 4}" text-anchor="middle" fill="#6B6560" font-size="11">${String(y.year).slice(-2)}</text>`
   }).join('')
 
   const bgTop = `<rect x="${pl}" y="${toY(100).toFixed(1)}" width="${cw}" height="${(toY(75) - toY(100)).toFixed(1)}" fill="rgba(80,180,80,0.08)"/>`
@@ -272,7 +272,7 @@ function buildSvgChart(yearlyRange: YearlyFortune[], isPractitioner: boolean): s
   return `<div class="chart-container">
     <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
       ${bgTop}${bgBot}${gridLines}
-      <path d="${path}" fill="none" stroke="#f59e0b" stroke-width="2"/>
+      <path d="${path}" fill="none" stroke="#8B6914" stroke-width="2"/>
       ${dots}
     </svg>
   </div>`
@@ -290,7 +290,7 @@ function buildYearCardSecular(y: YearlyFortune): string {
       <div class="score-big" style="color:${scoreColor(y.fortune.overall)}">${y.fortune.overall}</div>
     </div>
     ${buildScoreBars(y.fortune)}
-    <p style="color:#a8a29e;font-size:14px">守護佛：${escHtml(y.kuyou_star.buddha)}</p>`
+    <p style="color:#6B6560;font-size:14px">守護佛：${escHtml(y.kuyou_star.buddha)}</p>`
 
   if (y.theme) {
     html += `<h4>${escHtml(y.theme.title)}</h4><p>${escHtml(y.theme.description)}</p>`
@@ -346,7 +346,7 @@ function buildYearCardPractitioner(y: YearlyFortune): string {
     html += `<h4>${escHtml(s.theme.title)}</h4><p>${escHtml(s.theme.description)}</p>`
   }
   if (s.core_teaching) {
-    html += `<div class="card" style="margin:12px 0;background:#1c1917"><p>${escHtml(s.core_teaching)}</p></div>`
+    html += `<div class="card" style="margin:12px 0;background:#F8F6F0"><p>${escHtml(s.core_teaching)}</p></div>`
   }
   if (s.recommended_practices?.length) {
     html += `<h5>推薦修法</h5><div>${s.recommended_practices.map(p => `<span class="tag">${escHtml(p)}</span>`).join('')}</div>`
@@ -488,7 +488,7 @@ function getElementDescReport(el1: string, el2: string, calcRelation: string): s
 
 const elementColorMap: Record<string, string> = {
   '日': '#C4A052', '月': '#8B7355', '火': '#E85D4C',
-  '水': '#5B8FA8', '木': '#7CB3D9', '金': '#E89B3C', '土': '#a8a29e'
+  '水': '#5B8FA8', '木': '#7CB3D9', '金': '#E89B3C', '土': '#6B6560'
 }
 
 export function generateCompatReport(compat: CompatibilityResult): void {
@@ -507,7 +507,7 @@ export function generateCompatReport(compat: CompatibilityResult): void {
     <div class="person-box">
       <h5>你</h5>
       <p class="mansion">${escHtml(person1.mansion)}</p>
-      <span class="tag" style="background:${elementColorMap[person1.element] || '#a8a29e'}33;color:${elementColorMap[person1.element] || '#a8a29e'}">${escHtml(person1.element)}</span>
+      <span class="tag" style="background:${elementColorMap[person1.element] || '#6B6560'}33;color:${elementColorMap[person1.element] || '#6B6560'}">${escHtml(person1.element)}</span>
     </div>
     <div class="relation-box">
       <p class="relation-name">${escHtml(relation.name)}</p>
@@ -517,7 +517,7 @@ export function generateCompatReport(compat: CompatibilityResult): void {
     <div class="person-box">
       <h5>對方</h5>
       <p class="mansion">${escHtml(person2.mansion)}</p>
-      <span class="tag" style="background:${elementColorMap[person2.element] || '#a8a29e'}33;color:${elementColorMap[person2.element] || '#a8a29e'}">${escHtml(person2.element)}</span>
+      <span class="tag" style="background:${elementColorMap[person2.element] || '#6B6560'}33;color:${elementColorMap[person2.element] || '#6B6560'}">${escHtml(person2.element)}</span>
     </div>
   </div>`
 
@@ -539,8 +539,8 @@ export function generateCompatReport(compat: CompatibilityResult): void {
   if (calculation) {
     const elDesc = getElementDescReport(person1.element, person2.element, calculation.element_relation)
     elementSection = `<h3>元素關係</h3>
-    <p><span class="tag" style="background:${elementColorMap[person1.element] || '#a8a29e'}33;color:${elementColorMap[person1.element] || '#a8a29e'}">${escHtml(person1.element)}</span>
-    → <span class="tag" style="background:${elementColorMap[person2.element] || '#a8a29e'}33;color:${elementColorMap[person2.element] || '#a8a29e'}">${escHtml(person2.element)}</span>
+    <p><span class="tag" style="background:${elementColorMap[person1.element] || '#6B6560'}33;color:${elementColorMap[person1.element] || '#6B6560'}">${escHtml(person1.element)}</span>
+    → <span class="tag" style="background:${elementColorMap[person2.element] || '#6B6560'}33;color:${elementColorMap[person2.element] || '#6B6560'}">${escHtml(person2.element)}</span>
     ${escHtml(elDesc)}</p>`
   }
 
@@ -647,8 +647,8 @@ function buildDualLineSvg(
 
   const gridLines = [40, 55, 70, 85, 100].map(s => {
     const y = toY(s).toFixed(1)
-    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="${s === 55 || s === 70 ? '0' : '3,3'}"/>
-      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="10" dominant-baseline="middle">${s}</text>`
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#D5CFC5" stroke-width="0.5" stroke-dasharray="${s === 55 || s === 70 ? '0' : '3,3'}"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#6B6560" font-size="10" dominant-baseline="middle">${s}</text>`
   }).join('')
 
   const bgTop = `<rect x="${pl}" y="${toY(100).toFixed(1)}" width="${cw}" height="${(toY(75) - toY(100)).toFixed(1)}" fill="rgba(74,155,107,0.06)" rx="2"/>`
@@ -665,24 +665,24 @@ function buildDualLineSvg(
 
   const dots1 = p1Data.map((y, i) => {
     const x = toX(i).toFixed(1), yp = toY(getScore(y)).toFixed(1)
-    return `<circle cx="${x}" cy="${yp}" r="4" fill="#f59e0b" stroke="#1c1917" stroke-width="2"/>
-      <text x="${x}" y="${(parseFloat(yp) - 10).toFixed(1)}" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">${getScore(y)}</text>`
+    return `<circle cx="${x}" cy="${yp}" r="4" fill="#8B6914" stroke="#F8F6F0" stroke-width="2"/>
+      <text x="${x}" y="${(parseFloat(yp) - 10).toFixed(1)}" text-anchor="middle" fill="#8B6914" font-size="11" font-weight="600">${getScore(y)}</text>`
   }).join('')
 
   const dots2 = p2Data.map((y, i) => {
     const x = toX(i).toFixed(1), yp = toY(getScore(y)).toFixed(1)
-    return `<circle cx="${x}" cy="${yp}" r="4" fill="#7CB3D9" stroke="#1c1917" stroke-width="2"/>
+    return `<circle cx="${x}" cy="${yp}" r="4" fill="#7CB3D9" stroke="#F8F6F0" stroke-width="2"/>
       <text x="${x}" y="${(parseFloat(yp) + 18).toFixed(1)}" text-anchor="middle" fill="#7CB3D9" font-size="11" font-weight="600">${getScore(y)}</text>`
   }).join('')
 
   const xLabels = p1Data.map((y, i) =>
-    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="11">${y.year}</text>`
+    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#6B6560" font-size="11">${y.year}</text>`
   ).join('')
 
   return `<div class="chart-container">
     <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
       ${bgTop}${bgBot}${gridLines}
-      <path d="${path1}" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="${path1}" fill="none" stroke="#8B6914" stroke-width="2.5" stroke-linejoin="round"/>
       <path d="${path2}" fill="none" stroke="#7CB3D9" stroke-width="2.5" stroke-linejoin="round"/>
       ${dots1}${dots2}${xLabels}
     </svg>
@@ -699,21 +699,21 @@ function buildDualMonthlyChart(p1Monthly: { month: number; score: number }[], p2
 
   const gridLines = [40, 60, 80, 100].map(s => {
     const y = toY(s).toFixed(1)
-    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#57534e" stroke-width="0.5" stroke-dasharray="3,3"/>
-      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#a8a29e" font-size="9" dominant-baseline="middle">${s}</text>`
+    return `<line x1="${pl}" y1="${y}" x2="${w - pr}" y2="${y}" stroke="#D5CFC5" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="${pl - 6}" y="${y}" text-anchor="end" fill="#6B6560" font-size="9" dominant-baseline="middle">${s}</text>`
   }).join('')
 
   const path1 = p1Monthly.map((m, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(m.score).toFixed(1)}`).join(' ')
   const path2 = p2Monthly.map((m, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(m.score).toFixed(1)}`).join(' ')
 
   const xLabels = p1Monthly.map((m, i) =>
-    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#a8a29e" font-size="10">${m.month}月</text>`
+    `<text x="${toX(i).toFixed(1)}" y="${h - 4}" text-anchor="middle" fill="#6B6560" font-size="10">${m.month}月</text>`
   ).join('')
 
   return `<div class="chart-container">
     <svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
       ${gridLines}
-      <path d="${path1}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linejoin="round"/>
+      <path d="${path1}" fill="none" stroke="#8B6914" stroke-width="2" stroke-linejoin="round"/>
       <path d="${path2}" fill="none" stroke="#7CB3D9" stroke-width="2" stroke-linejoin="round"/>
       ${xLabels}
     </svg>
@@ -724,40 +724,40 @@ function getPairedReportCSS(): string {
   return `
     .profile-row { display: flex; gap: 16px; margin-bottom: 24px; }
     .profile-card {
-      flex: 1; padding: 16px; background: #292524; border: 1px solid #57534e;
+      flex: 1; padding: 16px; background: #FFFFFF; border: 1px solid #D5CFC5;
       border-radius: 12px; text-align: center;
     }
     .profile-card .name { font-size: 18px; font-weight: 700; }
     .profile-card .mansion { font-size: 24px; font-weight: 700; margin: 8px 0 4px; }
-    .profile-card .detail { font-size: 13px; color: #a8a29e; }
+    .profile-card .detail { font-size: 13px; color: #6B6560; }
     .profile-card .element-badge {
       display: inline-block; padding: 2px 10px; border-radius: 4px;
-      color: #1c1917; font-weight: 600; font-size: 13px; margin-top: 4px;
+      color: #2C2520; font-weight: 600; font-size: 13px; margin-top: 4px;
     }
     .compat-box {
-      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 12px;
       padding: 16px; text-align: center; margin-bottom: 24px;
     }
     .compat-score-big { font-size: 48px; font-weight: 700; }
-    .compat-label { font-size: 14px; color: #a8a29e; }
+    .compat-label { font-size: 14px; color: #6B6560; }
     .legend {
       display: flex; gap: 24px; justify-content: center; margin: 12px 0 20px;
-      font-size: 13px; color: #a8a29e; flex-wrap: wrap;
+      font-size: 13px; color: #6B6560; flex-wrap: wrap;
     }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-line { display: inline-block; width: 24px; height: 3px; border-radius: 2px; }
     .insight-box {
-      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 12px;
       padding: 20px; margin: 20px 0;
     }
-    .insight-box h3 { margin-top: 0; color: #f59e0b; }
+    .insight-box h3 { margin-top: 0; color: #8B6914; }
     .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
-    .insight-card { background: #44403c; border-radius: 8px; padding: 12px; text-align: center; }
-    .insight-card .ic-label { font-size: 12px; color: #a8a29e; }
+    .insight-card { background: #F0EDE5; border-radius: 8px; padding: 12px; text-align: center; }
+    .insight-card .ic-label { font-size: 12px; color: #6B6560; }
     .insight-card .ic-value { font-size: 20px; font-weight: 700; margin: 4px 0; }
-    .insight-card .ic-desc { font-size: 12px; color: #d6d3d1; }
+    .insight-card .ic-desc { font-size: 12px; color: #D5CFC5; }
     .year-section {
-      background: #292524; border: 1px solid #57534e; border-radius: 12px;
+      background: #FFFFFF; border: 1px solid #D5CFC5; border-radius: 12px;
       padding: 20px; margin-bottom: 20px;
     }
     .year-header {
@@ -766,23 +766,23 @@ function getPairedReportCSS(): string {
     }
     .year-title { font-size: 18px; font-weight: 700; }
     .year-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-    .tag-gold { background: #d4a017; color: #1c1917; }
-    .tag-green { background: #4a9b6b; color: #1c1917; }
+    .tag-gold { background: #9B7B1C; color: #FFFFFF; }
+    .tag-green { background: #2D7A4F; color: #FFFFFF; }
     .tag-blue { background: #3b82f6; color: #fff; }
     .tag-red { background: #ef4444; color: #fff; }
-    .tag-gray { background: #57534e; color: #fafaf9; }
+    .tag-gray { background: #D5CFC5; color: #2C2520; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
-    th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #44403c; }
-    th { color: #a8a29e; font-weight: 600; font-size: 12px; }
-    td { color: #d6d3d1; }
-    .score-great { color: #d4a017; font-weight: 700; }
+    th, td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #F0EDE5; }
+    th { color: #6B6560; font-weight: 600; font-size: 12px; }
+    td { color: #D5CFC5; }
+    .score-great { color: #9B7B1C; font-weight: 700; }
     .score-good { color: #4a9b6b; font-weight: 600; }
     .score-fair { color: #3b82f6; }
     .score-bad { color: #ef4444; font-weight: 700; }
-    .row-highlight { background: rgba(245, 158, 11, 0.08); }
+    .row-highlight { background: rgba(139, 105, 20, 0.06); }
     .year-advice {
       margin-top: 12px; padding: 12px 16px;
-      background: #44403c; border-radius: 8px; border-left: 3px solid #57534e;
+      background: #F0EDE5; border-radius: 8px; border-left: 3px solid #D5CFC5;
     }
     .year-advice p { margin-bottom: 4px; }
     @media (max-width: 600px) {
@@ -794,13 +794,13 @@ function getPairedReportCSS(): string {
       .insight-grid { grid-template-columns: 1fr; }
     }
     @media print {
-      .profile-card { background: #fff; border-color: #d6d3d1; }
-      .compat-box { background: #fff; border-color: #d6d3d1; }
-      .insight-box { background: #fff; border-color: #d6d3d1; }
+      .profile-card { background: #fff; border-color: #D5CFC5; }
+      .compat-box { background: #fff; border-color: #D5CFC5; }
+      .insight-box { background: #fff; border-color: #D5CFC5; }
       .insight-card { background: #f5f5f4; }
-      .year-section { background: #fff; border-color: #d6d3d1; page-break-inside: avoid; }
+      .year-section { background: #fff; border-color: #D5CFC5; page-break-inside: avoid; }
       .year-advice { background: #f5f5f4; }
-      th { border-bottom-color: #d6d3d1; }
+      th { border-bottom-color: #D5CFC5; }
       td { border-bottom-color: #e7e5e4; }
     }
   `
@@ -861,16 +861,16 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
   // 雙方 profile
   const profiles = `<div class="profile-row">
     <div class="profile-card">
-      <div class="name" style="color:#f59e0b;">${escHtml(person1.name)}</div>
+      <div class="name" style="color:#8B6914;">${escHtml(person1.name)}</div>
       <div class="mansion">${escHtml(person1.mansion)}</div>
       <div class="detail">${escHtml(person1.reading)} | ${escHtml(person1.date)}</div>
-      <span class="element-badge" style="background:${elementColorMap[person1.element] || '#a8a29e'}">${escHtml(person1.element)}</span>
+      <span class="element-badge" style="background:${elementColorMap[person1.element] || '#6B6560'}">${escHtml(person1.element)}</span>
     </div>
     <div class="profile-card">
       <div class="name" style="color:#7CB3D9;">${escHtml(person2.name)}</div>
       <div class="mansion">${escHtml(person2.mansion)}</div>
       <div class="detail">${escHtml(person2.reading)} | ${escHtml(person2.date)}</div>
-      <span class="element-badge" style="background:${elementColorMap[person2.element] || '#a8a29e'}">${escHtml(person2.element)}</span>
+      <span class="element-badge" style="background:${elementColorMap[person2.element] || '#6B6560'}">${escHtml(person2.element)}</span>
     </div>
   </div>`
 
@@ -887,7 +887,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
 
   // 雙線走勢圖
   const legend = `<div class="legend">
-    <span class="legend-item"><span class="legend-line" style="background:#f59e0b;"></span> ${escHtml(person1.name)}（${escHtml(person1.mansion)}）</span>
+    <span class="legend-item"><span class="legend-line" style="background:#8B6914;"></span> ${escHtml(person1.name)}（${escHtml(person1.mansion)}）</span>
     <span class="legend-item"><span class="legend-line" style="background:#7CB3D9;"></span> ${escHtml(person2.name)}（${escHtml(person2.mansion)}）</span>
     <span class="legend-item" style="font-size:11px; color:#78716c;">綠底 = 順運區(>75) | 紅底 = 警戒區(<55)</span>
   </div>`
@@ -925,7 +925,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
     <div class="insight-grid">
       <div class="insight-card">
         <div class="ic-label">${escHtml(person1.name)} 扛 ${escHtml(person2.name)}</div>
-        <div class="ic-value" style="color:#f59e0b;">${p1CarriedYears.length} 年</div>
+        <div class="ic-value" style="color:#8B6914;">${p1CarriedYears.length} 年</div>
         <div class="ic-desc">${p1CarriedYears.length > 0 ? p1CarriedYears.join(', ') : '無'}</div>
       </div>
       <div class="insight-card">
@@ -953,7 +953,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
     let adviceHtml = ''
     if (y1.theme || y2.theme) {
       adviceHtml = '<div class="year-advice">'
-      if (y1.theme) adviceHtml += `<p><strong style="color:#f59e0b;">${escHtml(person1.name)}</strong>：${escHtml(y1.theme.title)} — ${escHtml(y1.theme.description)}</p>`
+      if (y1.theme) adviceHtml += `<p><strong style="color:#8B6914;">${escHtml(person1.name)}</strong>：${escHtml(y1.theme.title)} — ${escHtml(y1.theme.description)}</p>`
       if (y2.theme) adviceHtml += `<p><strong style="color:#7CB3D9;">${escHtml(person2.name)}</strong>：${escHtml(y2.theme.title)} — ${escHtml(y2.theme.description)}</p>`
       adviceHtml += '</div>'
     }
@@ -961,7 +961,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
     let yearAdvice = ''
     if (y1.advice || y2.advice) {
       yearAdvice = '<div class="year-advice" style="border-left-color:#4a9b6b;">'
-      if (y1.advice) yearAdvice += `<p><strong style="color:#f59e0b;">${escHtml(person1.name)}</strong>：${escHtml(y1.advice)}</p>`
+      if (y1.advice) yearAdvice += `<p><strong style="color:#8B6914;">${escHtml(person1.name)}</strong>：${escHtml(y1.advice)}</p>`
       if (y2.advice) yearAdvice += `<p><strong style="color:#7CB3D9;">${escHtml(person2.name)}</strong>：${escHtml(y2.advice)}</p>`
       yearAdvice += '</div>'
     }
@@ -974,7 +974,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
           <span class="tag ${kuyouTagClass(y2.kuyou_star.level)}">${escHtml(person2.name)}: ${escHtml(y2.kuyou_star.name)} (${escHtml(y2.kuyou_star.level)})</span>
         </div>
       </div>
-      <h4 style="color:#a8a29e; font-size:13px;">月運走勢</h4>
+      <h4 style="color:#6B6560; font-size:13px;">月運走勢</h4>
       ${monthlyChart}
       ${adviceHtml}
       ${yearAdvice}

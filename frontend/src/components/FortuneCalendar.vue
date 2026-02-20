@@ -274,7 +274,7 @@ function getSankiColor(periodIndex: number): string {
 .fortune-calendar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md, 16px);
+  gap: var(--space-md);
 }
 
 /* 月份導覽 */
@@ -282,7 +282,7 @@ function getSankiColor(periodIndex: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-md, 16px);
+  gap: var(--space-md);
 }
 
 .nav-btn {
@@ -293,29 +293,29 @@ function getSankiColor(periodIndex: number): string {
   height: 36px;
   min-height: 44px;
   min-width: 44px;
-  background: var(--bg-surface, #292524);
-  border: 1px solid var(--border, #57534e);
-  border-radius: var(--radius-md, 8px);
-  color: var(--text-secondary, #a8a29e);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
 .nav-btn:hover {
-  background: var(--bg-elevated, #44403c);
-  border-color: var(--accent, #f59e0b);
-  color: var(--text-primary, #fafaf9);
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
 
 .nav-btn:focus-visible {
-  outline: 2px solid var(--accent, #f59e0b);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 .month-label {
   font-size: 18px;
   font-weight: 600;
-  color: var(--accent, #f59e0b);
+  color: var(--accent);
   margin: 0;
   min-width: 120px;
   text-align: center;
@@ -326,12 +326,12 @@ function getSankiColor(periodIndex: number): string {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-sm, 8px);
+  gap: var(--space-sm);
 }
 
 .stat-badge {
   padding: 2px 8px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 600;
 }
@@ -348,9 +348,9 @@ function getSankiColor(periodIndex: number): string {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-sm, 8px);
+  gap: var(--space-sm);
   font-size: 11px;
-  color: var(--text-secondary, #a8a29e);
+  color: var(--text-secondary);
 }
 
 .legend-item {
@@ -385,9 +385,9 @@ function getSankiColor(periodIndex: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm, 8px);
-  padding: var(--space-xl, 32px);
-  color: var(--text-secondary, #a8a29e);
+  gap: var(--space-sm);
+  padding: var(--space-xl);
+  color: var(--text-secondary);
 }
 
 /* 月曆格 */
@@ -401,7 +401,7 @@ function getSankiColor(periodIndex: number): string {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary, #a8a29e);
+  color: var(--text-secondary);
   padding: 4px 0 8px;
 }
 
@@ -414,8 +414,8 @@ function getSankiColor(periodIndex: number): string {
   position: relative;
   min-height: 72px;
   padding: 3px 2px;
-  background: var(--bg-surface, #292524);
-  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -432,8 +432,13 @@ function getSankiColor(periodIndex: number): string {
 }
 
 .day-cell:not(.empty):hover {
-  background: var(--bg-elevated, #44403c);
-  border-color: var(--border, #57534e);
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+
+.day-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .day-cell.is-today {
@@ -494,7 +499,7 @@ function getSankiColor(periodIndex: number): string {
 .day-number {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary, #fafaf9);
+  color: var(--text-primary);
   line-height: 1;
 }
 
@@ -550,7 +555,7 @@ function getSankiColor(periodIndex: number): string {
 
 .relation-name {
   font-size: 9px;
-  color: var(--text-secondary, #a8a29e);
+  color: var(--text-secondary);
   line-height: 1;
 }
 
@@ -569,11 +574,45 @@ function getSankiColor(periodIndex: number): string {
 .no-birth-hint {
   text-align: center;
   font-size: 12px;
-  color: var(--text-muted, #6B5A8E);
+  color: var(--text-muted);
   margin: 0;
 }
 
-/* 響應式 */
+/* 響應式 - 小螢幕手機 */
+@media (max-width: 479px) {
+  .calendar-grid {
+    gap: 2px;
+  }
+
+  .day-cell {
+    min-height: 60px;
+    padding: 2px 1px;
+  }
+
+  .day-number {
+    font-size: 13px;
+  }
+
+  .tag {
+    font-size: 8px;
+    padding: 0 3px;
+    line-height: 12px;
+  }
+
+  .relation-name {
+    display: none;
+  }
+
+  .fortune-score {
+    font-size: 11px;
+  }
+
+  .mansion-abbr {
+    font-size: 9px;
+  }
+}
+
+/* 響應式 - 桌面 */
 @media (min-width: 768px) {
   .day-cell {
     min-height: 92px;

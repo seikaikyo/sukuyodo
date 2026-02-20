@@ -1,41 +1,46 @@
-/* 宿曜道 - 設計系統變數 */
+/* 宿曜道 - 設計系統變數（和風書院 明亮配色） */
 
 :root {
-  /* 基底色 - 星空夜 */
-  --cosmos-void: #161222;
-  --cosmos-night: #221D30;
-  --cosmos-dusk: #332D42;
-  --cosmos-twilight: #48415A;
+  /* 基底色 - 和紙系 */
+  --cosmos-void: #F8F6F0;
+  --cosmos-night: #F0EDE5;
+  --cosmos-dusk: #E8E4DA;
+  --cosmos-twilight: #DDD8CC;
 
-  /* 主色 - 星語紫 */
-  --astral-deep: #4A3B6B;
-  --astral-medium: #6B5A8E;
-  --astral-light: #8E7CB3;
+  /* 主色 - 藍鼠系 */
+  --astral-deep: #3D5A80;
+  --astral-medium: #5A7FA5;
+  --astral-light: #7B9CC5;
 
-  /* 強調色 - 星光金 */
-  --stellar-gold: #D4AF37;
-  --stellar-glow: #E8C547;
-  --stellar-soft: #C9A87C;
+  /* 強調色 - 暗金系 */
+  --stellar-gold: #B8860B;
+  --stellar-glow: #C9971C;
+  --stellar-soft: #A08050;
 
   /* 輔助色 */
-  --moon-silver: #B8C4D0;
+  --moon-silver: #8B8580;
   --parchment: #FAF8F5;
   --scroll-cream: #F5F0E8;
 
+  /* 反色文字（用於 accent/badge 上的白字） */
+  --text-on-accent: #FFFFFF;
+
   /* 文字層次 */
-  --text-primary: #F5F0E8;
-  --text-secondary: #B8C4D0;
-  --text-muted: #6B5A8E;
+  --text-primary: #2C2520;
+  --text-secondary: #6B6560;
+  --text-muted: #7A7068;
 
   /* 邊框 */
-  --border-subtle: rgba(184, 196, 208, 0.08);
-  --border-default: rgba(184, 196, 208, 0.12);
-  --border-gold: rgba(212, 175, 55, 0.3);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-default: rgba(0, 0, 0, 0.10);
+  --border-gold: rgba(184, 134, 11, 0.3);
 
   /* 語意色 */
-  --success: #4A9B6B;
-  --warning: #C9A847;
-  --error: #9B4A5A;
+  --success: #2D7A4F;
+  --caution: #9B7B1C;
+  --info: #2563EB;
+  --warning: #C53030;
+  --error: #B83A3A;
 
   /* 字型 */
   --font-display: 'Noto Serif TC', serif;
@@ -52,6 +57,14 @@
   --space-10: 40px;
   --space-12: 48px;
 
+  /* 間距別名 (元件用) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
   /* 圓角 */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -60,47 +73,63 @@
   --radius-full: 9999px;
 
   /* 陰影 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.2);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.10);
+  --shadow-gold: 0 0 20px rgba(184, 134, 11, 0.15);
 
   /* 動畫 */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 350ms ease;
 
+  /* 介面 - 共用 */
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #F0EDE5;
+  --bg-primary: #F8F6F0;
+  --border: #D5CFC5;
+  --accent: #8B6914;
+  --accent-hover: #A07D1C;
+  --stellar: #9B7B1C;
+
+  /* 字型尺寸 */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-xl: 24px;
+
   /* 月曆 - 凌犯/三期/暗黒 */
-  --ryouhan-bg: rgba(255, 80, 80, 0.25);
-  --sanki-active-bg: rgba(74, 155, 107, 0.12);
-  --sanki-destroy-bg: rgba(232, 93, 76, 0.12);
-  --sanki-rebirth-bg: rgba(92, 143, 168, 0.12);
-  --dark-week-bg: rgba(100, 50, 120, 0.2);
+  --ryouhan-bg: rgba(197, 48, 48, 0.15);
+  --sanki-active-bg: rgba(45, 122, 79, 0.10);
+  --sanki-destroy-bg: rgba(197, 48, 48, 0.10);
+  --sanki-rebirth-bg: rgba(61, 90, 128, 0.10);
+  --dark-week-bg: rgba(100, 50, 120, 0.10);
 
   /* 月曆 - 特殊日色彩 */
-  --kanro-color: #4A9B6B;
-  --kongou-color: #D4AF37;
-  --rasetsu-color: #E85D4C;
+  --kanro-color: #2D7A4F;
+  --kongou-color: #B8860B;
+  --rasetsu-color: #C53030;
 }
 
-/* Shoelace 主題覆寫 */
+/* Shoelace 主題覆寫（淺色模式） */
 :root {
-  --sl-color-primary-50: #f5f0e8;
-  --sl-color-primary-100: #e8c547;
-  --sl-color-primary-200: #d4af37;
-  --sl-color-primary-300: #c9a87c;
-  --sl-color-primary-400: #8e7cb3;
-  --sl-color-primary-500: #6b5a8e;
-  --sl-color-primary-600: #4a3b6b;
-  --sl-color-primary-700: #3d3650;
-  --sl-color-primary-800: #2a2438;
-  --sl-color-primary-900: #1a1625;
-  --sl-color-primary-950: #0d0b14;
+  --sl-color-primary-50: #F8F6F0;
+  --sl-color-primary-100: #F0EDE5;
+  --sl-color-primary-200: #E8E4DA;
+  --sl-color-primary-300: #DDD8CC;
+  --sl-color-primary-400: #A08050;
+  --sl-color-primary-500: #B8860B;
+  --sl-color-primary-600: #8B6914;
+  --sl-color-primary-700: #6B5010;
+  --sl-color-primary-800: #4A380B;
+  --sl-color-primary-900: #2C2520;
+  --sl-color-primary-950: #1A1510;
 
   --sl-panel-background-color: var(--cosmos-dusk);
   --sl-panel-border-color: var(--border-default);
 
-  --sl-input-background-color: var(--cosmos-night);
+  --sl-input-background-color: #FFFFFF;
   --sl-input-border-color: var(--border-default);
   --sl-input-color: var(--text-primary);
   --sl-input-placeholder-color: var(--text-muted);
@@ -109,5 +138,5 @@
   --sl-font-sans: var(--font-body);
   --sl-font-serif: var(--font-display);
 
-  --sl-overlay-background-color: rgba(0, 0, 0, 0.65);
+  --sl-overlay-background-color: rgba(0, 0, 0, 0.4);
 }

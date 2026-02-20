@@ -58,7 +58,7 @@ const elementColors: Record<string, string> = {
   '日': '#E89B3C',
   '月': '#7CB3D9',
   '火': '#E85D4C',
-  '水': '#2D3436'
+  '水': '#4A7A90'
 }
 
 // 關係名稱對照
@@ -212,7 +212,7 @@ function handleClick(mansion: Mansion & { path: string }) {
 function getSegmentFill(seg: typeof mansionSegments.value[0]): string {
   if (seg.isDayMansion) return 'var(--accent)'
   if (seg.isHighlight) return 'var(--kongou-color)'
-  if (seg.isSelected) return 'rgba(245, 158, 11, 0.5)'
+  if (seg.isSelected) return 'rgba(139, 105, 20, 0.6)'
   return seg.color
 }
 
@@ -225,7 +225,7 @@ function getSegmentOpacity(seg: typeof mansionSegments.value[0]): number {
 function getSegmentStroke(seg: typeof mansionSegments.value[0]): string {
   if (seg.isRokugai) return 'var(--rasetsu-color)'
   if (hoveredIndex.value === seg.index) return 'var(--accent)'
-  return 'var(--bg-primary)'
+  return 'var(--cosmos-void)'
 }
 
 function getSegmentStrokeWidth(seg: typeof mansionSegments.value[0]): number {
@@ -388,23 +388,23 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 
 .mansion-name {
   font-size: 10px;
-  fill: var(--bg-primary);
+  fill: var(--text-on-accent);
   font-weight: 600;
   pointer-events: none;
   user-select: none;
 }
 
 .mansion-name.highlight {
-  fill: var(--bg-primary);
+  fill: var(--text-on-accent);
   font-weight: 700;
 }
 
 .mansion-name.selected {
-  fill: var(--bg-primary);
+  fill: var(--text-on-accent);
 }
 
 .mansion-name.day-mansion {
-  fill: var(--bg-primary);
+  fill: var(--text-on-accent);
   font-weight: 700;
 }
 
@@ -483,12 +483,12 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 }
 
 .tooltip-tag.day {
-  background: rgba(245, 158, 11, 0.3);
+  background: rgba(139, 105, 20, 0.15);
   color: var(--accent);
 }
 
 .tooltip-tag.rokugai {
-  background: rgba(232, 93, 76, 0.3);
+  background: rgba(197, 48, 48, 0.15);
   color: var(--rasetsu-color);
 }
 
@@ -511,6 +511,13 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 
   .hover-tooltip {
     font-size: 0.8rem;
+    max-width: 90vw;
+  }
+}
+
+@media (max-width: 479px) {
+  .wheel-svg {
+    max-width: 280px;
   }
 }
 </style>

@@ -1439,42 +1439,8 @@ function exportDecadeReport() {
   margin-bottom: var(--space-md);
 }
 
-.pill-btn {
-  padding: var(--space-sm) var(--space-md);
-  min-height: 44px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.pill-btn:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
-
-.pill-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg-primary);
-}
-
-.pill-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .fortune-content {
   animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .fortune-card {
@@ -1535,7 +1501,7 @@ function exportDecadeReport() {
 .score-fill.excellent { background: var(--stellar); }
 .score-fill.good { background: var(--success); }
 .score-fill.fair { background: var(--info); }
-.score-fill.caution { background: #eab308; }
+.score-fill.caution { background: var(--caution); }
 .score-fill.warning { background: var(--warning); }
 
 .score-value {
@@ -1549,7 +1515,7 @@ function exportDecadeReport() {
 .score-value.excellent { color: var(--stellar); font-weight: 600; }
 .score-value.good { color: var(--success); font-weight: 600; }
 .score-value.fair { color: var(--info); font-weight: 600; }
-.score-value.caution { color: #eab308; font-weight: 600; }
+.score-value.caution { color: var(--caution); font-weight: 600; }
 .score-value.warning { color: var(--warning); font-weight: 600; }
 
 .score-group {
@@ -1591,7 +1557,7 @@ function exportDecadeReport() {
 .legend-dot.excellent { background: var(--stellar); }
 .legend-dot.good { background: var(--success); }
 .legend-dot.fair { background: var(--info); }
-.legend-dot.caution { background: #eab308; }
+.legend-dot.caution { background: var(--caution); }
 .legend-dot.warning { background: var(--warning); }
 
 .overall-row {
@@ -1701,7 +1667,7 @@ function exportDecadeReport() {
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: rgba(128, 0, 128, 0.2);
-  color: #7b1fa2;
+  color: #4A3B6B;
   white-space: nowrap;
 }
 
@@ -1717,7 +1683,7 @@ function exportDecadeReport() {
   width: 100%;
   margin: var(--space-xs) 0 0;
   font-size: var(--font-sm);
-  color: #7b1fa2;
+  color: #4A3B6B;
   font-weight: 600;
   line-height: 1.5;
 }
@@ -1795,7 +1761,7 @@ function exportDecadeReport() {
 .ryouhan-month-info {
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #7b1fa2;
+  color: #4A3B6B;
   margin-bottom: var(--space-xs);
 }
 
@@ -1947,12 +1913,12 @@ function exportDecadeReport() {
   border-radius: var(--radius-full);
 }
 
-.hint-relation.eishin { background: var(--stellar); color: var(--bg-primary); }
-.hint-relation.gyotai { background: var(--success); color: var(--bg-primary); }
-.hint-relation.mei { background: var(--info); color: var(--bg-primary); }
-.hint-relation.yusui { background: var(--text-secondary); color: var(--bg-primary); }
-.hint-relation.kisei { background: #eab308; color: var(--bg-primary); }
-.hint-relation.ankai { background: var(--warning); color: var(--bg-primary); }
+.hint-relation.eishin { background: var(--stellar); color: var(--text-on-accent); }
+.hint-relation.gyotai { background: var(--success); color: var(--text-on-accent); }
+.hint-relation.mei { background: var(--info); color: var(--text-on-accent); }
+.hint-relation.yusui { background: var(--text-secondary); color: var(--text-on-accent); }
+.hint-relation.kisei { background: var(--caution); color: var(--text-on-accent); }
+.hint-relation.ankai { background: var(--warning); color: var(--text-on-accent); }
 
 .hint-mansions {
   font-size: var(--font-sm);
@@ -2006,7 +1972,7 @@ function exportDecadeReport() {
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   background: var(--score-high, #c9a43c);
-  color: #fff;
+  color: var(--text-on-accent);
   font-weight: 600;
 }
 
@@ -2263,12 +2229,12 @@ function exportDecadeReport() {
 .daily-item.excellent { border-bottom: 2px solid var(--stellar); }
 .daily-item.good { border-bottom: 2px solid var(--success); }
 .daily-item.fair { border-bottom: 2px solid var(--info); }
-.daily-item.caution { border-bottom: 2px solid #eab308; }
+.daily-item.caution { border-bottom: 2px solid var(--caution); }
 .daily-item.warning { border-bottom: 2px solid var(--warning); }
 
 .daily-item.is-today {
   background: var(--accent);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   border-color: var(--accent);
 }
 
@@ -2279,7 +2245,7 @@ function exportDecadeReport() {
 
 .daily-item.is-today .day-date,
 .daily-item.is-today .day-weekday {
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .daily-item.is-yesterday {
@@ -2290,15 +2256,15 @@ function exportDecadeReport() {
   font-size: var(--font-xs);
   font-weight: 600;
   color: var(--accent);
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
   padding: 1px 6px;
   border-radius: var(--radius-sm);
   margin-bottom: 2px;
 }
 
 .daily-item.is-today .day-label {
-  color: var(--bg-primary);
-  background: rgba(255, 255, 255, 0.3);
+  color: var(--text-on-accent);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .day-label.yesterday {
@@ -2410,7 +2376,7 @@ function exportDecadeReport() {
 .week-current-tag {
   font-size: var(--font-xs);
   color: var(--accent);
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(139, 105, 20, 0.12);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
@@ -2432,7 +2398,7 @@ function exportDecadeReport() {
 .week-fill.excellent { background: var(--stellar); }
 .week-fill.good { background: var(--success); }
 .week-fill.fair { background: var(--info); }
-.week-fill.caution { background: #eab308; }
+.week-fill.caution { background: var(--caution); }
 .week-fill.warning { background: var(--warning); }
 
 .week-score {
@@ -2503,7 +2469,7 @@ function exportDecadeReport() {
 .detail-value.excellent { color: var(--stellar); }
 .detail-value.good { color: var(--success); }
 .detail-value.fair { color: var(--info); }
-.detail-value.caution { color: #eab308; }
+.detail-value.caution { color: var(--caution); }
 .detail-value.warning { color: var(--warning); }
 
 .week-detail-daily {
@@ -2536,7 +2502,7 @@ function exportDecadeReport() {
 .daily-chip.excellent { border-left: 2px solid var(--stellar); }
 .daily-chip.good { border-left: 2px solid var(--success); }
 .daily-chip.fair { border-left: 2px solid var(--info); }
-.daily-chip.caution { border-left: 2px solid #eab308; }
+.daily-chip.caution { border-left: 2px solid var(--caution); }
 .daily-chip.warning { border-left: 2px solid var(--warning); }
 
 .daily-chip.clickable {
@@ -2644,7 +2610,7 @@ function exportDecadeReport() {
 .trend-fill.excellent { background: var(--stellar); }
 .trend-fill.good { background: var(--success); }
 .trend-fill.fair { background: var(--info); }
-.trend-fill.caution { background: #eab308; }
+.trend-fill.caution { background: var(--caution); }
 .trend-fill.warning { background: var(--warning); }
 
 .trend-score {
@@ -2658,7 +2624,7 @@ function exportDecadeReport() {
 .trend-score.excellent { color: var(--stellar); font-weight: 600; }
 .trend-score.good { color: var(--success); font-weight: 600; }
 .trend-score.fair { color: var(--info); }
-.trend-score.caution { color: #eab308; }
+.trend-score.caution { color: var(--caution); }
 .trend-score.warning { color: var(--warning); }
 
 /* Month Mansion Info */
@@ -2681,7 +2647,7 @@ function exportDecadeReport() {
 
 .lunar-month {
   padding: 2px 8px;
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(139, 105, 20, 0.08);
   border-radius: var(--radius-sm);
   font-size: var(--font-xs);
   color: var(--accent);
@@ -2796,7 +2762,7 @@ function exportDecadeReport() {
 }
 
 .monthly-card:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.03);
   border-color: var(--border);
   border-left-color: transparent;
 }
@@ -2816,7 +2782,7 @@ function exportDecadeReport() {
 
 .monthly-card.is-current-month {
   border-left-color: var(--accent);
-  background: rgba(245, 158, 11, 0.06);
+  background: rgba(139, 105, 20, 0.05);
 }
 
 .monthly-card-toggle {
@@ -2863,7 +2829,7 @@ function exportDecadeReport() {
 .monthly-bar-fill.excellent { background: var(--stellar); }
 .monthly-bar-fill.good { background: var(--success); }
 .monthly-bar-fill.fair { background: var(--info); }
-.monthly-bar-fill.caution { background: #eab308; }
+.monthly-bar-fill.caution { background: var(--caution); }
 .monthly-bar-fill.warning { background: var(--warning); }
 
 .monthly-score {
@@ -2876,7 +2842,7 @@ function exportDecadeReport() {
 .monthly-score.excellent { color: var(--stellar); font-weight: 600; }
 .monthly-score.good { color: var(--success); font-weight: 600; }
 .monthly-score.fair { color: var(--info); }
-.monthly-score.caution { color: #eab308; }
+.monthly-score.caution { color: var(--caution); }
 .monthly-score.warning { color: var(--warning); }
 
 .monthly-special-days {
@@ -3056,7 +3022,7 @@ function exportDecadeReport() {
 
 .kuyou-cycle-cell.is-current-year {
   border-color: var(--accent);
-  background: rgba(245, 158, 11, 0.08);
+  background: rgba(139, 105, 20, 0.06);
 }
 
 .cycle-year {
@@ -3137,7 +3103,7 @@ function exportDecadeReport() {
 
 .decade-card-header:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 .card-header-left {
@@ -3173,7 +3139,7 @@ function exportDecadeReport() {
 .mini-score.excellent { color: var(--stellar); }
 .mini-score.good { color: var(--success); }
 .mini-score.fair { color: var(--info); }
-.mini-score.caution { color: #eab308; }
+.mini-score.caution { color: var(--caution); }
 .mini-score.warning { color: var(--warning); }
 
 .card-toggle {
@@ -3290,7 +3256,7 @@ function exportDecadeReport() {
 
 .perspective-btn.active {
   background: var(--accent);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .perspective-btn:focus-visible {
@@ -3323,7 +3289,7 @@ function exportDecadeReport() {
 
 .practice-level.level-diligent {
   background: rgba(123, 31, 162, 0.2);
-  color: #7b1fa2;
+  color: #4A3B6B;
 }
 
 /* 真言宗修行資料 */
@@ -3331,7 +3297,7 @@ function exportDecadeReport() {
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-sm);
-  border-left: 3px solid #7b1fa2;
+  border-left: 3px solid #4A3B6B;
   overflow: hidden;
 }
 
@@ -3348,7 +3314,7 @@ function exportDecadeReport() {
   font-family: 'Noto Sans Siddham', serif;
   font-size: 2.5rem;
   line-height: 1.2;
-  color: #7b1fa2;
+  color: #4A3B6B;
 }
 
 .bija-iast {
@@ -3369,7 +3335,7 @@ function exportDecadeReport() {
 
 .mantra-label {
   font-size: var(--font-xs);
-  color: #7b1fa2;
+  color: #4A3B6B;
   font-weight: 600;
   margin: 0 0 var(--space-xs);
 }
@@ -3405,7 +3371,7 @@ function exportDecadeReport() {
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: rgba(123, 31, 162, 0.15);
-  color: #7b1fa2;
+  color: #4A3B6B;
   white-space: nowrap;
 }
 
@@ -3443,7 +3409,7 @@ function exportDecadeReport() {
 
 .recommended-practices h5 {
   font-size: var(--font-xs);
-  color: #7b1fa2;
+  color: #4A3B6B;
   margin: 0 0 var(--space-xs);
 }
 
@@ -3458,7 +3424,7 @@ function exportDecadeReport() {
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   background: rgba(123, 31, 162, 0.1);
-  color: #7b1fa2;
+  color: #4A3B6B;
 }
 
 /* Responsive */
@@ -3753,7 +3719,7 @@ function exportDecadeReport() {
 .milestones-title {
   font-size: 1rem;
   font-weight: 700;
-  color: #7b1fa2;
+  color: #4A3B6B;
   margin: 0 0 var(--space-md) 0;
 }
 
@@ -3778,7 +3744,7 @@ function exportDecadeReport() {
 .milestone-month {
   font-size: var(--font-sm);
   font-weight: 600;
-  color: #7b1fa2;
+  color: #4A3B6B;
   min-width: 36px;
   flex-shrink: 0;
 }

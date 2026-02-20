@@ -591,42 +591,8 @@ function handleMansionClick(m: CompatibleMansion) {
   margin-bottom: var(--space-lg);
 }
 
-.pill-btn {
-  padding: var(--space-sm) var(--space-md);
-  min-height: 44px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  color: var(--text-secondary);
-  font-size: var(--font-sm);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-}
-
-.pill-btn:hover {
-  border-color: var(--accent);
-  color: var(--text-primary);
-}
-
-.pill-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg-primary);
-}
-
-.pill-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .match-content {
   animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .relation-grid {
@@ -645,7 +611,7 @@ function handleMansionClick(m: CompatibleMansion) {
 .relation-section.good { border-left: 3px solid var(--success); }
 .relation-section.fair { border-left: 3px solid var(--info); }
 .relation-section.neutral { border-left: 3px solid var(--text-secondary); }
-.relation-section.caution { border-left: 3px solid #eab308; }
+.relation-section.caution { border-left: 3px solid var(--caution); }
 .relation-section.warning { border-left: 3px solid var(--warning); }
 
 .relation-title {
@@ -704,7 +670,7 @@ function handleMansionClick(m: CompatibleMansion) {
 .mansion-chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .mansion-chip:focus-visible {
@@ -720,7 +686,7 @@ function handleMansionClick(m: CompatibleMansion) {
   padding: 2px 6px;
   border-radius: var(--radius-sm);
   font-size: var(--font-xs);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .mansion-detail {
@@ -821,7 +787,7 @@ function handleMansionClick(m: CompatibleMansion) {
   background: var(--accent);
   border: none;
   border-radius: var(--radius-md);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -845,7 +811,7 @@ function handleMansionClick(m: CompatibleMansion) {
   color: var(--warning);
   font-size: var(--font-sm);
   padding: var(--space-sm);
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(197, 48, 48, 0.08);
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-md);
 }
@@ -968,7 +934,7 @@ function handleMansionClick(m: CompatibleMansion) {
   padding: var(--space-xs) var(--space-sm);
   background: var(--accent);
   border-radius: var(--radius-sm);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
   font-size: var(--font-xs);
 }
 
@@ -1000,17 +966,17 @@ function handleMansionClick(m: CompatibleMansion) {
 
 .distance-tag.near {
   background: var(--success);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .distance-tag.mid {
   background: var(--info);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .distance-tag.far {
   background: var(--text-secondary);
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 /* Direction Box */
@@ -1067,7 +1033,7 @@ function handleMansionClick(m: CompatibleMansion) {
   border-radius: var(--radius-sm);
   font-size: var(--font-sm);
   font-weight: 500;
-  color: var(--bg-primary);
+  color: var(--text-on-accent);
 }
 
 .element-arrow {
@@ -1296,7 +1262,7 @@ function handleMansionClick(m: CompatibleMansion) {
 .partner-card.excellent { border-left: 3px solid var(--stellar); }
 .partner-card.good { border-left: 3px solid var(--success); }
 .partner-card.fair { border-left: 3px solid var(--info); }
-.partner-card.caution { border-left: 3px solid #eab308; }
+.partner-card.caution { border-left: 3px solid var(--caution); }
 .partner-card.warning { border-left: 3px solid var(--warning); }
 
 .partner-info {
