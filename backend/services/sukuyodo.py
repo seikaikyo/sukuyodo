@@ -2545,7 +2545,10 @@ class SukuyodoService:
                 "buddha": "不動明王",
                 "name": "不動明王真言",
                 "text": "ノウマク サンマンダ バザラダン センダ マカロシャダ ソワタヤ ウンタラタ カンマン",
-                "reading": "のうまく さんまんだ ばざらだん せんだ まかろしゃだ そわたや うんたらた かんまん"
+                "reading": "のうまく さんまんだ ばざらだん せんだ まかろしゃだ そわたや うんたらた かんまん",
+                "siddham_bija": "カーン",
+                "siddham_roman": "k\u0101\u1e43",
+                "siddham_unicode": "\U0001158E\U000115AF\U000115BD"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩消除業障，迴向障礙消除、修行順遂",
@@ -2603,7 +2606,10 @@ class SukuyodoService:
                 "buddha": "聖觀音",
                 "name": "聖觀音真言",
                 "text": "オン アロリキャ ソワカ",
-                "reading": "おん あろりきゃ そわか"
+                "reading": "おん あろりきゃ そわか",
+                "siddham_bija": "サ",
+                "siddham_roman": "sa",
+                "siddham_unicode": "\U000115AD"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩培固根基，迴向福德增長、道心堅固",
@@ -2661,7 +2667,10 @@ class SukuyodoService:
                 "buddha": "彌勒菩薩",
                 "name": "彌勒菩薩真言",
                 "text": "オン マイタレイヤ ソワカ",
-                "reading": "おん まいたれいや そわか"
+                "reading": "おん まいたれいや そわか",
+                "siddham_bija": "ユ",
+                "siddham_roman": "yu",
+                "siddham_unicode": "\U000115A7\U000115B2"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩淨除無明，迴向智慧開顯、正見增長",
@@ -2718,7 +2727,10 @@ class SukuyodoService:
                 "buddha": "阿彌陀如來",
                 "name": "阿彌陀如來真言",
                 "text": "オン アミリタ テイセイ カラ ウン",
-                "reading": "おん あみりた ていせい から うん"
+                "reading": "おん あみりた ていせい から うん",
+                "siddham_bija": "キリーク",
+                "siddham_roman": "hr\u012b\u1e25",
+                "siddham_unicode": "\U000115AE\U000115BF\U000115A8\U000115B1\U000115BE"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩除障延命，迴向福壽增長、資糧圓滿",
@@ -2776,7 +2788,10 @@ class SukuyodoService:
                 "buddha": "千手觀音",
                 "name": "千手觀音真言",
                 "text": "オン バザラ タラマ キリク",
-                "reading": "おん ばざら たらま きりく"
+                "reading": "おん ばざら たらま きりく",
+                "siddham_bija": "キリーク",
+                "siddham_roman": "hr\u012b\u1e25",
+                "siddham_unicode": "\U000115AE\U000115BF\U000115A8\U000115B1\U000115BE"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩消除眾障，迴向弘法順利、眾緣和合",
@@ -2835,7 +2850,10 @@ class SukuyodoService:
                 "buddha": "虛空藏菩薩",
                 "name": "虛空藏菩薩真言",
                 "text": "ノウボウ アキャシャ ギャラバヤ オン アリ キャマリ ボリ ソワカ",
-                "reading": "のうぼう あきゃしゃ ぎゃらばや おん あり きゃまり ぼり そわか"
+                "reading": "のうぼう あきゃしゃ ぎゃらばや おん あり きゃまり ぼり そわか",
+                "siddham_bija": "タラーク",
+                "siddham_roman": "tr\u0101\u1e25",
+                "siddham_unicode": "\U0001159D\U000115BF\U000115A8\U000115AF\U000115BE"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩淨除魔障，迴向煩惱消滅、內心清淨",
@@ -2892,7 +2910,10 @@ class SukuyodoService:
                 "buddha": "釋迦如來",
                 "name": "釋迦如來真言",
                 "text": "ノウマク サンマンダ ボダナン バク",
-                "reading": "のうまく さんまんだ ぼだなん ばく"
+                "reading": "のうまく さんまんだ ぼだなん ばく",
+                "siddham_bija": "バク",
+                "siddham_roman": "bha\u1e25",
+                "siddham_unicode": "\U000115A5\U000115BE"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩淨化宿業，迴向罪障消滅、身心清淨",
@@ -2950,7 +2971,10 @@ class SukuyodoService:
                 "buddha": "勢至菩薩",
                 "name": "勢至菩薩真言",
                 "text": "オン サンザンザン サク ソワカ",
-                "reading": "おん さんざんざん さく そわか"
+                "reading": "おん さんざんざん さく そわか",
+                "siddham_bija": "サク",
+                "siddham_roman": "sa\u1e25",
+                "siddham_unicode": "\U000115AD\U000115BE"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩消除隔閡，迴向慈悲增長、善緣具足",
@@ -3009,7 +3033,10 @@ class SukuyodoService:
                 "buddha": "藥師如來",
                 "name": "藥師如來真言",
                 "text": "オン コロコロ センダリ マトウギ ソワカ",
-                "reading": "おん ころころ せんだり まとうぎ そわか"
+                "reading": "おん ころころ せんだり まとうぎ そわか",
+                "siddham_bija": "ベイ",
+                "siddham_roman": "bhai",
+                "siddham_unicode": "\U000115A5\U000115B9"
             },
             "homa_type": "息災護摩",
             "homa_description": "以息災護摩除障增福，迴向法運亨通、弘法事業圓滿",

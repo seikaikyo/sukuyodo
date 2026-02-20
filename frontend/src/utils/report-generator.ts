@@ -134,8 +134,16 @@ function getReportCSS(): string {
 
     .mantra-box {
       background: #1c1917; border: 1px solid #57534e; border-radius: 8px;
-      padding: 12px; margin: 8px 0; text-align: center;
+      margin: 8px 0; overflow: hidden;
     }
+    .mantra-bija-section {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 16px 12px 8px; border-bottom: 1px solid #57534e;
+    }
+    .bija-iast { font-size: 14px; color: #a8a29e; font-style: italic; }
+    .bija-reading { font-size: 12px; color: #a8a29e; }
+    .bija-buddha { font-size: 14px; font-weight: 700; color: #fafaf9; }
+    .mantra-text-section { padding: 8px 12px; text-align: center; }
     .mantra-text { font-size: 16px; letter-spacing: 2px; word-break: break-all; }
     .mantra-reading { color: #a8a29e; font-size: 13px; margin-top: 4px; }
 
@@ -316,11 +324,17 @@ function buildYearCardPractitioner(y: YearlyFortune): string {
       <div class="score-big" style="color:${scoreColor(y.fortune.overall)}">${y.fortune.overall}</div>
     </div>
     ${buildScoreBars(y.fortune, s.category_labels)}
-    <p style="color:#a8a29e;font-size:14px">本尊：${escHtml(s.mantra.buddha)}</p>
     <div class="mantra-box">
-      <p style="color:#a8a29e;font-size:12px">真言</p>
-      <p class="mantra-text">${escHtml(s.mantra.text)}</p>
-      <p class="mantra-reading">${escHtml(s.mantra.reading)}</p>
+      <div class="mantra-bija-section">
+        ${s.mantra.siddham_roman ? `<span class="bija-iast">${escHtml(s.mantra.siddham_roman)}</span>` : ''}
+        ${s.mantra.siddham_bija ? `<span class="bija-reading">${escHtml(s.mantra.siddham_bija)}</span>` : ''}
+        <span class="bija-buddha">${escHtml(s.mantra.buddha)}</span>
+      </div>
+      <div class="mantra-text-section">
+        <p style="color:#7b1fa2;font-size:12px;font-weight:600">真言</p>
+        <p class="mantra-text">${escHtml(s.mantra.text)}</p>
+        <p class="mantra-reading">${escHtml(s.mantra.reading)}</p>
+      </div>
     </div>
     <div class="homa-box">
       <span class="homa-type">${escHtml(s.homa_type)}</span>

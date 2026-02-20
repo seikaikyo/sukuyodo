@@ -4,6 +4,7 @@ import { ref, computed, watch } from 'vue'
 import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune, Mansion } from '../composables/useSukuyodo'
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 import { generateDecadeReport } from '../utils/report-generator'
+import { useProfile } from '../stores/profile'
 
 const props = defineProps<{
   activeTab: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'
@@ -47,9 +48,17 @@ function getPracticeLevelClass(level: string) {
   return 'level-diligent'
 }
 
-// 修行者觀 / 世俗觀 切換
-const decadePerspective = ref<'secular' | 'practitioner'>('secular')
+// 修行者觀 / 世俗觀 切換（根據 Profile 修行背景自動初始化）
+const { isPractitioner: profileIsPractitioner } = useProfile()
+const decadePerspective = ref<'secular' | 'practitioner'>(
+  profileIsPractitioner.value ? 'practitioner' : 'secular'
+)
 const isPractitioner = computed(() => decadePerspective.value === 'practitioner')
+
+// Profile 修行背景變更時同步 decadePerspective
+watch(profileIsPractitioner, (val) => {
+  decadePerspective.value = val ? 'practitioner' : 'secular'
+})
 
 // 特殊日修法指引（品第八, T21 p.398b-c）
 const SPECIAL_DAY_PRACTICE: Record<string, string> = {
@@ -828,11 +837,17 @@ function exportDecadeReport() {
 
           <!-- 修行者觀：詳細修行資訊 -->
           <template v-if="isPractitioner && yearlyFortune.shingon">
-            <p class="card-buddha">本尊：{{ yearlyFortune.shingon.mantra.buddha }}</p>
             <div class="shingon-mantra-box">
-              <p class="mantra-label">真言</p>
-              <p class="mantra-text">{{ yearlyFortune.shingon.mantra.text }}</p>
-              <p class="mantra-reading">{{ yearlyFortune.shingon.mantra.reading }}</p>
+              <div class="mantra-bija-section">
+                <span v-if="yearlyFortune.shingon.mantra.siddham_unicode" class="bija-siddham">{{ yearlyFortune.shingon.mantra.siddham_unicode }}</span>
+                <span v-if="yearlyFortune.shingon.mantra.siddham_roman" class="bija-iast">{{ yearlyFortune.shingon.mantra.siddham_roman }}</span>
+                <span class="bija-buddha">{{ yearlyFortune.shingon.mantra.buddha }}</span>
+              </div>
+              <div class="mantra-text-section">
+                <p class="mantra-label">真言</p>
+                <p class="mantra-text">{{ yearlyFortune.shingon.mantra.text }}</p>
+                <p class="mantra-reading">{{ yearlyFortune.shingon.mantra.reading }}</p>
+              </div>
             </div>
             <div class="shingon-homa-box">
               <span class="homa-type">{{ yearlyFortune.shingon.homa_type }}</span>
@@ -1331,11 +1346,17 @@ function exportDecadeReport() {
 
                 <!-- 修行者觀：詳細修行資訊 -->
                 <template v-if="isPractitioner && y.shingon">
-                  <p class="card-buddha">本尊：{{ y.shingon.mantra.buddha }}</p>
                   <div class="shingon-mantra-box">
-                    <p class="mantra-label">真言</p>
-                    <p class="mantra-text">{{ y.shingon.mantra.text }}</p>
-                    <p class="mantra-reading">{{ y.shingon.mantra.reading }}</p>
+                    <div class="mantra-bija-section">
+                      <span v-if="y.shingon.mantra.siddham_unicode" class="bija-siddham">{{ y.shingon.mantra.siddham_unicode }}</span>
+                      <span v-if="y.shingon.mantra.siddham_roman" class="bija-iast">{{ y.shingon.mantra.siddham_roman }}</span>
+                      <span class="bija-buddha">{{ y.shingon.mantra.buddha }}</span>
+                    </div>
+                    <div class="mantra-text-section">
+                      <p class="mantra-label">真言</p>
+                      <p class="mantra-text">{{ y.shingon.mantra.text }}</p>
+                      <p class="mantra-reading">{{ y.shingon.mantra.reading }}</p>
+                    </div>
                   </div>
                   <div class="shingon-homa-box">
                     <span class="homa-type">{{ y.shingon.homa_type }}</span>
@@ -3284,11 +3305,43 @@ function exportDecadeReport() {
 
 /* 真言宗修行資料 */
 .shingon-mantra-box {
-  padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-sm);
   border-left: 3px solid #7b1fa2;
+  overflow: hidden;
+}
+
+.mantra-bija-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+.bija-siddham {
+  font-family: 'Noto Sans Siddham', serif;
+  font-size: 2.5rem;
+  line-height: 1.2;
+  color: #7b1fa2;
+}
+
+.bija-iast {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.bija-buddha {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mantra-text-section {
+  padding: var(--space-sm) var(--space-md);
 }
 
 .mantra-label {

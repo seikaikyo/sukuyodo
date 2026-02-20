@@ -17,9 +17,18 @@ export interface Partner {
   relation: RelationType
 }
 
+export type PractitionerLevel = 'none' | 'tokudo' | 'ajari'
+
+export const PRACTITIONER_LEVELS: { value: PractitionerLevel; label: string }[] = [
+  { value: 'none', label: '一般' },
+  { value: 'tokudo', label: '得度' },
+  { value: 'ajari', label: '阿闍梨' },
+]
+
 export interface UserProfile {
   birthDate: string | null  // YYYY-MM-DD 格式
   partners: Partner[]
+  practitionerLevel: PractitionerLevel
 }
 
 const STORAGE_KEY = 'sukuyodo_profile'
@@ -38,7 +47,8 @@ function loadProfile(): UserProfile {
           nickname: p.nickname,
           birthDate: p.birthDate,
           relation: p.relation || 'friend'
-        }))
+        })),
+        practitionerLevel: parsed.practitionerLevel || 'none'
       }
     }
   } catch (e) {
@@ -46,7 +56,8 @@ function loadProfile(): UserProfile {
   }
   return {
     birthDate: null,
-    partners: []
+    partners: [],
+    practitionerLevel: 'none' as PractitionerLevel
   }
 }
 
@@ -104,18 +115,23 @@ export function useProfile() {
   function clearProfile() {
     profile.value = {
       birthDate: null,
-      partners: []
+      partners: [],
+      practitionerLevel: 'none'
     }
   }
+
+  const isPractitioner = computed(() => profile.value.practitionerLevel !== 'none')
 
   return {
     profile,
     isProfileSet,
+    isPractitioner,
     myBirthDate,
     addPartner,
     updatePartner,
     removePartner,
     clearProfile,
-    RELATION_TYPES
+    RELATION_TYPES,
+    PRACTITIONER_LEVELS
   }
 }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useSukuyodo } from '../composables/useSukuyodo'
-import { useProfile, RELATION_TYPES } from '../stores/profile'
-import type { RelationType } from '../stores/profile'
+import { useProfile, RELATION_TYPES, PRACTITIONER_LEVELS } from '../stores/profile'
+import type { RelationType, PractitionerLevel } from '../stores/profile'
 import { getLocalDateStr } from '../utils/fortune-helpers'
 import SummaryCard from '../components/SummaryCard.vue'
 import FortuneTab from '../components/FortuneTab.vue'
@@ -326,6 +326,20 @@ onUnmounted(() => {
               <h3 class="profile-section-title">我的生日</h3>
               <p v-if="myBirthDate" class="my-birthday">{{ myBirthDate }}</p>
               <p v-else class="my-birthday-empty">尚未設定（查詢本命宿時自動儲存）</p>
+            </div>
+
+            <!-- 修行背景 -->
+            <div class="profile-section">
+              <h3 class="profile-section-title">修行背景</h3>
+              <div class="practitioner-select">
+                <button
+                  v-for="lvl in PRACTITIONER_LEVELS"
+                  :key="lvl.value"
+                  class="practitioner-btn"
+                  :class="{ active: profile.practitionerLevel === lvl.value }"
+                  @click="profile.practitionerLevel = lvl.value"
+                >{{ lvl.label }}</button>
+              </div>
             </div>
 
             <!-- 收藏對象 -->
@@ -1036,6 +1050,41 @@ onUnmounted(() => {
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
+}
+
+.practitioner-select {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.practitioner-btn {
+  flex: 1;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.practitioner-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.practitioner-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+}
+
+.practitioner-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Responsive */
