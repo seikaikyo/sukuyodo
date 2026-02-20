@@ -2548,7 +2548,7 @@ class SukuyodoService:
                 "reading": "のうまく さんまんだ ばざらだん せんだ まかろしゃだ そわたや うんたらた かんまん"
             },
             "homa_type": "息災護摩",
-            "homa_description": "消災除障之護摩，適合業障現前之年",
+            "homa_description": "以息災護摩消除業障，迴向障礙消除、修行順遂",
             "theme": {
                 "title": "閉關沉潛之年",
                 "description": (
@@ -2605,8 +2605,8 @@ class SukuyodoService:
                 "text": "オン アロリキャ ソワカ",
                 "reading": "おん あろりきゃ そわか"
             },
-            "homa_type": "增益護摩",
-            "homa_description": "增長福德智慧之護摩，培植修行根基",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩培固根基，迴向福德增長、道心堅固",
             "theme": {
                 "title": "穩固根基之年",
                 "description": (
@@ -2663,8 +2663,8 @@ class SukuyodoService:
                 "text": "オン マイタレイヤ ソワカ",
                 "reading": "おん まいたれいや そわか"
             },
-            "homa_type": "增益護摩",
-            "homa_description": "增長智慧福德之護摩，開啟法門理解",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩淨除無明，迴向智慧開顯、正見增長",
             "theme": {
                 "title": "智慧開展之年",
                 "description": (
@@ -2720,8 +2720,8 @@ class SukuyodoService:
                 "text": "オン アミリタ テイセイ カラ ウン",
                 "reading": "おん あみりた ていせい から うん"
             },
-            "homa_type": "增益護摩",
-            "homa_description": "增長福德壽命之護摩，累積菩提資糧",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩除障延命，迴向福壽增長、資糧圓滿",
             "theme": {
                 "title": "福德累積之年",
                 "description": (
@@ -2778,8 +2778,8 @@ class SukuyodoService:
                 "text": "オン バザラ タラマ キリク",
                 "reading": "おん ばざら たらま きりく"
             },
-            "homa_type": "敬愛護摩",
-            "homa_description": "增長人緣感召之護摩，適合弘法利生之年",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩消除眾障，迴向弘法順利、眾緣和合",
             "theme": {
                 "title": "弘法利生之年",
                 "description": (
@@ -2837,8 +2837,8 @@ class SukuyodoService:
                 "text": "ノウボウ アキャシャ ギャラバヤ オン アリ キャマリ ボリ ソワカ",
                 "reading": "のうぼう あきゃしゃ ぎゃらばや おん あり きゃまり ぼり そわか"
             },
-            "homa_type": "降伏護摩",
-            "homa_description": "降伏內外魔障之護摩，斬斷煩惱根源",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩淨除魔障，迴向煩惱消滅、內心清淨",
             "theme": {
                 "title": "降魔淨障之年",
                 "description": (
@@ -2895,7 +2895,7 @@ class SukuyodoService:
                 "reading": "のうまく さんまんだ ぼだなん ばく"
             },
             "homa_type": "息災護摩",
-            "homa_description": "息滅業障災厄之護摩，淨化宿世罪障",
+            "homa_description": "以息災護摩淨化宿業，迴向罪障消滅、身心清淨",
             "theme": {
                 "title": "業障清淨之年",
                 "description": (
@@ -2952,8 +2952,8 @@ class SukuyodoService:
                 "text": "オン サンザンザン サク ソワカ",
                 "reading": "おん さんざんざん さく そわか"
             },
-            "homa_type": "敬愛護摩",
-            "homa_description": "增長慈悲人緣之護摩，廣結善緣",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩消除隔閡，迴向慈悲增長、善緣具足",
             "theme": {
                 "title": "慈悲增長之年",
                 "description": (
@@ -3011,8 +3011,8 @@ class SukuyodoService:
                 "text": "オン コロコロ センダリ マトウギ ソワカ",
                 "reading": "おん ころころ せんだり まとうぎ そわか"
             },
-            "homa_type": "增益護摩",
-            "homa_description": "增長法運福慧之護摩，護持弘法事業",
+            "homa_type": "息災護摩",
+            "homa_description": "以息災護摩除障增福，迴向法運亨通、弘法事業圓滿",
             "theme": {
                 "title": "法運亨通之年",
                 "description": (
