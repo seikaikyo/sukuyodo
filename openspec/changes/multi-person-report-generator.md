@@ -1,7 +1,7 @@
 ---
 title: 多人關係分析報告產生器
 type: feature
-status: completed
+status: removed
 created: 2026-02-20
 ---
 

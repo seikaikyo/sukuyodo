@@ -51,6 +51,35 @@ function getPracticeLevelClass(level: string) {
 const decadePerspective = ref<'secular' | 'practitioner'>('secular')
 const isPractitioner = computed(() => decadePerspective.value === 'practitioner')
 
+// 特殊日修法指引（品第八, T21 p.398b-c）
+const SPECIAL_DAY_PRACTICE: Record<string, string> = {
+  kanro: '宜冊立、受灌頂法、造作寺宇及受戒、習學經法、出家修道',
+  kongou: '宜作一切降伏法，誦日天子呪及作護摩，並諸猛利等事',
+  rasetsu: '不宜舉百事，必有殃禍'
+}
+
+// 凌犯逆轉時追加引文（品第五, T21 p.392a-b）
+const RYOUHAN_REVERSAL_PRACTICE: Record<string, string> = {
+  kanro: '犯逼守命胎之宿，是厄會之時，宜修功德持真言念誦以禳之',
+  rasetsu: '犯衰危壞等宿者，則所求稱意百事通達'
+}
+
+// 三九法修行提示（卷下, T21 p.397c-398a）
+// key 對應後端 SANKI_DAY_TYPES 的 name 欄位
+const SANKI_PRACTICE: Record<string, string> = {
+  '命の日': '不宜舉動百事',
+  '胎の日': '不宜舉動百事',
+  '栄の日': '出家人剃髮、割爪甲、沐浴、承事師主、啟請法要並吉',
+  '安の日': '作壇場並吉',
+  '成の日': '修道學問、作諸成就法並吉',
+  '業の日': '所作善惡亦不成就',
+  '危の日': '不宜剃頭沐浴',
+  '壊の日': '不宜剃頭沐浴',
+  '友の日': '宜結交定婚姻，歡宴聚會並吉',
+  '親の日': '宜結交定婚姻，歡宴聚會並吉',
+  '衰の日': '唯宜解除諸惡、療病'
+}
+
 // 流年相關
 const currentYear = new Date().getFullYear()
 const decadeStartYear = ref(currentYear - 2)
@@ -305,6 +334,14 @@ function exportDecadeReport() {
             <p v-if="dailyFortune.special_day.ryouhan_reversed" class="special-day-reversed">
               凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）
             </p>
+            <div v-if="isPractitioner && SPECIAL_DAY_PRACTICE[dailyFortune.special_day.type]" class="practice-scripture">
+              <p class="scripture-text">{{ SPECIAL_DAY_PRACTICE[dailyFortune.special_day.type] }}</p>
+              <span class="scripture-source">品第八, T21 p.398b-c</span>
+            </div>
+            <div v-if="isPractitioner && dailyFortune.special_day.ryouhan_reversed && RYOUHAN_REVERSAL_PRACTICE[dailyFortune.special_day.type]" class="practice-scripture ryouhan-scripture">
+              <p class="scripture-text">{{ RYOUHAN_REVERSAL_PRACTICE[dailyFortune.special_day.type] }}</p>
+              <span class="scripture-source">品第五, T21 p.392a-b</span>
+            </div>
           </div>
 
           <div v-if="dailyFortune.ryouhan" class="ryouhan-banner">
@@ -333,6 +370,10 @@ function exportDecadeReport() {
             </div>
             <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
             <p class="sanki-period-desc">{{ dailyFortune.sanki.period_description }}</p>
+            <div v-if="isPractitioner && SANKI_PRACTICE[dailyFortune.sanki.day_type]" class="practice-scripture sanki-scripture">
+              <p class="scripture-text">{{ SANKI_PRACTICE[dailyFortune.sanki.day_type] }}</p>
+              <span class="scripture-source">卷下, T21 p.397c-398a</span>
+            </div>
           </div>
 
           <div class="lucky-info">
@@ -734,30 +775,115 @@ function exportDecadeReport() {
         <div class="fortune-card">
           <!-- 當年九曜星摘要 -->
           <h3 class="fortune-title">{{ yearlyFortune.year }} 年運勢</h3>
+
+          <!-- 視角切換 -->
+          <div class="perspective-toggle" role="radiogroup" aria-label="觀點切換">
+            <button
+              class="perspective-btn"
+              :class="{ active: decadePerspective === 'secular' }"
+              role="radio"
+              :aria-checked="decadePerspective === 'secular'"
+              @click="decadePerspective = 'secular'"
+            >世俗觀</button>
+            <button
+              class="perspective-btn"
+              :class="{ active: decadePerspective === 'practitioner' }"
+              role="radio"
+              :aria-checked="decadePerspective === 'practitioner'"
+              @click="decadePerspective = 'practitioner'"
+            >修行者觀</button>
+          </div>
+
           <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
             <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')">{{ yearlyFortune.kuyou_star.name }}</span>
-            <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
+            <template v-if="isPractitioner && yearlyFortune.shingon">
+              <span class="practice-level" :class="getPracticeLevelClass(yearlyFortune.shingon.practice_level)">{{ yearlyFortune.shingon.practice_name }}</span>
+            </template>
+            <template v-else>
+              <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
+            </template>
             <span class="current-year-score" :class="getScoreClass(yearlyFortune.fortune.overall)">{{ yearlyFortune.fortune.overall }}</span>
           </div>
-          <p v-if="yearlyFortune.kuyou_star" class="current-year-desc">{{ yearlyFortune.kuyou_star.description }}</p>
+          <p v-if="yearlyFortune.kuyou_star" class="current-year-desc">
+            {{ isPractitioner && yearlyFortune.shingon ? yearlyFortune.shingon.description : yearlyFortune.kuyou_star.description }}
+          </p>
           <div class="current-year-scores" style="margin-bottom: var(--space-md)">
             <div class="mini-score-item">
-              <span class="mini-label">事業</span>
+              <span class="mini-label">{{ isPractitioner && yearlyFortune.shingon ? yearlyFortune.shingon.category_labels.career : '事業' }}</span>
               <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.career)">{{ yearlyFortune.fortune.career }}</span>
             </div>
             <div class="mini-score-item">
-              <span class="mini-label">感情</span>
+              <span class="mini-label">{{ isPractitioner && yearlyFortune.shingon ? yearlyFortune.shingon.category_labels.love : '感情' }}</span>
               <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.love)">{{ yearlyFortune.fortune.love }}</span>
             </div>
             <div class="mini-score-item">
-              <span class="mini-label">健康</span>
+              <span class="mini-label">{{ isPractitioner && yearlyFortune.shingon ? yearlyFortune.shingon.category_labels.health : '健康' }}</span>
               <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.health)">{{ yearlyFortune.fortune.health }}</span>
             </div>
             <div class="mini-score-item">
-              <span class="mini-label">財運</span>
+              <span class="mini-label">{{ isPractitioner && yearlyFortune.shingon ? yearlyFortune.shingon.category_labels.wealth : '財運' }}</span>
               <span class="mini-value" :class="getScoreClass(yearlyFortune.fortune.wealth)">{{ yearlyFortune.fortune.wealth }}</span>
             </div>
           </div>
+
+          <!-- 修行者觀：詳細修行資訊 -->
+          <template v-if="isPractitioner && yearlyFortune.shingon">
+            <p class="card-buddha">本尊：{{ yearlyFortune.shingon.mantra.buddha }}</p>
+            <div class="shingon-mantra-box">
+              <p class="mantra-label">真言</p>
+              <p class="mantra-text">{{ yearlyFortune.shingon.mantra.text }}</p>
+              <p class="mantra-reading">{{ yearlyFortune.shingon.mantra.reading }}</p>
+            </div>
+            <div class="shingon-homa-box">
+              <span class="homa-type">{{ yearlyFortune.shingon.homa_type }}</span>
+              <span class="homa-desc">{{ yearlyFortune.shingon.homa_description }}</span>
+            </div>
+            <p class="practice-focus-text">修行重心：{{ yearlyFortune.shingon.practice_focus }}</p>
+            <div v-if="yearlyFortune.shingon.theme" class="card-theme">
+              <strong>{{ yearlyFortune.shingon.theme.title }}</strong>
+              <p>{{ yearlyFortune.shingon.theme.description }}</p>
+            </div>
+            <div v-if="yearlyFortune.shingon.core_teaching" class="core-teaching-box">
+              <p>{{ yearlyFortune.shingon.core_teaching }}</p>
+            </div>
+            <div v-if="yearlyFortune.shingon.recommended_practices?.length" class="recommended-practices">
+              <h5>推薦修法</h5>
+              <div class="practice-tags">
+                <span v-for="(p, i) in yearlyFortune.shingon.recommended_practices" :key="i" class="practice-tag">{{ p }}</span>
+              </div>
+            </div>
+            <div v-if="yearlyFortune.shingon.category_practice" class="category-descriptions">
+              <div v-if="yearlyFortune.shingon.category_practice.career" class="category-desc-item">
+                <h4>{{ yearlyFortune.shingon.category_labels.career }}</h4>
+                <p>{{ yearlyFortune.shingon.category_practice.career }}</p>
+              </div>
+              <div v-if="yearlyFortune.shingon.category_practice.love" class="category-desc-item">
+                <h4>{{ yearlyFortune.shingon.category_labels.love }}</h4>
+                <p>{{ yearlyFortune.shingon.category_practice.love }}</p>
+              </div>
+              <div v-if="yearlyFortune.shingon.category_practice.health" class="category-desc-item">
+                <h4>{{ yearlyFortune.shingon.category_labels.health }}</h4>
+                <p>{{ yearlyFortune.shingon.category_practice.health }}</p>
+              </div>
+              <div v-if="yearlyFortune.shingon.category_practice.wealth" class="category-desc-item">
+                <h4>{{ yearlyFortune.shingon.category_labels.wealth }}</h4>
+                <p>{{ yearlyFortune.shingon.category_practice.wealth }}</p>
+              </div>
+            </div>
+            <div v-if="yearlyFortune.shingon.opportunities?.length" class="opportunities">
+              <h4>修行好時機</h4>
+              <ul>
+                <li v-for="(opp, i) in yearlyFortune.shingon.opportunities" :key="i">{{ opp }}</li>
+              </ul>
+            </div>
+            <div v-if="yearlyFortune.shingon.warnings?.length" class="warnings">
+              <h4>修行注意事項</h4>
+              <ul>
+                <li v-for="(warn, i) in yearlyFortune.shingon.warnings" :key="i">{{ warn }}</li>
+              </ul>
+            </div>
+            <p v-if="yearlyFortune.shingon.advice" class="card-advice">{{ yearlyFortune.shingon.advice }}</p>
+          </template>
 
           <!-- 各月運勢卡片（可展開） -->
           <h4 class="monthly-section-title">各月運勢</h4>
@@ -986,6 +1112,17 @@ function exportDecadeReport() {
                 <span class="ryouhan-months-list">{{ yearlyFortune.strategy.ryouhan_outlook.affected_months.map(m => m + '月').join('、') }}</span>
               </div>
               <p class="strategy-desc">{{ yearlyFortune.strategy.ryouhan_outlook.description }}</p>
+            </div>
+          </div>
+
+          <!-- 月度修行里程碑（僅修行者觀） -->
+          <div v-if="isPractitioner && yearlyFortune.shingon?.monthly_tips && Object.keys(yearlyFortune.shingon.monthly_tips).length" class="monthly-milestones">
+            <h4 class="milestones-title">月度修行里程碑</h4>
+            <div class="milestone-list">
+              <div v-for="month in 12" :key="month" class="milestone-item" :class="{ 'is-current-month': month === currentMonth }">
+                <span class="milestone-month">{{ month }}月</span>
+                <span class="milestone-text">{{ yearlyFortune.shingon.monthly_tips[String(month)] }}</span>
+              </div>
             </div>
           </div>
 
@@ -3494,5 +3631,85 @@ function exportDecadeReport() {
 .avoid-day-tag {
   background: rgba(224, 112, 64, 0.12);
   color: #e07040;
+}
+
+/* === 經文引用區塊 === */
+.practice-scripture {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(123, 31, 162, 0.06);
+  border-radius: var(--radius-md);
+  border-left: 3px solid rgba(123, 31, 162, 0.3);
+}
+
+.practice-scripture.ryouhan-scripture {
+  margin-top: var(--space-xs);
+  border-left-color: #cc4444;
+  background: rgba(204, 68, 68, 0.06);
+}
+
+.practice-scripture.sanki-scripture {
+  margin-top: var(--space-sm);
+}
+
+.scripture-text {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 0 0 var(--space-xs);
+  font-style: italic;
+}
+
+.scripture-source {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+/* === 月度修行里程碑 === */
+.monthly-milestones {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.milestones-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #7b1fa2;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.milestone-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.milestone-item.is-current-month {
+  background: rgba(123, 31, 162, 0.08);
+}
+
+.milestone-month {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: #7b1fa2;
+  min-width: 36px;
+  flex-shrink: 0;
+}
+
+.milestone-text {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 </style>

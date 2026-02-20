@@ -10,7 +10,6 @@ import MatchTab from '../components/MatchTab.vue'
 import FortuneCalendar from '../components/FortuneCalendar.vue'
 import LuckyDaysTab from '../components/LuckyDaysTab.vue'
 import KnowledgeTab from '../components/KnowledgeTab.vue'
-import ReportTab from '../components/ReportTab.vue'
 
 const {
   // Profile
@@ -429,13 +428,6 @@ onUnmounted(() => {
         :aria-selected="activeMainTab === 'knowledge'"
         @click="activeMainTab = 'knowledge'"
       >知識</button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeMainTab === 'report' }"
-        role="tab"
-        :aria-selected="activeMainTab === 'report'"
-        @click="activeMainTab = 'report'"
-      >報告</button>
     </nav>
 
     <!-- Tab Content -->
@@ -531,7 +523,6 @@ onUnmounted(() => {
         @update:selected-wheel-mansion="selectedWheelMansion = $event"
       />
 
-      <ReportTab v-if="activeMainTab === 'report'" />
     </main>
   </div>
 </template>

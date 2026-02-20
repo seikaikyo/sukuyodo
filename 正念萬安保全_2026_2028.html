@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>正念 vs 新公司 三年運勢分析報告 (2026-2028)</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Hiragino Sans", "Noto Sans TC", "Noto Sans JP", sans-serif;
+  background: #1c1917; color: #fafaf9;
+  line-height: 1.7; padding: 24px; max-width: 860px; margin: 0 auto;
+}
+h1, h2, h3, h4, h5 { color: #fafaf9; line-height: 1.4; }
+h1 { font-size: 24px; margin-bottom: 8px; }
+h2 { font-size: 20px; margin: 32px 0 12px; border-bottom: 1px solid #57534e; padding-bottom: 8px; }
+h3 { font-size: 18px; margin: 24px 0 8px; }
+h4 { font-size: 16px; margin: 16px 0 6px; color: #f59e0b; }
+p { margin: 6px 0; }
+ul { padding-left: 20px; margin: 6px 0; }
+li { margin: 4px 0; }
+
+.cover { text-align: center; padding: 48px 0 32px; border-bottom: 2px solid #f59e0b; margin-bottom: 32px; }
+.cover h1 { font-size: 28px; color: #f59e0b; }
+.cover .subtitle { color: #a8a29e; font-size: 14px; margin-top: 8px; }
+
+.card {
+  background: #292524; border: 1px solid #57534e; border-radius: 12px;
+  padding: 16px; margin-bottom: 16px;
+}
+
+.level-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 9999px;
+  font-size: 12px; font-weight: 700;
+}
+
+.tag { display: inline-block; background: #44403c; border-radius: 9999px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; }
+.section-divider { border: none; border-top: 1px solid #57534e; margin: 24px 0; }
+
+/* 雙人資料卡 */
+.duo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+@media (max-width: 600px) { .duo-grid { grid-template-columns: 1fr; } }
+
+.profile-card {
+  background: #292524; border: 1px solid #57534e; border-radius: 12px;
+  padding: 20px; text-align: center;
+}
+.profile-card .name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.profile-card .mansion { font-size: 24px; font-weight: 700; color: #f59e0b; margin: 8px 0 4px; }
+.profile-card .element { font-size: 14px; color: #a8a29e; }
+.profile-card .detail { font-size: 13px; color: #a8a29e; margin-top: 4px; }
+
+/* 相性 */
+.compat-box {
+  background: #292524; border: 1px solid #57534e; border-radius: 12px;
+  padding: 20px; text-align: center; margin: 16px 0;
+}
+.compat-score { font-size: 48px; font-weight: 700; color: #3b82f6; }
+.compat-type { font-size: 20px; font-weight: 700; margin: 8px 0; }
+.compat-detail { font-size: 14px; color: #a8a29e; }
+.direction-row {
+  display: flex; justify-content: center; gap: 32px; margin-top: 16px;
+  flex-wrap: wrap;
+}
+.direction-item { text-align: center; }
+.direction-item .arrow { font-size: 14px; color: #a8a29e; }
+.direction-item .dir-type { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+/* 年度總覽 */
+.year-overview {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0;
+}
+@media (max-width: 600px) { .year-overview { grid-template-columns: 1fr; } }
+
+.year-card {
+  background: #292524; border: 1px solid #57534e; border-radius: 12px;
+  padding: 16px; text-align: center;
+}
+.year-card .year-label { font-size: 18px; font-weight: 700; color: #f59e0b; margin-bottom: 8px; }
+.year-card .person-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #3a3733; }
+.year-card .person-row:last-child { border-bottom: none; }
+.year-card .person-name { font-size: 13px; }
+.year-card .person-star { font-size: 13px; color: #a8a29e; }
+.year-card .person-score { font-size: 18px; font-weight: 700; }
+
+/* 月度表 */
+.month-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+.month-table th { background: #292524; padding: 8px 6px; text-align: center; border: 1px solid #57534e; color: #a8a29e; font-weight: 600; }
+.month-table td { padding: 8px 6px; text-align: center; border: 1px solid #57534e; }
+.month-table .row-label { text-align: left; font-weight: 600; padding-left: 12px; background: #292524; }
+
+/* 分數顏色 */
+.s-excellent { color: #d4a017; font-weight: 700; }
+.s-good { color: #4a9b6b; font-weight: 700; }
+.s-fair { color: #3b82f6; }
+.s-caution { color: #eab308; }
+.s-warning { color: #ef4444; font-weight: 700; }
+
+/* SVG 折線圖 */
+.chart-container { margin: 16px 0; text-align: center; overflow-x: auto; }
+.chart-container svg { max-width: 100%; height: auto; }
+
+/* 策略卡 */
+.strategy-card {
+  background: #292524; border-left: 4px solid #f59e0b; border-radius: 0 12px 12px 0;
+  padding: 16px 20px; margin: 12px 0;
+}
+.strategy-card h4 { margin-top: 0; }
+
+.highlight { color: #f59e0b; font-weight: 700; }
+.danger { color: #ef4444; font-weight: 700; }
+.safe { color: #4a9b6b; font-weight: 700; }
+
+.footer { text-align: center; color: #78716c; font-size: 12px; margin-top: 48px; padding-top: 16px; border-top: 1px solid #57534e; }
+
+/* 差距高亮 */
+.gap-big { background: rgba(239, 68, 68, 0.15); }
+.gap-favor { background: rgba(74, 155, 107, 0.15); }
+
+/* 元素互動 */
+.element-box {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  margin: 12px 0; font-size: 16px;
+}
+.element-box .el { font-size: 20px; font-weight: 700; }
+.element-box .el-arrow { color: #a8a29e; font-size: 14px; }
+
+@media print {
+  body { background: #fff; color: #1c1917; }
+  .card, .profile-card, .compat-box, .year-card, .strategy-card, .month-table th, .month-table .row-label { background: #f5f5f4; border-color: #d6d3d1; }
+  h1, h2, h3, h4, h5 { color: #1c1917; }
+  .cover h1, .year-card .year-label, h4, .highlight { color: #b45309; }
+  .compat-score { color: #2563eb; }
+  .s-excellent { color: #92400e; }
+  .s-good { color: #166534; }
+  .s-fair { color: #1e40af; }
+  .s-warning { color: #dc2626; }
+}
+</style>
+</head>
+<body>
+
+<!-- 封面 -->
+<div class="cover">
+  <h1>宿曜道 三年運勢分析報告</h1>
+  <p style="font-size: 18px; margin-top: 12px;">正念 vs 新公司</p>
+  <p style="font-size: 16px; color: #a8a29e; margin-top: 4px;">2026 - 2028</p>
+  <p class="subtitle">分析日期: 2026/02/20</p>
+</div>
+
+<!-- 1. 人物資料 -->
+<h2>1. 人物資料</h2>
+
+<div class="duo-grid">
+  <div class="profile-card">
+    <div class="name">正念</div>
+    <div class="detail">1991/01/27</div>
+    <div class="mansion">井宿</div>
+    <div class="element">五行: <strong>木</strong></div>
+    <div class="detail">別名: ちちりぼし</div>
+    <div style="margin-top: 8px;">
+      <span class="tag">近距離宿</span>
+    </div>
+  </div>
+  <div class="profile-card">
+    <div class="name">新公司</div>
+    <div class="detail">1996/11/29</div>
+    <div class="mansion">柳宿</div>
+    <div class="element">五行: <strong>土</strong></div>
+    <div class="detail">別名: ぬりこぼし</div>
+    <div style="margin-top: 8px;">
+      <span class="tag">近距離宿</span>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 相性分析 -->
+<h2>2. 相性分析</h2>
+
+<div class="compat-box">
+  <div class="compat-type">友衰</div>
+  <div class="compat-score">60</div>
+  <div style="margin: 4px 0;">
+    <span class="level-badge" style="background: #3b82f6; color: #fff;">中吉</span>
+    <span class="tag">近距離</span>
+  </div>
+
+  <div class="direction-row">
+    <div class="direction-item">
+      <div class="arrow">正念 → 新公司</div>
+      <div class="dir-type" style="color: #ef4444;">衰</div>
+      <div style="font-size: 12px; color: #a8a29e;">付出較多的一方</div>
+    </div>
+    <div class="direction-item">
+      <div class="arrow">新公司 → 正念</div>
+      <div class="dir-type" style="color: #4a9b6b;">友</div>
+      <div style="font-size: 12px; color: #a8a29e;">受惠較多的一方</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h4>元素互動</h4>
+  <div class="element-box">
+    <span class="el" style="color: #4a9b6b;">木</span>
+    <span class="el-arrow">剋 →</span>
+    <span class="el" style="color: #eab308;">土</span>
+  </div>
+  <p style="font-size: 14px; text-align: center; color: #a8a29e;">正念(木)對新公司(土)具有主導性，元素加成 +5</p>
+</div>
+
+<div class="card">
+  <h4>解讀</h4>
+  <p><strong>友衰關係</strong>的特徵：雙方存在能量流動的方向性。正念對新公司是<span class="danger">「衰」</span>方，代表在這段關係中正念是付出的一方、主動投入的一方。新公司對正念是<span class="safe">「友」</span>方，代表公司能提供正念發展的舞台和資源。</p>
+  <p style="margin-top: 8px;">從五行來看，正念的木剋公司的土。正念在這間公司具備主導力和控制力，能夠影響環境。你不會被公司文化吞沒，反而能在其中留下自己的印記。</p>
+  <p style="margin-top: 8px;">近距離關係意味著雙方磁場相近、交流頻繁。進入這間公司後互動密度會高，無論好壞都會放大。</p>
+</div>
+
+<hr class="section-divider">
+
+<!-- 3. 三年九曜總覽 -->
+<h2>3. 三年九曜總覽</h2>
+
+<div class="year-overview">
+  <div class="year-card">
+    <div class="year-label">2026</div>
+    <div class="person-row">
+      <span class="person-name">正念</span>
+      <span class="person-star">木曜星</span>
+      <span class="person-score s-excellent">85</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #d4a017; color: #1c1917;">大吉</span>
+    </div>
+    <div class="person-row" style="margin-top: 8px;">
+      <span class="person-name">新公司</span>
+      <span class="person-star">金曜星</span>
+      <span class="person-score s-fair">65</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #3b82f6; color: #fff;">半吉</span>
+    </div>
+  </div>
+
+  <div class="year-card">
+    <div class="year-label">2027</div>
+    <div class="person-row">
+      <span class="person-name">正念</span>
+      <span class="person-star">羅喉星</span>
+      <span class="person-score s-warning">35</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #ef4444; color: #fff;">大凶</span>
+    </div>
+    <div class="person-row" style="margin-top: 8px;">
+      <span class="person-name">新公司</span>
+      <span class="person-star">日曜星</span>
+      <span class="person-score s-excellent">85</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #d4a017; color: #1c1917;">大吉</span>
+    </div>
+  </div>
+
+  <div class="year-card">
+    <div class="year-label">2028</div>
+    <div class="person-row">
+      <span class="person-name">正念</span>
+      <span class="person-star">土曜星</span>
+      <span class="person-score s-fair">65</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #3b82f6; color: #fff;">半吉</span>
+    </div>
+    <div class="person-row" style="margin-top: 8px;">
+      <span class="person-name">新公司</span>
+      <span class="person-star">火曜星</span>
+      <span class="person-score s-warning">35</span>
+    </div>
+    <div style="text-align: center; margin: 4px 0;">
+      <span class="level-badge" style="background: #ef4444; color: #fff;">大凶</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h4>三年格局: 交替互補</h4>
+  <p>正念和新公司的九曜呈現完美的<span class="highlight">交替互補模式</span>：</p>
+  <ul>
+    <li><strong>2026</strong>：正念 <span class="s-excellent">大吉(85)</span>、公司 <span class="s-fair">半吉(65)</span> — 正念主導期</li>
+    <li><strong>2027</strong>：正念 <span class="s-warning">大凶(35)</span>、公司 <span class="s-excellent">大吉(85)</span> — 公司支撐期</li>
+    <li><strong>2028</strong>：正念 <span class="s-fair">半吉(65)</span>、公司 <span class="s-warning">大凶(35)</span> — 正念回穩期</li>
+  </ul>
+  <p style="margin-top: 8px;">三年中不會出現雙方同時低谷的狀況。一方低迷時另一方氣勢正盛，構成天然的安全網。這在宿曜道中是相當理想的搭配節奏。</p>
+</div>
+
+<!-- SVG 折線圖 -->
+<div class="chart-container">
+  <svg viewBox="0 0 780 220" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景格線 -->
+    <rect x="50" y="10" width="710" height="180" fill="#292524" rx="8"/>
+    <line x1="50" y1="46" x2="760" y2="46" stroke="#3a3733" stroke-dasharray="4"/>
+    <line x1="50" y1="82" x2="760" y2="82" stroke="#3a3733" stroke-dasharray="4"/>
+    <line x1="50" y1="118" x2="760" y2="118" stroke="#3a3733" stroke-dasharray="4"/>
+    <line x1="50" y1="154" x2="760" y2="154" stroke="#3a3733" stroke-dasharray="4"/>
+
+    <!-- Y 軸標籤 -->
+    <text x="44" y="50" fill="#78716c" font-size="11" text-anchor="end">90</text>
+    <text x="44" y="86" fill="#78716c" font-size="11" text-anchor="end">70</text>
+    <text x="44" y="122" fill="#78716c" font-size="11" text-anchor="end">50</text>
+    <text x="44" y="158" fill="#78716c" font-size="11" text-anchor="end">30</text>
+
+    <!-- X 軸標籤 (36 個月) -->
+    <!-- 2026 -->
+    <text x="70" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">1</text>
+    <text x="90" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">2</text>
+    <text x="110" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">3</text>
+    <text x="130" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">4</text>
+    <text x="150" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">5</text>
+    <text x="170" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">6</text>
+    <text x="190" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">7</text>
+    <text x="210" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">8</text>
+    <text x="230" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">9</text>
+    <text x="250" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">10</text>
+    <text x="270" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">11</text>
+    <text x="290" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">12</text>
+    <!-- 2027 -->
+    <text x="330" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">1</text>
+    <text x="350" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">2</text>
+    <text x="370" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">3</text>
+    <text x="390" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">4</text>
+    <text x="410" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">5</text>
+    <text x="430" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">6</text>
+    <text x="450" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">7</text>
+    <text x="470" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">8</text>
+    <text x="490" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">9</text>
+    <text x="510" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">10</text>
+    <text x="530" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">11</text>
+    <text x="550" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">12</text>
+    <!-- 2028 -->
+    <text x="590" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">1</text>
+    <text x="610" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">2</text>
+    <text x="630" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">3</text>
+    <text x="650" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">4</text>
+    <text x="670" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">5</text>
+    <text x="690" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">6</text>
+    <text x="710" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">7</text>
+    <text x="730" y="205" fill="#a8a29e" font-size="9" text-anchor="middle">8</text>
+
+    <!-- 年份區隔 -->
+    <line x1="310" y1="10" x2="310" y2="190" stroke="#57534e" stroke-dasharray="6"/>
+    <line x1="570" y1="10" x2="570" y2="190" stroke="#57534e" stroke-dasharray="6"/>
+    <text x="180" y="25" fill="#f59e0b" font-size="12" text-anchor="middle" font-weight="700">2026</text>
+    <text x="440" y="25" fill="#f59e0b" font-size="12" text-anchor="middle" font-weight="700">2027</text>
+    <text x="660" y="25" fill="#f59e0b" font-size="12" text-anchor="middle" font-weight="700">2028</text>
+
+    <!-- 正念折線 (score to Y: y = 190 - (score - 20) * 2.25) -->
+    <!-- 2026: 73,68,77,83,50,81,60,58,83,70,68,63 -->
+    <!-- 2027: 42,39,52,35,35,77,67,42,52,37,52,52 -->
+    <!-- 2028: 63,68,70,53,43,85,85,80,43,50,73,63 -->
+    <polyline fill="none" stroke="#4a9b6b" stroke-width="2.5"
+      points="
+        70,70.75  90,81.75  110,61.75  130,48.25  150,122.5  170,52.75
+        190,100  210,104.5  230,48.25  250,77.5  270,81.75  290,92.75
+        330,139.5  350,146.25  370,118  390,156.25  410,156.25  430,61.75
+        450,84  470,139.5  490,118  510,151.75  530,118  550,118
+        590,92.75  610,81.75  630,77.5  650,115.75  670,138.25  690,43.75
+        710,43.75  730,55
+      "/>
+
+    <!-- 新公司折線 -->
+    <!-- 2026: 35,53,65,65,71,40,65,63,45,71,73,35 -->
+    <!-- 2027: 53,55,63,68,58,43,85,68,43,58,78,43 -->
+    <!-- 2028: 40,62,55,64,42,35,35,66,42,35,64,62 -->
+    <polyline fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="6,3"
+      points="
+        70,156.25  90,115.75  110,88.75  130,88.75  150,72.25  170,145
+        190,88.75  210,92.75  230,133.75  250,72.25  270,68.25  290,156.25
+        330,115.75  350,111.25  370,88.75  390,81.75  410,108  430,133.75
+        450,43.75  470,81.75  490,133.75  510,108  530,63.5  550,133.75
+        590,145  610,86.5  630,111.25  650,86.5  670,141.5  690,156.25
+        710,156.25  730,86.5
+      "/>
+
+    <!-- 圖例 -->
+    <line x1="60" y1="215" x2="80" y2="215" stroke="#4a9b6b" stroke-width="2.5"/>
+    <text x="84" y="218" fill="#fafaf9" font-size="11">正念</text>
+    <line x1="130" y1="215" x2="150" y2="215" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="6,3"/>
+    <text x="154" y="218" fill="#fafaf9" font-size="11">新公司</text>
+  </svg>
+</div>
+
+<hr class="section-divider">
+
+<!-- 4. 2026 月度明細 -->
+<h2>4. 2026年 月度明細</h2>
+
+<div class="card">
+  <h4>年度關鍵字: 正念的黃金年</h4>
+  <p>正念九曜 <span class="highlight">木曜星(大吉)</span>，年度總運 85。公司九曜金曜星(半吉)，年度 65。正念全年氣勢壓過公司，是建立地位的最佳時機。</p>
+</div>
+
+<table class="month-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th>
+      <th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="row-label">正念</td>
+      <td class="s-good">73</td>
+      <td class="s-fair">68</td>
+      <td class="s-good">77</td>
+      <td class="s-excellent">83</td>
+      <td class="s-caution">50</td>
+      <td class="s-excellent">81</td>
+      <td class="s-fair">60</td>
+      <td class="s-caution">58</td>
+      <td class="s-excellent">83</td>
+      <td class="s-good">70</td>
+      <td class="s-fair">68</td>
+      <td class="s-fair">63</td>
+    </tr>
+    <tr>
+      <td class="row-label">新公司</td>
+      <td class="s-warning">35</td>
+      <td class="s-caution">53</td>
+      <td class="s-fair">65</td>
+      <td class="s-fair">65</td>
+      <td class="s-good">71</td>
+      <td class="s-warning">40</td>
+      <td class="s-fair">65</td>
+      <td class="s-fair">63</td>
+      <td class="s-caution">45</td>
+      <td class="s-good">71</td>
+      <td class="s-good">73</td>
+      <td class="s-warning">35</td>
+    </tr>
+    <tr style="color: #a8a29e; font-size: 12px;">
+      <td class="row-label" style="font-size: 12px; color: #a8a29e;">差距</td>
+      <td>+38</td><td>+15</td><td>+12</td><td>+18</td><td>-21</td><td>+41</td>
+      <td>-5</td><td>-5</td><td>+38</td><td>-1</td><td>-5</td><td>+28</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="strategy-card">
+  <h4>黃金月份 (正念強勢)</h4>
+  <ul>
+    <li><strong>1月 (正念73 vs 公司35, 差距+38)</strong> — 公司年初最弱，正念一進去就能展現實力</li>
+    <li><strong>4月 (正念83 vs 公司65, 差距+18)</strong> — 正念年度高峰之一，適合爭取重要職責</li>
+    <li><strong>6月 (正念81 vs 公司40, 差距+41)</strong> — 年度最大優勢月，公司體質弱，正念的判斷和行動力都在線</li>
+    <li><strong>9月 (正念83 vs 公司45, 差距+38)</strong> — 下半年高峰，適合推進關鍵計畫</li>
+  </ul>
+</div>
+
+<div class="strategy-card">
+  <h4>注意月份</h4>
+  <ul>
+    <li><strong>5月 (正念50 vs 公司71, 差距-21)</strong> — 年度唯一明顯低谷。公司氣勢上升但正念下滑，容易被動。這個月守住就好，不要主動發起挑戰</li>
+    <li><strong>7-8月 (正念60/58 vs 公司65/63)</strong> — 雙方接近，氣勢持平。做好本分即可</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h4>2026 策略總結</h4>
+  <p>上半年(1-4月)和 9月是全年核心窗口，正念應該在這些月份密集投入、建立口碑。5月是唯一需要謹慎的時段。下半年整體穩定，但不如上半年爆發力強。</p>
+  <p style="margin-top: 8px;"><strong>核心策略：趁大吉年拼命建立不可替代性。</strong>大吉年的努力有加倍回報，錯過就要等九年。</p>
+</div>
+
+<hr class="section-divider">
+
+<!-- 5. 2027 月度明細 -->
+<h2>5. 2027年 月度明細</h2>
+
+<div class="card">
+  <h4>年度關鍵字: 正念的試煉年</h4>
+  <p>正念九曜 <span class="danger">羅喉星(大凶)</span>，年度總運 35。公司九曜 <span class="highlight">日曜星(大吉)</span>，年度 85。正念個人氣場全年低迷，但公司正處於最強盛時期 — 要利用公司的順風，不要硬撐。</p>
+</div>
+
+<table class="month-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th>
+      <th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="row-label">正念</td>
+      <td class="s-caution">42</td>
+      <td class="s-warning">39</td>
+      <td class="s-caution">52</td>
+      <td class="s-warning">35</td>
+      <td class="s-warning">35</td>
+      <td class="s-good">77</td>
+      <td class="s-fair">67</td>
+      <td class="s-caution">42</td>
+      <td class="s-caution">52</td>
+      <td class="s-warning">37</td>
+      <td class="s-caution">52</td>
+      <td class="s-caution">52</td>
+    </tr>
+    <tr>
+      <td class="row-label">新公司</td>
+      <td class="s-caution">53</td>
+      <td class="s-caution">55</td>
+      <td class="s-fair">63</td>
+      <td class="s-fair">68</td>
+      <td class="s-caution">58</td>
+      <td class="s-caution">43</td>
+      <td class="s-excellent">85</td>
+      <td class="s-fair">68</td>
+      <td class="s-caution">43</td>
+      <td class="s-caution">58</td>
+      <td class="s-good">78</td>
+      <td class="s-caution">43</td>
+    </tr>
+    <tr style="color: #a8a29e; font-size: 12px;">
+      <td class="row-label" style="font-size: 12px; color: #a8a29e;">差距</td>
+      <td>-11</td><td>-16</td><td>-11</td><td>-33</td><td>-23</td><td>+34</td>
+      <td>-18</td><td>-26</td><td>+9</td><td>-21</td><td>-26</td><td>+9</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="strategy-card">
+  <h4>喘息月份</h4>
+  <ul>
+    <li><strong>6月 (正念77 vs 公司43, 差距+34)</strong> — 全年唯一正念明顯高於公司的月份。大凶年中的黃金窗口，這個月要把握機會做想做的事</li>
+    <li><strong>9月、12月 (差距+9)</strong> — 雙方分數都不高但正念略佔上風，適合穩健推進</li>
+  </ul>
+</div>
+
+<div class="strategy-card">
+  <h4>高危月份</h4>
+  <ul>
+    <li><strong>4月 (正念35 vs 公司68, 差距-33)</strong> — 年度最危險月份。正念跌到谷底，公司卻在穩定上升。這個月做任何重大決策都要三思</li>
+    <li><strong>5月 (正念35 vs 公司58, 差距-23)</strong> — 連續第二個谷底月。4-5月是全年最黑暗的時段</li>
+    <li><strong>8月 (正念42 vs 公司68, 差距-26)</strong> — 下半年低點。公司在擴張期，正念容易感到力不從心</li>
+    <li><strong>10-11月 (差距-21/-26)</strong> — 年末又一波低谷。正念在公司的存在感會明顯下降</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h4>2027 策略總結</h4>
+  <p>大凶年不適合主動出擊。好消息是公司處於大吉年，整體業務會蒸蒸日上 — 正念要做的是<strong>搭上公司的順風車</strong>，不要逆風硬飛。</p>
+  <p style="margin-top: 8px;">具體做法：減少獨斷決策、多配合團隊方向、不主動挑起衝突、把 2026 年建立的信任資本拿來用。6月是全年唯一的主動出擊窗口。</p>
+  <p style="margin-top: 8px;"><strong>核心策略：借公司的勢。公司大吉 + 你大凶 = 你跟著公司走就對了。</strong></p>
+</div>
+
+<hr class="section-divider">
+
+<!-- 6. 2028 月度明細 -->
+<h2>6. 2028年 月度明細</h2>
+
+<div class="card">
+  <h4>年度關鍵字: 角色翻轉</h4>
+  <p>正念九曜 <span class="safe">土曜星(半吉)</span>，年度總運 65。公司九曜 <span class="danger">火曜星(大凶)</span>，年度 35。正念從谷底回穩，公司則跌入低谷。正念的經驗和穩定性會成為公司的重要支柱。</p>
+</div>
+
+<table class="month-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>1月</th><th>2月</th><th>3月</th><th>4月</th><th>5月</th><th>6月</th>
+      <th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12月</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="row-label">正念</td>
+      <td class="s-fair">63</td>
+      <td class="s-fair">68</td>
+      <td class="s-good">70</td>
+      <td class="s-caution">53</td>
+      <td class="s-caution">43</td>
+      <td class="s-excellent">85</td>
+      <td class="s-excellent">85</td>
+      <td class="s-excellent">80</td>
+      <td class="s-caution">43</td>
+      <td class="s-caution">50</td>
+      <td class="s-good">73</td>
+      <td class="s-fair">63</td>
+    </tr>
+    <tr>
+      <td class="row-label">新公司</td>
+      <td class="s-warning">40</td>
+      <td class="s-fair">62</td>
+      <td class="s-caution">55</td>
+      <td class="s-fair">64</td>
+      <td class="s-caution">42</td>
+      <td class="s-warning">35</td>
+      <td class="s-warning">35</td>
+      <td class="s-fair">66</td>
+      <td class="s-caution">42</td>
+      <td class="s-warning">35</td>
+      <td class="s-fair">64</td>
+      <td class="s-fair">62</td>
+    </tr>
+    <tr style="color: #a8a29e; font-size: 12px;">
+      <td class="row-label" style="font-size: 12px; color: #a8a29e;">差距</td>
+      <td>+23</td><td>+6</td><td>+15</td><td>-11</td><td>+1</td><td>+50</td>
+      <td>+50</td><td>+14</td><td>+1</td><td>+15</td><td>+9</td><td>+1</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="strategy-card">
+  <h4>支配月份 (正念大幅領先)</h4>
+  <ul>
+    <li><strong>6月 (正念85 vs 公司35, 差距+50)</strong> — 三年中最大差距月份。正念達到半吉年的最高峰，公司跌到年度谷底。你說什麼就是什麼</li>
+    <li><strong>7月 (正念85 vs 公司35, 差距+50)</strong> — 連續第二個月最大差距。6-7月合計是整個三年中正念最強勢的時段</li>
+    <li><strong>1月 (正念63 vs 公司40, 差距+23)</strong> — 年初即領先，適合設定全年節奏</li>
+    <li><strong>3月 (正念70 vs 公司55, 差距+15)</strong> — 穩定領先期，適合推動中期計畫</li>
+  </ul>
+</div>
+
+<div class="strategy-card">
+  <h4>注意月份</h4>
+  <ul>
+    <li><strong>4月 (正念53 vs 公司64, 差距-11)</strong> — 全年唯一公司高於正念的月份。但差距不大，保持平常心即可</li>
+    <li><strong>9月 (正念43 vs 公司42)</strong> — 雙方同時低迷。避免這個月做重大決策</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h4>2028 策略總結</h4>
+  <p>公司進入大凶年，經營會碰到瓶頸。正念已經回穩到半吉，加上 2026 大吉年打下的基礎和 2027 磨練出的韌性，此時正念的經驗和判斷力對公司而言很珍貴。</p>
+  <p style="margin-top: 8px;">6-7月是三年來的最高峰，也是正念在這間公司話語權最大的時候。</p>
+  <p style="margin-top: 8px;"><strong>核心策略：公司需要你。2026 建立的信任 + 2027 的韌性 = 2028 你就是那個穩定軍心的人。</strong></p>
+</div>
+
+<hr class="section-divider">
+
+<!-- 7. 整體策略 -->
+<h2>7. 三年整體策略</h2>
+
+<div class="card">
+  <h4>時間軸建議</h4>
+  <table class="month-table">
+    <thead>
+      <tr><th>時段</th><th>正念狀態</th><th>公司狀態</th><th>策略</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-label">2026上半年</td>
+        <td class="s-excellent">大吉 爆發</td>
+        <td class="s-fair">半吉 平穩</td>
+        <td>全力衝刺，建立地位</td>
+      </tr>
+      <tr>
+        <td class="row-label">2026下半年</td>
+        <td class="s-good">大吉 穩定</td>
+        <td class="s-fair">半吉 起伏</td>
+        <td>鞏固成果，儲備人脈</td>
+      </tr>
+      <tr>
+        <td class="row-label">2027上半年</td>
+        <td class="s-warning">大凶 低谷</td>
+        <td class="s-good">大吉 上升</td>
+        <td>守勢，跟著公司方向走</td>
+      </tr>
+      <tr>
+        <td class="row-label">2027下半年</td>
+        <td class="s-caution">大凶 起伏</td>
+        <td class="s-excellent">大吉 高峰</td>
+        <td>借力公司，6月把握唯一窗口</td>
+      </tr>
+      <tr>
+        <td class="row-label">2028上半年</td>
+        <td class="s-fair">半吉 回穩</td>
+        <td class="s-warning">大凶 下滑</td>
+        <td>主導節奏，成為公司支柱</td>
+      </tr>
+      <tr>
+        <td class="row-label">2028下半年</td>
+        <td class="s-good">半吉 高峰</td>
+        <td class="s-warning">大凶 谷底</td>
+        <td>6-7月是三年巔峰，最大話語權</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h4>致正念的話</h4>
+  <p>從宿曜道來看，你和這間公司的三年節奏是非常理想的交替互補格局。不會出現雙方同時崩盤的狀況，一方低谷時另一方必定撐著。</p>
+  <p style="margin-top: 8px;">2026 年是你的大吉年，這是九年一遇的黃金時期。如果你進這間公司，第一年就是你最強的一年 — 趁這個時候把能力展現出來、把關係建立起來。你在大吉年種下的種子，會在接下來兩年持續開花。</p>
+  <p style="margin-top: 8px;">2027 年羅喉星大凶，個人氣場會低，但公司正好是日曜星大吉。公司業務好、環境好，你不需要靠自己硬撐，跟著公司的勢走就行。2026 年建立的信任和人脈，就是你 2027 年的安全網。</p>
+  <p style="margin-top: 8px;">2028 年你回到半吉，公司掉到大凶。經歷過一年大吉、一年大凶的你，能力和抗壓性都已經歷練過了。公司在困難期需要穩定的人，你就是那個角色。6-7 月是三年來你話語權最大的時候。</p>
+  <p style="margin-top: 12px; font-weight: 700;">結論：這間公司值得去。三年節奏互補、元素相生、第一年就是你的黃金年。現在就主動聯絡，不要被動等。</p>
+</div>
+
+<!-- 頁尾 -->
+<div class="footer">
+  <p>宿曜道運勢分析系統 | 分析日期: 2026/02/20</p>
+  <p>本報告基於宿曜經(大正藏 T21n1299)原典算法生成，僅供參考</p>
+</div>
+
+</body>
+</html>

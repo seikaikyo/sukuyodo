@@ -28,4 +28,5 @@ npm-debug.log*
 Thumbs.db
 
 # Personal reports
+report_*.html
 report-*.html
