@@ -1071,7 +1071,7 @@ function exportDecadeReport() {
                 <span class="strategy-icon safe-icon">&#9650;</span>
                 <span class="strategy-label">避風港月份</span>
               </div>
-              <div v-for="h in yearlyFortune.strategy.safe_havens" :key="h.start_month" class="strategy-item safe-item">
+              <div v-for="h in [...yearlyFortune.strategy.safe_havens].sort((a, b) => a.start_month - b.start_month)" :key="h.start_month" class="strategy-item safe-item">
                 <span class="strategy-months safe-tag">{{ h.start_month }}-{{ h.end_month }}月</span>
                 <span class="strategy-avg">均分 {{ h.avg_score }}</span>
                 <p class="strategy-item-desc">{{ h.description }}</p>
@@ -1084,7 +1084,7 @@ function exportDecadeReport() {
                 <span class="strategy-icon best-icon">&#9679;</span>
                 <span class="strategy-label">最佳行動月</span>
               </div>
-              <div v-for="b in yearlyFortune.strategy.best_months" :key="b.month" class="strategy-item best-item">
+              <div v-for="b in [...yearlyFortune.strategy.best_months].sort((a, b) => a.month - b.month)" :key="b.month" class="strategy-item best-item">
                 <span class="strategy-months best-tag">{{ b.month }}月</span>
                 <span class="strategy-score" :class="getScoreClass(b.score)">{{ b.score }}</span>
                 <p class="strategy-item-desc">{{ b.description }}</p>
@@ -1097,7 +1097,7 @@ function exportDecadeReport() {
                 <span class="strategy-icon caution-icon">&#9660;</span>
                 <span class="strategy-label">警戒月份</span>
               </div>
-              <div v-for="c in yearlyFortune.strategy.caution_months" :key="c.month" class="strategy-item caution-item">
+              <div v-for="c in [...yearlyFortune.strategy.caution_months].sort((a, b) => a.month - b.month)" :key="c.month" class="strategy-item caution-item">
                 <span class="strategy-months caution-tag">{{ c.month }}月</span>
                 <span class="strategy-score" :class="getScoreClass(c.score)">{{ c.score }}</span>
                 <p class="strategy-item-desc">{{ c.description }}</p>
