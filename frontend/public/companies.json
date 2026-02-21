@@ -6,30 +6,57 @@
     "jobUrl": "https://www.104.com.tw/job/8qldo"
   },
   {
-    "name": "GARMIN 台灣國際航電",
-    "foundingDate": "1990-01-16",
-    "memo": "智慧製造自動化工程師 | MES職缺在新店，台南僅機電",
-    "jobUrl": "https://www.104.com.tw/job/8dhtc"
-  },
-  {
-    "name": "台達電子",
-    "foundingDate": "1975-08-20",
-    "memo": "AI Agent軟體研發工程師-台達研究院 | 台南市善化區"
-  },
-  {
-    "name": "松瑞製藥",
-    "foundingDate": "2004-01-30",
-    "memo": "軟體工程師 ERP/MES/React/Angular | 台南市新市區"
-  },
-  {
-    "name": "直得科技",
-    "foundingDate": "1998-10-19",
-    "memo": "軟體開發工程師 EtherCAT/嵌入式 | 台南市新市區"
+    "name": "恆碩科技",
+    "foundingDate": "1998-07-03",
+    "memo": "MES軟體工程師 | 台南市仁德區",
+    "jobUrl": "https://www.104.com.tw/job/8k8nw"
   },
   {
     "name": "富田永續生醫",
     "foundingDate": "2025-06-03",
     "memo": "電控研發/自動化控制/智慧戰情室 | 台南市歸仁區",
     "jobUrl": "https://www.104.com.tw/job/8w7le"
+  },
+  {
+    "name": "東陽實業廠",
+    "foundingDate": "1967-10-30",
+    "memo": "IoT軟體工程師 | 台南市安南區",
+    "jobUrl": "https://www.104.com.tw/job/8sn70"
+  },
+  {
+    "name": "捷拓科技",
+    "foundingDate": "1990-08-07",
+    "memo": "自動化工程師 | 台南市南區",
+    "jobUrl": "https://www.104.com.tw/job/8pcfn"
+  },
+  {
+    "name": "資拓宏宇國際",
+    "foundingDate": "2008-04-10",
+    "memo": "系統分析師-智慧城市領域 | 高雄市前鎮區",
+    "jobUrl": "https://www.104.com.tw/job/8x79w"
+  },
+  {
+    "name": "新應材",
+    "foundingDate": "2003-09-25",
+    "memo": "智慧製造工程師(南科高雄園區) | 高雄市岡山區",
+    "jobUrl": "https://www.104.com.tw/job/8n69r"
+  },
+  {
+    "name": "臻鼎科技",
+    "foundingDate": "1978-09-02",
+    "memo": "智慧製造儲備幹部 | 高雄市路竹區",
+    "jobUrl": "https://www.104.com.tw/job/8vd3m"
+  },
+  {
+    "name": "富比庫",
+    "foundingDate": "2015-05-29",
+    "memo": "AI工程師 | 高雄市前鎮區",
+    "jobUrl": "https://www.104.com.tw/job/5r5sb"
+  },
+  {
+    "name": "基士德環科",
+    "foundingDate": "2021-02-01",
+    "memo": "AI工程師/資料科學家 | 高雄市鼓山區",
+    "jobUrl": "https://www.104.com.tw/job/7rax2"
   }
 ]
