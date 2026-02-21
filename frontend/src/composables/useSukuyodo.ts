@@ -797,7 +797,7 @@ export function useSukuyodo() {
   // Tab Navigation
   const activeMainTab = ref<'fortune' | 'match' | 'calendar' | 'lucky' | 'knowledge'>('fortune')
   const activeFortuneTab = ref<'daily' | 'weekly' | 'monthly' | 'yearly' | 'decade'>('daily')
-  const activeMatchTab = ref<'finder' | 'compat' | 'partners'>('finder')
+  const activeMatchTab = ref<'finder' | 'compat' | 'partners' | 'company'>('finder')
   const activeKnowledgeTab = ref<'mansion' | 'wheel' | 'relations' | 'elements' | 'nature-types' | 'special-days' | 'kuyou' | 'ryouhan' | 'sanki' | 'calendar' | 'history'>('mansion')
 
   // Query UI
@@ -847,6 +847,15 @@ export function useSukuyodo() {
   // Partner Compatibilities
   const partnerCompatibilities = ref<PartnerCompatibility[]>([])
   const partnerCompatLoading = ref(false)
+
+  // Company Compatibility
+  const companyName = ref('')
+  const companyDate = ref('')
+  const companyCompat = ref<CompatibilityResult | null>(null)
+  const companyCompatLoading = ref(false)
+  const companyCompatError = ref('')
+  const companyCompatibilities = ref<(PartnerCompatibility & { companyId: string; companyName: string; companyMemo?: string })[]>([])
+  const companyCompatLoading2 = ref(false)
 
   // Lucky Days
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
@@ -1349,6 +1358,103 @@ export function useSukuyodo() {
     }
   }
 
+  async function calculateCompanyCompatibility() {
+    if (!myBirthDate.value || !companyDate.value) return
+
+    companyCompatLoading.value = true
+    companyCompatError.value = ''
+    companyCompat.value = null
+
+    try {
+      const res = await fetch(getApiUrl('/compatibility'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date1: myBirthDate.value,
+          date2: companyDate.value
+        })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          companyCompat.value = data.data
+        } else {
+          companyCompatError.value = data.error || '分析失敗'
+        }
+      } else {
+        const err = await res.json()
+        companyCompatError.value = err.detail || '分析失敗'
+      }
+    } catch {
+      companyCompatError.value = '無法連線到伺服器'
+    } finally {
+      companyCompatLoading.value = false
+    }
+  }
+
+  async function fetchCompanyCompatibilities() {
+    if (!myBirthDate.value) return
+    const companies = profile.value.companies
+    if (companies.length === 0) {
+      companyCompatibilities.value = []
+      return
+    }
+
+    companyCompatLoading2.value = true
+    companyCompatibilities.value = []
+
+    try {
+      const results: typeof companyCompatibilities.value = []
+
+      for (const company of companies) {
+        const res = await fetch(getApiUrl('/compatibility'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date1: myBirthDate.value,
+            date2: company.foundingDate
+          })
+        })
+
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success) {
+            const compat = data.data as CompatibilityResult
+            results.push({
+              companyId: company.id,
+              companyName: company.name,
+              companyMemo: company.memo,
+              partnerId: company.id,
+              nickname: company.name,
+              birthDate: company.foundingDate,
+              mansion: {
+                name_jp: compat.person2.mansion,
+                reading: compat.person2.reading,
+                element: compat.person2.element
+              },
+              relation: compat.relation,
+              score: compat.score,
+              element_bonus: compat.element_bonus,
+              summary: compat.summary,
+              calculation: {
+                distance: compat.calculation.distance,
+                element_relation: compat.calculation.element_relation,
+                person1_element: compat.person1.element,
+                person2_element: compat.person2.element
+              }
+            })
+          }
+        }
+      }
+
+      companyCompatibilities.value = results.sort((a, b) => b.score - a.score)
+    } catch {
+      console.error('Failed to fetch company compatibilities')
+    } finally {
+      companyCompatLoading2.value = false
+    }
+  }
+
   async function loadMetadata() {
     try {
       const res = await fetch(getApiUrl('/metadata'))
@@ -1423,10 +1529,13 @@ export function useSukuyodo() {
     lookupMansion()
   }
 
-  // Watch for partner tab switch
+  // Watch for partner/company tab switch
   watch(activeMatchTab, (tab) => {
     if (tab === 'partners' && partnerCompatibilities.value.length === 0) {
       fetchPartnerCompatibilities()
+    }
+    if (tab === 'company' && companyCompatibilities.value.length === 0 && profile.value.companies.length > 0) {
+      fetchCompanyCompatibilities()
     }
   })
 
@@ -1502,6 +1611,15 @@ export function useSukuyodo() {
     partnerCompatibilities,
     partnerCompatLoading,
 
+    // Company Compatibility
+    companyName,
+    companyDate,
+    companyCompat,
+    companyCompatLoading,
+    companyCompatError,
+    companyCompatibilities,
+    companyCompatLoading2,
+
     // Lucky Days
     luckyDaySummary,
     luckyDaySummaryLoading,
@@ -1538,6 +1656,8 @@ export function useSukuyodo() {
     fetchPairLuckyDays,
     clearPairSelection,
     calculateCompatibility,
+    calculateCompanyCompatibility,
+    fetchCompanyCompatibilities,
     fetchPartnerCompatibilities,
     fetchDailyFortuneForDate,
     fetchYearlyRange,

@@ -25,9 +25,17 @@ export const PRACTITIONER_LEVELS: { value: PractitionerLevel; label: string }[] 
   { value: 'ajari', label: '阿闍梨' },
 ]
 
+export interface Company {
+  id: string
+  name: string
+  foundingDate: string  // YYYY-MM-DD 格式
+  memo?: string
+}
+
 export interface UserProfile {
   birthDate: string | null  // YYYY-MM-DD 格式
   partners: Partner[]
+  companies: Company[]
   practitionerLevel: PractitionerLevel
 }
 
@@ -48,6 +56,12 @@ function loadProfile(): UserProfile {
           birthDate: p.birthDate,
           relation: p.relation || 'friend'
         })),
+        companies: (parsed.companies || []).map((c: Company) => ({
+          id: c.id,
+          name: c.name,
+          foundingDate: c.foundingDate,
+          memo: c.memo
+        })),
         practitionerLevel: parsed.practitionerLevel || 'none'
       }
     }
@@ -57,6 +71,7 @@ function loadProfile(): UserProfile {
   return {
     birthDate: null,
     partners: [],
+    companies: [],
     practitionerLevel: 'none' as PractitionerLevel
   }
 }
@@ -112,10 +127,35 @@ export function useProfile() {
     }
   }
 
+  function addCompany(company: Omit<Company, 'id'>) {
+    if (profile.value.companies.length >= 20) {
+      throw new Error('最多只能新增 20 間公司')
+    }
+    profile.value.companies.push({
+      ...company,
+      id: crypto.randomUUID()
+    })
+  }
+
+  function updateCompany(id: string, updates: Partial<Omit<Company, 'id'>>) {
+    const company = profile.value.companies.find(c => c.id === id)
+    if (company) {
+      Object.assign(company, updates)
+    }
+  }
+
+  function removeCompany(id: string) {
+    const idx = profile.value.companies.findIndex(c => c.id === id)
+    if (idx !== -1) {
+      profile.value.companies.splice(idx, 1)
+    }
+  }
+
   function clearProfile() {
     profile.value = {
       birthDate: null,
       partners: [],
+      companies: [],
       practitionerLevel: 'none'
     }
   }
@@ -130,6 +170,9 @@ export function useProfile() {
     addPartner,
     updatePartner,
     removePartner,
+    addCompany,
+    updateCompany,
+    removeCompany,
     clearProfile,
     RELATION_TYPES,
     PRACTITIONER_LEVELS

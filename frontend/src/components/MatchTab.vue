@@ -4,7 +4,8 @@ import type {
   CompatibilityFinderResult,
   CompatibleMansion,
   CompatibilityResult,
-  PartnerCompatibility
+  PartnerCompatibility,
+  Relation
 } from '../composables/useSukuyodo'
 import { getScoreClass, getScoreLevel, getLocalDateStr } from '../utils/fortune-helpers'
 import { generateCompatReport, generatePairedDecadeReport } from '../utils/report-generator'
@@ -25,8 +26,14 @@ function togglePartner(id: string) {
   }
 }
 
+export interface CompanyCompatItem extends PartnerCompatibility {
+  companyId: string
+  companyName: string
+  companyMemo?: string
+}
+
 const props = defineProps<{
-  activeTab: 'finder' | 'compat' | 'partners'
+  activeTab: 'finder' | 'compat' | 'partners' | 'company'
   compatFinder: CompatibilityFinderResult | null
   finderLoading: boolean
   selectedMansion: CompatibleMansion | null
@@ -40,6 +47,14 @@ const props = defineProps<{
   elementColors: Record<string, string>
   birthDate: string
   mansion: { name_jp: string; reading: string; element: string } | null
+  // Company
+  companyName: string
+  companyDate: string
+  companyCompat: CompatibilityResult | null
+  companyCompatLoading: boolean
+  companyCompatError: string
+  companyCompatibilities: CompanyCompatItem[]
+  companyCompatLoading2: boolean
 }>()
 
 async function handleExportPairedReport() {
@@ -120,10 +135,15 @@ async function handlePartnerPairedReport(pc: PartnerCompatibility) {
 }
 
 const emit = defineEmits<{
-  'update:activeTab': [value: 'finder' | 'compat' | 'partners']
+  'update:activeTab': [value: 'finder' | 'compat' | 'partners' | 'company']
   'update:selectedMansion': [value: CompatibleMansion | null]
   'update:date2': [value: string]
+  'update:companyName': [value: string]
+  'update:companyDate': [value: string]
   calculateCompatibility: []
+  calculateCompanyCompatibility: []
+  saveCompany: [data: { name: string; foundingDate: string; memo?: string }]
+  removeCompany: [id: string]
   'navigate-knowledge': [tab: string]
   'navigate-lucky': []
 }>()
@@ -200,6 +220,73 @@ function getElementDesc(el1: string, el2: string, calcRelation: string): string 
 function handleMansionClick(m: CompatibleMansion) {
   emit('update:selectedMansion', props.selectedMansion?.index === m.index ? null : m)
 }
+
+// Company verdict
+const expandedCompanyId = ref<string | null>(null)
+const confirmDeleteCompanyId = ref<string | null>(null)
+
+function toggleCompany(id: string) {
+  const isExpanding = expandedCompanyId.value !== id
+  expandedCompanyId.value = isExpanding ? id : null
+  if (isExpanding) {
+    nextTick(() => {
+      const el = document.querySelector('.company-detail')
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }
+}
+
+function deleteCompany(id: string) {
+  emit('removeCompany', id)
+  confirmDeleteCompanyId.value = null
+  if (expandedCompanyId.value === id) expandedCompanyId.value = null
+}
+
+interface CompanyVerdict {
+  level: 'recommend' | 'caution' | 'avoid'
+  text: string
+  detail: string
+}
+
+function getCompanyVerdict(relation: Relation): CompanyVerdict {
+  const type = relation.type
+  const dir = relation.direction || ''
+
+  // 栄親
+  if (type === 'eishin') {
+    if (dir === '栄') {
+      return { level: 'recommend', text: '推薦', detail: '你是栄方，公司自然帶給你助力和好運' }
+    }
+    return { level: 'recommend', text: '適合', detail: '你是親方，會自然投入付出，確保回報合理即可' }
+  }
+  // 友衰
+  if (type === 'yusui') {
+    if (dir === '友') {
+      return { level: 'caution', text: '留意', detail: '你是友方（給予側），注意付出與回報是否平衡' }
+    }
+    return { level: 'caution', text: '留意', detail: '你是衰方（接受側），短期有利但長期需觀察' }
+  }
+  // 命/業/胎
+  if (type === 'mei' || type === 'gyotai') {
+    return { level: 'caution', text: '中性', detail: '命業胎關係，緣分深但需看其他條件綜合判斷' }
+  }
+  // 危成
+  if (type === 'kisei') {
+    if (dir === '危') {
+      return { level: 'caution', text: '留意', detail: '你是危方，這間公司可能帶來不穩定因素' }
+    }
+    return { level: 'caution', text: '可考慮', detail: '你是成方（被借力），能發揮價值但留意風險' }
+  }
+  // 安壊
+  if (type === 'ankai') {
+    if (dir === '壊') {
+      return { level: 'avoid', text: '避開', detail: '你是壊方，容易與這間公司產生破壞性衝突' }
+    }
+    return { level: 'caution', text: '留意', detail: '你是安方，表面穩定但可能被動、難以主導' }
+  }
+
+  return { level: 'caution', text: '中性', detail: '請參考相性分數綜合判斷' }
+}
 </script>
 
 <template>
@@ -229,6 +316,14 @@ function handleMansionClick(m: CompatibleMansion) {
         aria-controls="panel-match-partners"
         @click="emit('update:activeTab', 'partners')"
       >我的配對</button>
+      <button
+        class="pill-btn"
+        :class="{ active: activeTab === 'company' }"
+        role="tab"
+        :aria-selected="activeTab === 'company'"
+        aria-controls="panel-match-company"
+        @click="emit('update:activeTab', 'company')"
+      >公司速查</button>
     </div>
 
     <!-- Finder -->
@@ -442,6 +537,217 @@ function handleMansionClick(m: CompatibleMansion) {
             </ul>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Company -->
+    <div v-if="activeTab === 'company'" id="panel-match-company" class="match-content" role="tabpanel">
+      <div class="company-intro">
+        <p>輸入公司設立日期，查看與你的宿曜相性。設立日期可至經濟部商業司查詢。</p>
+      </div>
+
+      <div class="company-form">
+        <sl-input
+          :value="companyName"
+          label="公司名稱"
+          placeholder="例：台積電"
+          @sl-input="emit('update:companyName', ($event.target as HTMLInputElement).value)"
+        ></sl-input>
+        <sl-input
+          type="date"
+          :value="companyDate"
+          label="設立日期"
+          :max="getLocalDateStr()"
+          @sl-input="emit('update:companyDate', ($event.target as HTMLInputElement).value)"
+        ></sl-input>
+        <button
+          class="btn-primary"
+          :disabled="!companyDate || companyCompatLoading"
+          @click="emit('calculateCompanyCompatibility')"
+        >
+          <sl-spinner v-if="companyCompatLoading"></sl-spinner>
+          <span v-else>查詢</span>
+        </button>
+      </div>
+
+      <div v-if="companyCompatError" class="error-msg">{{ companyCompatError }}</div>
+
+      <!-- Company Result -->
+      <div v-if="companyCompat" class="compat-result company-result">
+        <div class="company-verdict-header">
+          <div class="compat-score" :class="getScoreLevel(companyCompat.score).class">
+            <span class="score-num">{{ companyCompat.score }}</span>
+            <span class="score-text">{{ getScoreLevel(companyCompat.score).text }}</span>
+          </div>
+          <div
+            class="verdict-badge"
+            :class="getCompanyVerdict(companyCompat.relation).level"
+          >{{ getCompanyVerdict(companyCompat.relation).text }}</div>
+        </div>
+
+        <div class="verdict-detail">
+          {{ getCompanyVerdict(companyCompat.relation).detail }}
+        </div>
+
+        <div class="compat-persons">
+          <div class="person-card">
+            <h5>你</h5>
+            <p class="person-mansion">{{ companyCompat.person1.mansion }}</p>
+            <span class="person-element">{{ companyCompat.person1.element }}</span>
+          </div>
+          <div class="relation-arrow">
+            <span class="relation-name">
+              {{ companyCompat.relation.name }}
+              <template v-if="companyCompat.relation.direction">（{{ companyCompat.relation.direction }}）</template>
+            </span>
+            <span class="relation-reading">{{ companyCompat.relation.reading }}</span>
+            <span
+              v-if="companyCompat.relation.distance_type_name"
+              class="distance-tag"
+              :class="companyCompat.relation.distance_type"
+            >{{ companyCompat.relation.distance_type_name }}</span>
+          </div>
+          <div class="person-card">
+            <h5>{{ companyName || '公司' }}</h5>
+            <p class="person-mansion">{{ companyCompat.person2.mansion }}</p>
+            <span class="person-element">{{ companyCompat.person2.element }}</span>
+          </div>
+        </div>
+
+        <!-- 方向解釋 -->
+        <div v-if="companyCompat.relation.direction" class="direction-box">
+          <div class="direction-row">
+            <span class="direction-label">你→公司</span>
+            <span class="direction-value">{{ companyCompat.relation.direction }}</span>
+            <span class="direction-desc">{{ directionDesc[companyCompat.relation.direction] || '' }}</span>
+          </div>
+          <div class="direction-row">
+            <span class="direction-label">公司→你</span>
+            <span class="direction-value">{{ getInverseDirection(companyCompat.relation.direction) }}</span>
+            <span class="direction-desc">{{ directionDesc[getInverseDirection(companyCompat.relation.direction)] || '' }}</span>
+          </div>
+        </div>
+
+        <!-- 元素關係 -->
+        <div v-if="companyCompat.calculation" class="element-relation-box">
+          <span class="element-tag" :style="{ background: elementColors[companyCompat.person1.element] }">{{ companyCompat.person1.element }}</span>
+          <span class="element-arrow">→</span>
+          <span class="element-tag" :style="{ background: elementColors[companyCompat.person2.element] }">{{ companyCompat.person2.element }}</span>
+          <span class="element-desc">{{ getElementDesc(companyCompat.person1.element, companyCompat.person2.element, companyCompat.calculation.element_relation) }}</span>
+        </div>
+
+        <!-- 事業面向 -->
+        <div v-if="companyCompat.relation.career" class="compat-aspects">
+          <div class="aspect-section">
+            <h5>事業面向</h5>
+            <p>{{ companyCompat.relation.career }}</p>
+          </div>
+        </div>
+
+        <div class="compat-detail">
+          <p>{{ companyCompat.relation.description }}</p>
+          <p>{{ companyCompat.summary }}</p>
+        </div>
+
+        <!-- 儲存按鈕 -->
+        <button
+          class="btn-save-company"
+          @click="emit('saveCompany', { name: companyName || '未命名公司', foundingDate: companyDate })"
+        >收藏此公司</button>
+      </div>
+
+      <!-- Saved Companies -->
+      <div v-if="companyCompatibilities.length > 0" class="saved-companies">
+        <h4 class="saved-title">已收藏公司 ({{ companyCompatibilities.length }})</h4>
+        <div class="partner-list">
+          <div
+            v-for="cc in companyCompatibilities"
+            :key="cc.companyId"
+            class="partner-card-wrapper"
+          >
+            <button
+              class="partner-card"
+              :class="[getScoreClass(cc.score), { expanded: expandedCompanyId === cc.companyId }]"
+              :aria-expanded="expandedCompanyId === cc.companyId"
+              @click="toggleCompany(cc.companyId)"
+            >
+              <div class="partner-info">
+                <span class="partner-name">{{ cc.companyName }}</span>
+                <span class="partner-mansion">{{ cc.mansion.name_jp }}（{{ cc.mansion.reading }}）</span>
+              </div>
+              <div class="partner-relation">
+                <span class="relation-name">{{ cc.relation.name }}</span>
+                <div class="company-verdict-mini">
+                  <span
+                    class="verdict-badge-mini"
+                    :class="getCompanyVerdict(cc.relation).level"
+                  >{{ getCompanyVerdict(cc.relation).text }}</span>
+                </div>
+              </div>
+              <div class="partner-score">
+                <span class="score-num">{{ cc.score }}</span>
+              </div>
+            </button>
+
+            <div v-if="expandedCompanyId === cc.companyId" class="partner-detail company-detail">
+              <div class="verdict-detail">
+                {{ getCompanyVerdict(cc.relation).detail }}
+              </div>
+
+              <!-- 方向解釋 -->
+              <div v-if="cc.relation.direction" class="direction-box">
+                <div class="direction-row">
+                  <span class="direction-label">你→公司</span>
+                  <span class="direction-value">{{ cc.relation.direction }}</span>
+                  <span class="direction-desc">{{ directionDesc[cc.relation.direction] || '' }}</span>
+                </div>
+                <div class="direction-row">
+                  <span class="direction-label">公司→你</span>
+                  <span class="direction-value">{{ getInverseDirection(cc.relation.direction) }}</span>
+                  <span class="direction-desc">{{ directionDesc[getInverseDirection(cc.relation.direction)] || '' }}</span>
+                </div>
+              </div>
+
+              <!-- 元素關係 -->
+              <div v-if="cc.calculation" class="element-relation-box">
+                <span class="element-tag" :style="{ background: elementColors[cc.calculation.person1_element || ''] }">{{ cc.calculation.person1_element || '' }}</span>
+                <span class="element-arrow">→</span>
+                <span class="element-tag" :style="{ background: elementColors[cc.calculation.person2_element || ''] }">{{ cc.calculation.person2_element || '' }}</span>
+                <span class="element-desc">{{ getElementDesc(cc.calculation.person1_element || '', cc.calculation.person2_element || '', cc.calculation.element_relation || '') }}</span>
+              </div>
+
+              <!-- 事業面向 -->
+              <div v-if="cc.relation.career" class="compat-aspects">
+                <div class="aspect-section">
+                  <h5>事業面向</h5>
+                  <p>{{ cc.relation.career }}</p>
+                </div>
+              </div>
+
+              <div class="compat-detail">
+                <p>{{ cc.relation.description }}</p>
+                <p v-if="cc.summary">{{ cc.summary }}</p>
+              </div>
+
+              <div class="company-actions">
+                <button
+                  v-if="confirmDeleteCompanyId !== cc.companyId"
+                  class="btn-delete-company"
+                  @click.stop="confirmDeleteCompanyId = cc.companyId"
+                >移除</button>
+                <button
+                  v-else
+                  class="btn-delete-company confirm"
+                  @click.stop="deleteCompany(cc.companyId)"
+                >確認移除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="companyCompatLoading2" class="loading-state">
+        <sl-spinner></sl-spinner>
       </div>
     </div>
 
@@ -1445,6 +1751,175 @@ function handleMansionClick(m: CompatibleMansion) {
 
   .relation-section {
     padding: var(--space-sm);
+  }
+}
+
+/* Company */
+.company-intro {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+}
+
+.company-intro p {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.company-form {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  align-items: flex-end;
+}
+
+.company-form sl-input {
+  flex: 1;
+  --sl-input-background-color: var(--bg-surface);
+  --sl-input-border-color: var(--border);
+  --sl-input-color: var(--text-primary);
+  --sl-input-label-color: var(--text-secondary);
+}
+
+.company-result {
+  position: relative;
+}
+
+.company-verdict-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.verdict-badge {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: var(--font-base);
+}
+
+.verdict-badge.recommend {
+  background: var(--success);
+  color: var(--text-on-accent);
+}
+
+.verdict-badge.caution {
+  background: var(--caution);
+  color: var(--bg-primary);
+}
+
+.verdict-badge.avoid {
+  background: var(--warning);
+  color: var(--text-on-accent);
+}
+
+.verdict-detail {
+  text-align: center;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.btn-save-company {
+  width: 100%;
+  padding: var(--space-sm);
+  min-height: 44px;
+  margin-top: var(--space-md);
+  background: transparent;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-save-company:hover {
+  background: rgba(139, 105, 20, 0.1);
+}
+
+.saved-companies {
+  margin-top: var(--space-xl);
+}
+
+.saved-title {
+  font-size: var(--font-base);
+  color: var(--accent);
+  margin: 0 0 var(--space-md);
+}
+
+.verdict-badge-mini {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.verdict-badge-mini.recommend {
+  background: var(--success);
+  color: var(--text-on-accent);
+}
+
+.verdict-badge-mini.caution {
+  background: var(--caution);
+  color: var(--bg-primary);
+}
+
+.verdict-badge-mini.avoid {
+  background: var(--warning);
+  color: var(--text-on-accent);
+}
+
+.company-verdict-mini {
+  margin-top: 2px;
+}
+
+.company-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-md);
+}
+
+.btn-delete-company {
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.btn-delete-company:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.btn-delete-company.confirm {
+  border-color: var(--warning);
+  background: var(--warning);
+  color: var(--text-on-accent);
+}
+
+@media (max-width: 767px) {
+  .company-form {
+    flex-direction: column;
+  }
+
+  .company-verdict-header {
+    flex-direction: column;
+    gap: var(--space-sm);
   }
 }
 

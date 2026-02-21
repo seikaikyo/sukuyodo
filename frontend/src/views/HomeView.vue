@@ -65,6 +65,15 @@ const {
   partnerCompatibilities,
   partnerCompatLoading,
 
+  // Company Compatibility
+  companyName,
+  companyDate,
+  companyCompat,
+  companyCompatLoading,
+  companyCompatError,
+  companyCompatibilities,
+  companyCompatLoading2,
+
   // Lucky Days
   luckyDaySummary,
   luckyDaySummaryLoading,
@@ -88,6 +97,8 @@ const {
   // API Functions
   lookupMansion,
   calculateCompatibility,
+  calculateCompanyCompatibility,
+  fetchCompanyCompatibilities,
   fetchPairLuckyDays,
   clearPairSelection,
   fetchDailyFortuneForDate,
@@ -106,7 +117,7 @@ const {
   init
 } = useSukuyodo()
 
-const { addPartner, updatePartner, removePartner, profile } = useProfile()
+const { addPartner, updatePartner, removePartner, addCompany, removeCompany, profile } = useProfile()
 
 // Profile & Partner management state
 const showProfilePanel = ref(false)
@@ -156,6 +167,16 @@ function savePartner() {
 function deletePartner(id: string) {
   removePartner(id)
   confirmDeleteId.value = null
+}
+
+function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string }) {
+  addCompany(data)
+  fetchCompanyCompatibilities()
+}
+
+function handleRemoveCompany(id: string) {
+  removeCompany(id)
+  fetchCompanyCompatibilities()
 }
 
 function handleEscape(e: KeyboardEvent) {
@@ -487,9 +508,21 @@ onUnmounted(() => {
         :element-colors="elementColors"
         :birth-date="birthDate"
         :mansion="mansion"
+        :company-name="companyName"
+        :company-date="companyDate"
+        :company-compat="companyCompat"
+        :company-compat-loading="companyCompatLoading"
+        :company-compat-error="companyCompatError"
+        :company-compatibilities="companyCompatibilities"
+        :company-compat-loading2="companyCompatLoading2"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
+        @update:company-name="companyName = $event"
+        @update:company-date="companyDate = $event"
         @calculate-compatibility="calculateCompatibility"
+        @calculate-company-compatibility="calculateCompanyCompatibility"
+        @save-company="handleSaveCompany"
+        @remove-company="handleRemoveCompany"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />
