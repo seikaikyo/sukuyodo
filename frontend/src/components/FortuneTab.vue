@@ -34,6 +34,13 @@ const emit = defineEmits<{
   'toggleYearlyWeek': [week: number]
 }>()
 
+const KUYOU_LEVEL_READING: Record<string, string> = {
+  '大吉': 'だいきち',
+  '半吉': 'はんきち',
+  '末吉': 'すえきち',
+  '大凶': 'だいきょう',
+}
+
 function getKuyouLevelClass(level: string) {
   if (level === '大吉') return 'level-great'
   if (level === '吉') return 'level-good'
@@ -321,11 +328,11 @@ function exportDecadeReport() {
           </div>
 
           <div class="score-legend">
-            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
-            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
-            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ <ruby>大吉<rp>(</rp><rt>だいきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ <ruby>吉<rp>(</rp><rt>きち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ <ruby>中吉<rp>(</rp><rt>ちゅうきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ <ruby>小凶<rp>(</rp><rt>しょうきょう</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 <ruby>凶<rp>(</rp><rt>きょう</rt><rp>)</rp></ruby></span>
           </div>
 
           <div v-if="dailyFortune.compound_analysis?.length" class="compound-analysis">
@@ -338,7 +345,7 @@ function exportDecadeReport() {
 
           <div v-if="dailyFortune.special_day" class="special-day-banner" :class="[dailyFortune.special_day.type, { reversed: dailyFortune.special_day.ryouhan_reversed }]">
             <span class="special-day-level">{{ dailyFortune.special_day.level }}</span>
-            <span class="special-day-name term-link" @click="emit('navigate-knowledge', 'special-days')">{{ dailyFortune.special_day.name }}</span>
+            <span class="special-day-name term-link" @click="emit('navigate-knowledge', 'special-days')"><ruby v-if="dailyFortune.special_day.reading">{{ dailyFortune.special_day.name }}<rp>(</rp><rt>{{ dailyFortune.special_day.reading }}</rt><rp>)</rp></ruby><template v-else>{{ dailyFortune.special_day.name }}</template></span>
             <p class="special-day-desc">{{ dailyFortune.special_day.description }}</p>
             <p v-if="dailyFortune.special_day.ryouhan_reversed" class="special-day-reversed">
               凌犯期間，吉凶逆轉（凌犯期間中のため吉凶が逆轉しています）
@@ -354,14 +361,14 @@ function exportDecadeReport() {
           </div>
 
           <div v-if="dailyFortune.ryouhan" class="ryouhan-banner">
-            <span class="ryouhan-label term-link" @click="emit('navigate-knowledge', 'ryouhan')">{{ dailyFortune.ryouhan.period_label || '凌犯期間' }}</span>
+            <span class="ryouhan-label term-link" @click="emit('navigate-knowledge', 'ryouhan')"><ruby v-if="dailyFortune.ryouhan.reading">{{ dailyFortune.ryouhan.period_label || '凌犯期間' }}<rp>(</rp><rt>{{ dailyFortune.ryouhan.reading }}</rt><rp>)</rp></ruby><template v-else>{{ dailyFortune.ryouhan.period_label || '凌犯期間' }}</template></span>
             <p class="ryouhan-desc">{{ dailyFortune.ryouhan.description }}</p>
             <p v-if="dailyFortune.fortune.ryouhan_warning" class="ryouhan-warning">{{ dailyFortune.fortune.ryouhan_warning }}</p>
             <span v-if="dailyFortune.ryouhan.source" class="ryouhan-source">{{ dailyFortune.ryouhan.source }}</span>
           </div>
 
           <div v-if="dailyFortune.rokugai" class="rokugai-banner">
-            <span class="rokugai-label term-link" @click="emit('navigate-knowledge', 'relations')">六害宿「{{ dailyFortune.rokugai.name }}」</span>
+            <span class="rokugai-label term-link" @click="emit('navigate-knowledge', 'relations')">六害宿「<ruby v-if="dailyFortune.rokugai.name_reading">{{ dailyFortune.rokugai.name }}<rp>(</rp><rt>{{ dailyFortune.rokugai.name_reading }}</rt><rp>)</rp></ruby><template v-else>{{ dailyFortune.rokugai.name }}</template>」</span>
             <p class="rokugai-desc">{{ dailyFortune.rokugai.description }}</p>
           </div>
 
@@ -375,7 +382,7 @@ function exportDecadeReport() {
                 <ruby v-if="dailyFortune.sanki.day_type_reading">{{ dailyFortune.sanki.day_type }}<rp>(</rp><rt>{{ dailyFortune.sanki.day_type_reading }}</rt><rp>)</rp></ruby>
                 <template v-else>{{ dailyFortune.sanki.day_type }}</template>
               </span>
-              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黒週（暗黒の一週間）</span>
+              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label"><ruby>暗黒の一週間<rp>(</rp><rt>あんこくのいっしゅうかん</rt><rp>)</rp></ruby></span>
             </div>
             <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
             <p class="sanki-period-desc">{{ dailyFortune.sanki.period_description }}</p>
@@ -496,11 +503,11 @@ function exportDecadeReport() {
           </div>
 
           <div class="score-legend">
-            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
-            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
-            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ <ruby>大吉<rp>(</rp><rt>だいきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ <ruby>吉<rp>(</rp><rt>きち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ <ruby>中吉<rp>(</rp><rt>ちゅうきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ <ruby>小凶<rp>(</rp><rt>しょうきょう</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 <ruby>凶<rp>(</rp><rt>きょう</rt><rp>)</rp></ruby></span>
           </div>
 
           <div v-if="weeklyFortune.lucky" class="lucky-info">
@@ -649,11 +656,11 @@ function exportDecadeReport() {
           </div>
 
           <div class="score-legend">
-            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
-            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
-            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ <ruby>大吉<rp>(</rp><rt>だいきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ <ruby>吉<rp>(</rp><rt>きち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ <ruby>中吉<rp>(</rp><rt>ちゅうきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ <ruby>小凶<rp>(</rp><rt>しょうきょう</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 <ruby>凶<rp>(</rp><rt>きょう</rt><rp>)</rp></ruby></span>
           </div>
 
           <!-- 本月策略 -->
@@ -804,12 +811,12 @@ function exportDecadeReport() {
           </div>
 
           <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
-            <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')">{{ yearlyFortune.kuyou_star.name }}</span>
+            <span class="kuyou-name term-link" @click="emit('navigate-knowledge', 'kuyou')"><ruby v-if="yearlyFortune.kuyou_star.reading">{{ yearlyFortune.kuyou_star.name }}<rp>(</rp><rt>{{ yearlyFortune.kuyou_star.reading }}</rt><rp>)</rp></ruby><template v-else>{{ yearlyFortune.kuyou_star.name }}</template></span>
             <template v-if="isPractitioner && yearlyFortune.shingon">
               <span class="practice-level" :class="getPracticeLevelClass(yearlyFortune.shingon.practice_level)">{{ yearlyFortune.shingon.practice_name }}</span>
             </template>
             <template v-else>
-              <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)">{{ yearlyFortune.kuyou_star.level }}</span>
+              <span class="kuyou-level" :class="getKuyouLevelClass(yearlyFortune.kuyou_star.level)"><ruby v-if="KUYOU_LEVEL_READING[yearlyFortune.kuyou_star.level]">{{ yearlyFortune.kuyou_star.level }}<rp>(</rp><rt>{{ KUYOU_LEVEL_READING[yearlyFortune.kuyou_star.level] }}</rt><rp>)</rp></ruby><template v-else>{{ yearlyFortune.kuyou_star.level }}</template></span>
             </template>
             <span class="current-year-score" :class="getScoreClass(yearlyFortune.fortune.overall)">{{ yearlyFortune.fortune.overall }}</span>
           </div>
@@ -1062,11 +1069,11 @@ function exportDecadeReport() {
           </div>
 
           <div class="score-legend">
-            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
-            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
-            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ <ruby>大吉<rp>(</rp><rt>だいきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ <ruby>吉<rp>(</rp><rt>きち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ <ruby>中吉<rp>(</rp><rt>ちゅうきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ <ruby>小凶<rp>(</rp><rt>しょうきょう</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 <ruby>凶<rp>(</rp><rt>きょう</rt><rp>)</rp></ruby></span>
           </div>
 
           <!-- 趨吉避凶策略 -->
@@ -1282,11 +1289,11 @@ function exportDecadeReport() {
           </div>
 
           <div class="score-legend">
-            <span class="legend-item"><span class="legend-dot excellent"></span>90+ 大吉</span>
-            <span class="legend-item"><span class="legend-dot good"></span>75+ 吉</span>
-            <span class="legend-item"><span class="legend-dot fair"></span>60+ 中吉</span>
-            <span class="legend-item"><span class="legend-dot caution"></span>45+ 小凶</span>
-            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 凶</span>
+            <span class="legend-item"><span class="legend-dot excellent"></span>90+ <ruby>大吉<rp>(</rp><rt>だいきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot good"></span>75+ <ruby>吉<rp>(</rp><rt>きち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot fair"></span>60+ <ruby>中吉<rp>(</rp><rt>ちゅうきち</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot caution"></span>45+ <ruby>小凶<rp>(</rp><rt>しょうきょう</rt><rp>)</rp></ruby></span>
+            <span class="legend-item"><span class="legend-dot warning"></span>&lt;45 <ruby>凶<rp>(</rp><rt>きょう</rt><rp>)</rp></ruby></span>
           </div>
 
           <!-- 年度卡片列表 -->

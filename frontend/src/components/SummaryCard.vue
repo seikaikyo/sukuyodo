@@ -49,7 +49,8 @@ const emit = defineEmits<{
         </div>
         <div class="fortune-label">今日運勢</div>
         <div class="fortune-level" :class="getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).class">
-          {{ dailyFortune.fortune.level_name || getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).text }}
+          <ruby v-if="dailyFortune.fortune.level_reading">{{ dailyFortune.fortune.level_name || getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).text }}<rp>(</rp><rt>{{ dailyFortune.fortune.level_reading }}</rt><rp>)</rp></ruby>
+          <template v-else>{{ dailyFortune.fortune.level_name || getFortuneLevel(dailyFortune.fortune.overall, dailyFortune.fortune.level).text }}</template>
         </div>
       </template>
       <sl-spinner v-else></sl-spinner>

@@ -355,7 +355,8 @@ function handleMansionClick(m: CompatibleMansion) {
               :class="compatibility.relation.distance_type"
               @click="emit('navigate-knowledge', 'relations')"
             >
-              {{ compatibility.relation.distance_type_name }}
+              <ruby v-if="compatibility.relation.distance_type_reading">{{ compatibility.relation.distance_type_name }}<rp>(</rp><rt>{{ compatibility.relation.distance_type_reading }}</rt><rp>)</rp></ruby>
+              <template v-else>{{ compatibility.relation.distance_type_name }}</template>
             </span>
           </div>
           <div class="person-card">

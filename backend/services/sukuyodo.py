@@ -270,6 +270,7 @@ class SukuyodoService:
                     "type": rel_key,
                     "distance_type": distance_type,
                     "distance_type_name": self._get_distance_type_name(distance_type),
+                    "distance_type_reading": self._get_distance_type_reading(distance_type),
                     "direction": direction,
                     **rel_data
                 }
@@ -283,6 +284,7 @@ class SukuyodoService:
             "advice": "",
             "distance_type": None,
             "distance_type_name": "",
+            "distance_type_reading": "",
             "direction": None
         }
 
@@ -311,6 +313,10 @@ class SukuyodoService:
     def _get_distance_type_name(self, distance_type: Optional[str]) -> str:
         """將距離類型轉換為中文名稱"""
         return {"near": "近距離", "mid": "中距離", "far": "遠距離"}.get(distance_type or "", "")
+
+    def _get_distance_type_reading(self, distance_type: Optional[str]) -> str:
+        """將距離類型轉換為假名讀音"""
+        return {"near": "きんきょり", "mid": "ちゅうきょり", "far": "えんきょり"}.get(distance_type or "", "")
 
     def calculate_compatibility(
         self,
@@ -396,6 +402,7 @@ class SukuyodoService:
                 "good_for": relation.get("good_for", []),
                 "distance_type": relation.get("distance_type"),
                 "distance_type_name": relation.get("distance_type_name", ""),
+                "distance_type_reading": relation.get("distance_type_reading", ""),
                 "direction": relation.get("direction"),
                 "love": distance_detail.get("love", ""),
                 "career": distance_detail.get("career", ""),
@@ -765,11 +772,11 @@ class SukuyodoService:
 
     # 等級 → 中日文名稱
     LEVEL_NAMES = {
-        "daikichi": {"zh": "大吉", "ja": "大吉"},
-        "kichi": {"zh": "吉", "ja": "吉"},
-        "chukichi": {"zh": "中吉", "ja": "中吉"},
-        "shokyo": {"zh": "小凶", "ja": "小凶"},
-        "kyo": {"zh": "凶", "ja": "凶"},
+        "daikichi": {"zh": "大吉", "ja": "大吉", "reading": "だいきち"},
+        "kichi": {"zh": "吉", "ja": "吉", "reading": "きち"},
+        "chukichi": {"zh": "中吉", "ja": "中吉", "reading": "ちゅうきち"},
+        "shokyo": {"zh": "小凶", "ja": "小凶", "reading": "しょうきょう"},
+        "kyo": {"zh": "凶", "ja": "凶", "reading": "きょう"},
     }
 
     # 等級 → effective_interpretation
@@ -1105,9 +1112,9 @@ class SukuyodoService:
             "name": "甘露日",
             "reading": "かんろび",
             "level": "大吉",
-            "description": "宿曜經記載的大吉日。七曜與當日宿的能量完全調和，萬事順遂。適合護摩供養、灌頂傳法、開眼供養、入佛開光、結婚、簽約、搬遷、開業等重要行動。",
+            "description": "宿曜經記載的大吉日。七曜與當日宿的能量完全調和，萬事順遂。適合護摩供、灌頂傳法、開眼供養、入佛開光、結婚、簽約、搬遷、開業等重要行動。",
             "description_classic": "甘露者，天降甘美之法雨也。七曜與宿値相應調和，萬事成就，百福莊嚴。此日行事，如沐法雨，所願皆遂。",
-            "description_ja": "甘露日は七曜と当日の宿が最も調和する大吉日なり。「甘露」とは仏教における不死の霊薬（アムリタ）を指し、天の恵みが降り注ぐ日とされる。真言宗では護摩供養・灌頂伝法・開眼供養など最重要の仏事をこの日に行うことを旨とす。"
+            "description_ja": "甘露日は七曜と当日の宿が最も調和する大吉日なり。「甘露」とは仏教における不死の霊薬（アムリタ）を指し、天の恵みが降り注ぐ日とされる。真言宗では護摩供・灌頂伝法・開眼供養など最重要の仏事をこの日に行うことを旨とす。"
         },
         "kongou": {
             "name": "金剛峯日",
@@ -1237,12 +1244,12 @@ class SukuyodoService:
     # 來源：yakumoin.net, kosei-do.co.jp, sukuyou.divination.page 三方交叉驗證
     # 凶度排序：命宿 > 事宿 > 意宿 > 聚宿 > 同宿 > 克宿
     ROKUGAI_OFFSETS = {
-        "命宿": {"offset": 0, "severity": 1},   # 本命宿
-        "意宿": {"offset": 3, "severity": 3},   # 一九の安（第 4 番目）
-        "事宿": {"offset": 9, "severity": 2},   # 業（第 10 番目）
-        "克宿": {"offset": 12, "severity": 6},  # 二九の安（第 13 番目）
-        "聚宿": {"offset": 15, "severity": 4},  # 二九の壊（第 16 番目）
-        "同宿": {"offset": 19, "severity": 5},  # 三九の栄（第 20 番目）
+        "命宿": {"offset": 0, "severity": 1, "reading": "めいしゅく"},   # 本命宿
+        "意宿": {"offset": 3, "severity": 3, "reading": "いしゅく"},   # 一九の安（第 4 番目）
+        "事宿": {"offset": 9, "severity": 2, "reading": "じしゅく"},   # 業（第 10 番目）
+        "克宿": {"offset": 12, "severity": 6, "reading": "こくしゅく"},  # 二九の安（第 13 番目）
+        "聚宿": {"offset": 15, "severity": 4, "reading": "じゅしゅく"},  # 二九の壊（第 16 番目）
+        "同宿": {"offset": 19, "severity": 5, "reading": "どうしゅく"},  # 三九の栄（第 20 番目）
     }
 
     # 三期サイクル：27 日為一循環，分三期各 9 天
@@ -1888,6 +1895,7 @@ class SukuyodoService:
                     rokugai = {
                         "active": True,
                         "name": rg["name"],
+                        "name_reading": rg["name_reading"],
                         "severity": rg["severity"],
                         "description": f"凌犯期間中の六害宿「{rg['name']}」に当たります。本命宿との関係で特に注意が必要な日です。"
                     }
@@ -2014,6 +2022,7 @@ class SukuyodoService:
                 "level": final_level,
                 "level_name": self.LEVEL_NAMES[final_level]["zh"],
                 "level_name_ja": self.LEVEL_NAMES[final_level]["ja"],
+                "level_reading": self.LEVEL_NAMES[final_level]["reading"],
                 "base_level": base_level,
                 "overall": overall_score,
                 "career": career_score,
@@ -2257,6 +2266,7 @@ class SukuyodoService:
                 "level": month_level,
                 "level_name": self.LEVEL_NAMES[month_level]["zh"],
                 "level_name_ja": self.LEVEL_NAMES[month_level]["ja"],
+                "level_reading": self.LEVEL_NAMES[month_level]["reading"],
                 "overall": base_score,
                 "career": calc_monthly_category("career"),
                 "love": calc_monthly_category("love"),
@@ -4495,6 +4505,7 @@ class SukuyodoService:
 
             return {
                 "active": True,
+                "reading": "りょうはんきかん",
                 "lunar_month": lunar_m,
                 "start_day": start_day,
                 "end_day": end_day,
@@ -4534,6 +4545,7 @@ class SukuyodoService:
             target_mansion = self.mansions_data[target_index]
             results.append({
                 "name": name,
+                "name_reading": info["reading"],
                 "mansion_index": target_index,
                 "mansion_name": target_mansion["name_jp"],
                 "mansion_reading": target_mansion["reading"],
