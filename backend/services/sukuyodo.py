@@ -1,5 +1,6 @@
 """宿曜道計算服務 - 日本真言宗占星術"""
 import json
+import random
 from datetime import date
 from pathlib import Path
 from typing import Optional
@@ -69,6 +70,12 @@ class SukuyodoService:
         self._elements_data = None
         self._metadata = None
         self._month_mansion_table = None
+
+    @staticmethod
+    def _seeded_choice(seed_key: str, pool: list):
+        """獨立 seed 的 random.choice，不影響外部 seed 狀態"""
+        random.seed(seed_key)
+        return random.choice(pool)
 
     def _load_data(self):
         """載入所有資料"""
@@ -1839,9 +1846,6 @@ class SukuyodoService:
         mansion_relation = self.get_relation_type(user_index, day_mansion_index)
         mansion_relation_type = mansion_relation["type"]
 
-        # 設定 seed 確保文字描述選擇穩定（同輸入同結果）
-        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
-
         # === 七曜資訊 ===
         weekday = target_date.weekday()
         jp_weekday = (weekday + 1) % 7
@@ -1926,6 +1930,7 @@ class SukuyodoService:
         # === 各項描述（根據等級選擇，非分數門檻） ===
         def get_category_desc(category: str, ryouhan_active: bool = False) -> dict:
             """回傳 {"zh": "...", "ja": "..."} 或 {"zh": "..."}"""
+            random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}cat_{category}")
             if ryouhan_active:
                 descs = self.RYOUHAN_CATEGORY_DESCRIPTIONS.get(category, {})
                 desc_key = self.RYOUHAN_DESC_KEY.get(final_level, "mid_reversal")
@@ -1952,6 +1957,7 @@ class SukuyodoService:
         wealth_desc_ja = wealth_descs.get("ja", "")
 
         # === 選擇建議（根據等級） ===
+        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}advice")
         advice_key = self.LEVEL_ADVICE_KEY.get(final_level, "neutral")
         advice_list = fortune_data["daily_advice"].get(advice_key, fortune_data["daily_advice"]["neutral"])
         advice = random.choice(advice_list)
@@ -2010,7 +2016,7 @@ class SukuyodoService:
                 "type": mansion_relation_type,
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(mansion_relation_type, mansion_relation["name"]),
                 "reading": mansion_relation.get("reading", ""),
-                "description": random.choice(self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]])),
+                "description": self._seeded_choice(f"{birth_date.isoformat()}{target_date.isoformat()}rel_desc", self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]])),
                 "description_classic": mansion_relation.get("description_classic", ""),
                 "description_ja": mansion_relation.get("description_ja", "")
             },
@@ -2231,9 +2237,6 @@ class SukuyodoService:
         # 月度策略分析
         monthly_strategy = self._generate_monthly_strategy(weekly, all_daily, ryouhan_count, days_in_month)
 
-        # 文字描述（seeded random.choice 確保同輸入同結果）
-        random.seed(f"{birth_date.isoformat()}{year}{month}")
-
         return {
             "year": year,
             "month": month,
@@ -2254,13 +2257,13 @@ class SukuyodoService:
                 "type": relation["type"],
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(relation["type"], relation["name"]),
                 "reading": relation.get("reading", ""),
-                "description": random.choice(self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], [relation["description"]]))
+                "description": self._seeded_choice(f"{birth_date.isoformat()}{year}{month}rel_desc", self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], [relation["description"]]))
             },
             "theme": {
                 "title": month_theme.get("theme", ""),
                 "focus": month_theme.get("focus", ""),
                 "element_boost": theme_element,
-                "description": random.choice(self.MONTHLY_THEME_DESCRIPTIONS.get(relation["type"], ["本月能量平穩，按照自己的步調前進即可。"]))
+                "description": self._seeded_choice(f"{birth_date.isoformat()}{year}{month}theme_desc", self.MONTHLY_THEME_DESCRIPTIONS.get(relation["type"], ["本月能量平穩，按照自己的步調前進即可。"]))
             },
             "fortune": {
                 "level": month_level,
@@ -2282,7 +2285,7 @@ class SukuyodoService:
             "special_days": special_days_in_month,
             "weekly": weekly,
             "strategy": monthly_strategy,
-            "advice": random.choice(self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], [f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。"]))
+            "advice": self._seeded_choice(f"{birth_date.isoformat()}{year}{month}advice", self.MONTHLY_FORTUNE_ADVICE.get(relation["type"], [f"本月運勢{self.DAILY_FORTUNE_RELATION_NAMES.get(relation['type'], '平穩')}，順其自然即可。"]))
         }
 
     def calculate_weekly_fortune(self, birth_date: date, target_date: date) -> dict:
@@ -2393,10 +2396,8 @@ class SukuyodoService:
         for sp in special_day_entries:
             week_warnings.append(f"{sp['date'][-5:]} {sp['name']}")
 
-        # 文字描述（seeded random.choice 確保同輸入同結果）
-        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}")
-
         # 選擇建議（根據平均分數反推等級）
+        random.seed(f"{birth_date.isoformat()}{target_date.isoformat()}weekly_advice")
         if overall_score >= 83:
             advice_list = fortune_data["daily_advice"]["excellent"]
         elif overall_score >= 68:
@@ -2453,7 +2454,7 @@ class SukuyodoService:
             "daily_overview": daily_overview,
             "week_warnings": week_warnings,
             "advice": advice,
-            "focus": random.choice(self.WEEKLY_FORTUNE_FOCUS.get(relation_type, self.WEEKLY_FORTUNE_FOCUS["neutral"])),
+            "focus": self._seeded_choice(f"{birth_date.isoformat()}{target_date.isoformat()}weekly_focus", self.WEEKLY_FORTUNE_FOCUS.get(relation_type, self.WEEKLY_FORTUNE_FOCUS["neutral"])),
             "category_tips": category_tips,
             "lucky": {
                 "direction": lucky_direction["direction"],
