@@ -151,21 +151,27 @@ export function useProfile() {
     }
   }
 
-  // 從 /companies.json 載入推薦公司清單，依名稱去重
+  // 從 /companies.json 載入推薦公司清單，新增或更新既有資料
   async function importCompaniesFromJson(): Promise<number> {
     const res = await fetch('/companies.json')
     if (!res.ok) throw new Error('無法讀取 companies.json')
     const list: Omit<Company, 'id'>[] = await res.json()
-    const existingNames = new Set(profile.value.companies.map(c => c.name))
-    let added = 0
+    let changed = 0
     for (const c of list) {
-      if (!existingNames.has(c.name) && profile.value.companies.length < 20) {
+      const existing = profile.value.companies.find(e => e.name === c.name)
+      if (existing) {
+        // 更新 memo 和 foundingDate
+        if (existing.memo !== c.memo || existing.foundingDate !== c.foundingDate) {
+          existing.memo = c.memo
+          existing.foundingDate = c.foundingDate
+          changed++
+        }
+      } else if (profile.value.companies.length < 20) {
         profile.value.companies.push({ ...c, id: crypto.randomUUID() })
-        existingNames.add(c.name)
-        added++
+        changed++
       }
     }
-    return added
+    return changed
   }
 
   function clearProfile() {
