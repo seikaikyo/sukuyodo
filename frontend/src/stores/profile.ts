@@ -152,28 +152,13 @@ export function useProfile() {
     }
   }
 
-  // 從 /companies.json 載入推薦公司清單，新增或更新既有資料
+  // 從 /companies.json 載入推薦公司清單（以 JSON 為準，先清空再匯入）
   async function importCompaniesFromJson(): Promise<number> {
     const res = await fetch('/companies.json')
     if (!res.ok) throw new Error('無法讀取 companies.json')
     const list: Omit<Company, 'id'>[] = await res.json()
-    let changed = 0
-    for (const c of list) {
-      const existing = profile.value.companies.find(e => e.name === c.name)
-      if (existing) {
-        // 更新 memo、foundingDate、jobUrl
-        if (existing.memo !== c.memo || existing.foundingDate !== c.foundingDate || existing.jobUrl !== c.jobUrl) {
-          existing.memo = c.memo
-          existing.foundingDate = c.foundingDate
-          existing.jobUrl = c.jobUrl
-          changed++
-        }
-      } else if (profile.value.companies.length < 20) {
-        profile.value.companies.push({ ...c, id: crypto.randomUUID() })
-        changed++
-      }
-    }
-    return changed
+    profile.value.companies = list.map(c => ({ ...c, id: crypto.randomUUID() }))
+    return list.length
   }
 
   function clearProfile() {
