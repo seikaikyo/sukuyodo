@@ -32,6 +32,26 @@ export interface CompanyCompatItem extends PartnerCompatibility {
   companyMemo?: string
 }
 
+export interface CompanySearchResult {
+  name: string
+  founding_date: string
+  score: number
+  relation_name: string
+  relation_type: string
+  direction: string
+  distance_type: string
+  distance_type_name: string
+  element_bonus: number
+  verdict: string
+  job_title: string
+  location: string
+  job_url: string
+  person1_mansion: string
+  person1_element: string
+  person2_mansion: string
+  person2_element: string
+}
+
 const props = defineProps<{
   activeTab: 'finder' | 'compat' | 'partners' | 'company'
   compatFinder: CompatibilityFinderResult | null
@@ -55,6 +75,10 @@ const props = defineProps<{
   companyCompatError: string
   companyCompatibilities: CompanyCompatItem[]
   companyCompatLoading2: boolean
+  // Company Auto Search
+  companySearchResults: CompanySearchResult[]
+  companySearchLoading: boolean
+  companySearchError: string
 }>()
 
 async function handleExportPairedReport() {
@@ -134,6 +158,25 @@ async function handlePartnerPairedReport(pc: PartnerCompatibility) {
   }
 }
 
+// Auto search state
+const searchKeywords = ref('MES 智慧製造')
+const searchArea = ref('6001014000')
+
+const areaOptions = [
+  { label: '台南善化 (南科)', value: '6001014000' },
+  { label: '台南全區', value: '6001000000' },
+  { label: '台南新市', value: '6001015000' },
+  { label: '高雄全區', value: '6003000000' },
+]
+
+function saveSearchResult(result: CompanySearchResult) {
+  emit('saveCompany', {
+    name: result.name,
+    foundingDate: result.founding_date,
+    memo: `${result.job_title} | ${result.location}`,
+  })
+}
+
 const emit = defineEmits<{
   'update:activeTab': [value: 'finder' | 'compat' | 'partners' | 'company']
   'update:selectedMansion': [value: CompatibleMansion | null]
@@ -145,6 +188,7 @@ const emit = defineEmits<{
   saveCompany: [data: { name: string; foundingDate: string; memo?: string }]
   removeCompany: [id: string]
   importCompanies: []
+  searchCompanies: [keywords: string, area: string]
   'navigate-knowledge': [tab: string]
   'navigate-lucky': []
 }>()
@@ -543,8 +587,108 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
 
     <!-- Company -->
     <div v-if="activeTab === 'company'" id="panel-match-company" class="match-content" role="tabpanel">
+      <!-- 自動搜尋 -->
+      <div class="auto-search-section">
+        <h4 class="section-title">自動搜尋 104 職缺</h4>
+        <p class="section-desc">輸入關鍵字，自動搜尋 104 → 查設立日期 → 算相性</p>
+        <div class="auto-search-form">
+          <sl-input
+            :value="searchKeywords"
+            label="關鍵字"
+            placeholder="例：MES 智慧製造"
+            @sl-input="searchKeywords = ($event.target as HTMLInputElement).value"
+          ></sl-input>
+          <div class="form-row">
+            <label class="form-label">地區</label>
+            <sl-select
+              :value="searchArea"
+              @sl-change="searchArea = ($event.target as HTMLSelectElement).value"
+            >
+              <sl-option
+                v-for="opt in areaOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >{{ opt.label }}</sl-option>
+            </sl-select>
+          </div>
+          <button
+            class="btn-primary btn-search"
+            :disabled="!searchKeywords.trim() || companySearchLoading"
+            @click="emit('searchCompanies', searchKeywords, searchArea)"
+          >
+            <sl-spinner v-if="companySearchLoading"></sl-spinner>
+            <span v-else>搜尋推薦公司</span>
+          </button>
+        </div>
+
+        <div v-if="companySearchError" class="error-msg">{{ companySearchError }}</div>
+
+        <div v-if="companySearchLoading" class="search-progress">
+          <sl-spinner></sl-spinner>
+          <span>搜尋中，需爬取外部網站約 30-60 秒...</span>
+        </div>
+
+        <!-- 搜尋結果 -->
+        <div v-if="companySearchResults.length > 0" class="search-results">
+          <h5 class="results-title">搜尋結果 ({{ companySearchResults.length }} 間公司)</h5>
+          <div class="partner-list">
+            <div
+              v-for="(result, idx) in companySearchResults"
+              :key="idx"
+              class="search-result-card"
+              :class="result.verdict === '推薦' || result.verdict === '適合' ? 'recommend' : result.verdict === '避開' ? 'avoid' : 'caution'"
+            >
+              <div class="result-main">
+                <div class="result-info">
+                  <span class="result-name">{{ result.name }}</span>
+                  <span class="result-job">{{ result.job_title }}</span>
+                  <span class="result-location">{{ result.location }}</span>
+                </div>
+                <div class="result-compat">
+                  <span class="result-relation">{{ result.relation_name }}</span>
+                  <span
+                    v-if="result.distance_type_name"
+                    class="distance-tag"
+                    :class="result.distance_type"
+                  >{{ result.distance_type_name }}</span>
+                  <span
+                    class="verdict-badge-mini"
+                    :class="result.verdict === '推薦' || result.verdict === '適合' ? 'recommend' : result.verdict === '避開' ? 'avoid' : 'caution'"
+                  >{{ result.verdict }}</span>
+                </div>
+                <div class="result-score">
+                  <span class="score-num">{{ result.score }}</span>
+                </div>
+              </div>
+              <div class="result-actions">
+                <span class="result-mansions">
+                  {{ result.person2_mansion }}（{{ result.person2_element }}）
+                  <template v-if="result.direction">| {{ result.direction }}</template>
+                </span>
+                <div class="result-btns">
+                  <a
+                    v-if="result.job_url"
+                    :href="result.job_url"
+                    target="_blank"
+                    rel="noopener"
+                    class="btn-link-sm"
+                  >104 職缺</a>
+                  <button
+                    class="btn-save-sm"
+                    @click="saveSearchResult(result)"
+                  >收藏</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider" />
+
+      <!-- 手動查詢 -->
       <div class="company-intro">
-        <p>輸入公司設立日期，查看與你的宿曜相性。設立日期可至經濟部商業司查詢。</p>
+        <p>或手動輸入公司設立日期，查看與你的宿曜相性。設立日期可至經濟部商業司查詢。</p>
       </div>
 
       <div class="company-form">
@@ -1967,6 +2111,203 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   .company-verdict-header {
     flex-direction: column;
     gap: var(--space-sm);
+  }
+}
+
+/* Auto Search */
+.auto-search-section {
+  margin-bottom: var(--space-lg);
+}
+
+.section-title {
+  font-size: var(--font-base);
+  color: var(--accent);
+  margin: 0 0 var(--space-xs);
+}
+
+.section-desc {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-md);
+}
+
+.auto-search-form {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-end;
+  margin-bottom: var(--space-md);
+}
+
+.auto-search-form sl-input {
+  flex: 1;
+  --sl-input-background-color: var(--bg-surface);
+  --sl-input-border-color: var(--border);
+  --sl-input-color: var(--text-primary);
+  --sl-input-label-color: var(--text-secondary);
+}
+
+.auto-search-form .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 160px;
+}
+
+.auto-search-form .form-label {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.btn-search {
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+.search-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.results-title {
+  font-size: var(--font-sm);
+  color: var(--accent);
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.search-result-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: border-color 0.2s;
+}
+
+.search-result-card.recommend { border-left: 3px solid var(--success); }
+.search-result-card.caution { border-left: 3px solid var(--caution); }
+.search-result-card.avoid { border-left: 3px solid var(--warning); }
+
+.result-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.result-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: var(--font-base);
+}
+
+.result-job {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.result-location {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.result-compat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0 var(--space-sm);
+}
+
+.result-compat .result-relation {
+  font-size: var(--font-sm);
+  color: var(--accent);
+}
+
+.result-score .score-num {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.result-mansions {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.result-btns {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.btn-link-sm {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-link-sm:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-save-sm {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-xs);
+  background: transparent;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-save-sm:hover {
+  background: rgba(139, 105, 20, 0.1);
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: var(--space-xl) 0;
+}
+
+@media (max-width: 767px) {
+  .auto-search-form {
+    flex-direction: column;
+  }
+
+  .result-main {
+    flex-wrap: wrap;
+  }
+
+  .result-compat {
+    flex-direction: row;
+    padding: 0;
+    margin-top: var(--space-xs);
   }
 }
 

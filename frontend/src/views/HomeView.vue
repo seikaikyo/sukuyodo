@@ -74,6 +74,11 @@ const {
   companyCompatibilities,
   companyCompatLoading2,
 
+  // Company Auto Search
+  companySearchResults,
+  companySearchLoading,
+  companySearchError,
+
   // Lucky Days
   luckyDaySummary,
   luckyDaySummaryLoading,
@@ -99,6 +104,7 @@ const {
   calculateCompatibility,
   calculateCompanyCompatibility,
   fetchCompanyCompatibilities,
+  searchCompanies,
   fetchPairLuckyDays,
   clearPairSelection,
   fetchDailyFortuneForDate,
@@ -524,6 +530,9 @@ onUnmounted(() => {
         :company-compat-error="companyCompatError"
         :company-compatibilities="companyCompatibilities"
         :company-compat-loading2="companyCompatLoading2"
+        :company-search-results="companySearchResults"
+        :company-search-loading="companySearchLoading"
+        :company-search-error="companySearchError"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @update:company-name="companyName = $event"
@@ -533,6 +542,7 @@ onUnmounted(() => {
         @save-company="handleSaveCompany"
         @remove-company="handleRemoveCompany"
         @import-companies="handleImportCompanies"
+        @search-companies="(kw: string, area: string) => searchCompanies(kw, area)"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />

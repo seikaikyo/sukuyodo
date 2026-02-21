@@ -6,6 +6,7 @@ from sqlmodel import Session
 
 from database import get_session
 from services.sukuyodo import sukuyodo_service
+from services.company_search import company_search_service
 from services.stats import stats_service
 from services.japanese_calendar import japanese_calendar_service
 from models.stats import Features
@@ -17,6 +18,14 @@ class CompatibilityRequest(BaseModel):
     """相性診斷請求"""
     date1: str  # YYYY-MM-DD
     date2: str  # YYYY-MM-DD
+
+
+class CompanySearchRequest(BaseModel):
+    """公司自動搜尋請求"""
+    keywords: str           # 搜尋關鍵字，如 "MES 智慧製造"
+    area: str = "6001014000"  # 104 地區碼，預設台南善化
+    birth_date: str         # 使用者生日 YYYY-MM-DD
+    min_score: int = 0      # 最低分數門檻（0 表示不篩選）
 
 
 @router.get("/mansions")
@@ -773,4 +782,50 @@ def get_pair_lucky_days(
     return {
         "success": True,
         "data": result
+    }
+
+
+@router.post("/company-search")
+async def search_companies(request: CompanySearchRequest):
+    """
+    公司自動搜尋
+
+    搜尋 104 職缺 → 查詢 twincn.com 設立日期 → 計算宿曜相性 → 排序回傳。
+    整個流程需爬取外部網站，回應時間較長（約 30-60 秒）。
+
+    Args:
+        request: 搜尋條件（關鍵字、地區、使用者生日、最低分數）
+    """
+    try:
+        birth = date.fromisoformat(request.birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth > today:
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    if not request.keywords.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="搜尋關鍵字不可為空"
+        )
+
+    results = await company_search_service.search_and_calculate(
+        keywords=request.keywords.strip(),
+        area=request.area,
+        birth_date=birth,
+        min_score=request.min_score,
+    )
+
+    return {
+        "success": True,
+        "data": results,
+        "count": len(results),
     }

@@ -857,6 +857,11 @@ export function useSukuyodo() {
   const companyCompatibilities = ref<(PartnerCompatibility & { companyId: string; companyName: string; companyMemo?: string })[]>([])
   const companyCompatLoading2 = ref(false)
 
+  // Company Auto Search
+  const companySearchResults = ref<any[]>([])
+  const companySearchLoading = ref(false)
+  const companySearchError = ref('')
+
   // Lucky Days
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
   const luckyDaySummaryLoading = ref(false)
@@ -1455,6 +1460,42 @@ export function useSukuyodo() {
     }
   }
 
+  async function searchCompanies(keywords: string, area: string) {
+    const queryDate = birthDate.value || myBirthDate.value
+    if (!queryDate || !keywords.trim()) return
+
+    companySearchLoading.value = true
+    companySearchError.value = ''
+    companySearchResults.value = []
+
+    try {
+      const res = await fetch(getApiUrl('/company-search'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: keywords.trim(),
+          area,
+          birth_date: queryDate,
+        })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          companySearchResults.value = data.data
+        } else {
+          companySearchError.value = data.error || '搜尋失敗'
+        }
+      } else {
+        const err = await res.json()
+        companySearchError.value = err.detail || '搜尋失敗'
+      }
+    } catch {
+      companySearchError.value = '無法連線到伺服器'
+    } finally {
+      companySearchLoading.value = false
+    }
+  }
+
   async function loadMetadata() {
     try {
       const res = await fetch(getApiUrl('/metadata'))
@@ -1620,6 +1661,11 @@ export function useSukuyodo() {
     companyCompatibilities,
     companyCompatLoading2,
 
+    // Company Auto Search
+    companySearchResults,
+    companySearchLoading,
+    companySearchError,
+
     // Lucky Days
     luckyDaySummary,
     luckyDaySummaryLoading,
@@ -1658,6 +1704,7 @@ export function useSukuyodo() {
     calculateCompatibility,
     calculateCompanyCompatibility,
     fetchCompanyCompatibilities,
+    searchCompanies,
     fetchPartnerCompatibilities,
     fetchDailyFortuneForDate,
     fetchYearlyRange,
