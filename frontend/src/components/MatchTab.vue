@@ -729,6 +729,10 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                 <p v-if="cc.summary">{{ cc.summary }}</p>
               </div>
 
+              <div v-if="cc.companyMemo" class="company-memo">
+                <p>{{ cc.companyMemo }}</p>
+              </div>
+
               <div class="company-actions">
                 <button
                   v-if="confirmDeleteCompanyId !== cc.companyId"
@@ -1881,6 +1885,16 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
 
 .company-verdict-mini {
   margin-top: 2px;
+}
+
+.company-memo {
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-b, #f5f0e8);
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.85rem;
+  color: var(--text-secondary, #6b5e4f);
+  word-break: break-all;
 }
 
 .company-actions {
