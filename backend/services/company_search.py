@@ -1,4 +1,4 @@
-"""公司自動搜尋服務 - 爬取 104 + findcompany.com.tw，計算宿曜相性"""
+"""公司自動搜尋服務 - 爬取 104 + GCIS 官方 API，計算宿曜相性"""
 import logging
 import re
 from datetime import date
@@ -19,7 +19,10 @@ _104_HEADERS = {
     "Accept": "application/json, text/plain, */*",
 }
 
-# findcompany 查詢設立日期
+# GCIS 經濟部商工登記開放資料 API（主要）
+_GCIS_API_URL = "https://data.gcis.nat.gov.tw/od/data/api/6BBA2268-1367-4B42-9CCA-BC17499EBE8C"
+
+# findcompany 查詢設立日期（備援）
 _FINDCOMPANY_BASE = "https://www.findcompany.com.tw"
 _FINDCOMPANY_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -109,14 +112,75 @@ class CompanySearchService:
         company_name: str,
     ) -> str | None:
         """
-        從 findcompany.com.tw 查詢公司設立日期
+        查詢公司設立日期（GCIS 官方 API 優先，findcompany 備援）
 
         Args:
-            company_name: 公司全名
+            company_name: 公司名稱（全名或關鍵字）
 
         Returns:
             設立日期字串 (YYYY-MM-DD) 或 None
         """
+        # 主要：GCIS 經濟部商工登記開放資料 API
+        result = await self._lookup_gcis(company_name)
+        if result:
+            return result
+
+        # 備援：findcompany.com.tw
+        return await self._lookup_findcompany(company_name)
+
+    async def _lookup_gcis(self, company_name: str) -> str | None:
+        """從 GCIS 官方 API 查詢設立日期"""
+        # 去除常見後綴以提高模糊比對命中率
+        search_name = company_name
+        for suffix in ["股份有限公司", "有限公司"]:
+            search_name = search_name.replace(suffix, "")
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                resp = await client.get(_GCIS_API_URL, params={
+                    "$format": "json",
+                    "$filter": f"Company_Name like {search_name} and Company_Status eq 01",
+                    "$top": "5",
+                })
+                if resp.status_code != 200 or not resp.text.startswith("["):
+                    return None
+                data = resp.json()
+            except Exception as e:
+                logger.warning("GCIS 查詢 %s 失敗: %s", company_name, e)
+                return None
+
+        if not data:
+            return None
+
+        # 找最符合的公司（名稱包含原始關鍵字）
+        for company in data:
+            name = company.get("Company_Name", "")
+            if search_name not in name:
+                continue
+            roc_date = company.get("Company_Setup_Date", "")
+            return self._roc_to_western(roc_date)
+
+        # 沒有完全符合的，用第一筆
+        roc_date = data[0].get("Company_Setup_Date", "")
+        return self._roc_to_western(roc_date)
+
+    @staticmethod
+    def _roc_to_western(roc_date: str) -> str | None:
+        """民國 7 碼日期轉西曆 YYYY-MM-DD"""
+        if not roc_date or len(roc_date) != 7:
+            return None
+        try:
+            year = int(roc_date[:3]) + 1911
+            month = roc_date[3:5]
+            day = roc_date[5:7]
+            result = f"{year}-{month}-{day}"
+            date.fromisoformat(result)  # 驗證格式
+            return result
+        except (ValueError, IndexError):
+            return None
+
+    async def _lookup_findcompany(self, company_name: str) -> str | None:
+        """從 findcompany.com.tw 查詢設立日期（備援）"""
         async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
             try:
                 url = f"{_FINDCOMPANY_BASE}/{company_name}"
@@ -134,11 +198,9 @@ class CompanySearchService:
         """從 findcompany.com.tw HTML 解析設立日期"""
         soup = BeautifulSoup(html, "html.parser")
 
-        # findcompany 頁面結構: "設立日期" 標籤旁邊有 YYYY-MM-DD 格式日期
         for el in soup.find_all(["td", "span", "div"]):
             text = el.get_text(strip=True)
             if text == "設立日期":
-                # 找下一個兄弟元素
                 next_el = el.find_next_sibling()
                 if next_el:
                     date_text = next_el.get_text(strip=True)
@@ -146,15 +208,11 @@ class CompanySearchService:
                     if m:
                         return m.group(0)
 
-        # 備用: 直接搜尋 HTML 中的西曆日期模式
-        # findcompany 回傳的日期通常是 YYYY-MM-DD 格式
         dates = re.findall(r"\d{4}-\d{2}-\d{2}", html)
         if dates:
-            # 第一個日期通常是設立日期（頁面結構穩定）
             for d in dates:
                 try:
                     parsed = date.fromisoformat(d)
-                    # 排除太近的日期（可能是最後變更日期等）
                     if parsed.year < 2025:
                         return d
                 except ValueError:
