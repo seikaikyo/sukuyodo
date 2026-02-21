@@ -1429,6 +1429,7 @@ export function useSukuyodo() {
               companyId: company.id,
               companyName: company.name,
               companyMemo: company.memo,
+              jobUrl: company.jobUrl,
               partnerId: company.id,
               nickname: company.name,
               birthDate: company.foundingDate,

@@ -30,6 +30,7 @@ export interface CompanyCompatItem extends PartnerCompatibility {
   companyId: string
   companyName: string
   companyMemo?: string
+  jobUrl?: string
 }
 
 export interface CompanySearchResult {
@@ -174,6 +175,7 @@ function saveSearchResult(result: CompanySearchResult) {
     name: result.name,
     foundingDate: result.founding_date,
     memo: `${result.job_title} | ${result.location}`,
+    jobUrl: result.job_url,
   })
 }
 
@@ -185,7 +187,7 @@ const emit = defineEmits<{
   'update:companyDate': [value: string]
   calculateCompatibility: []
   calculateCompanyCompatibility: []
-  saveCompany: [data: { name: string; foundingDate: string; memo?: string }]
+  saveCompany: [data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }]
   removeCompany: [id: string]
   importCompanies: []
   searchCompanies: [keywords: string, area: string]
@@ -884,6 +886,15 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                 <p>{{ cc.companyMemo }}</p>
               </div>
 
+              <div class="company-actions">
+                <a
+                  v-if="cc.jobUrl"
+                  :href="cc.jobUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="btn-link-sm"
+                >104 職缺</a>
+              </div>
               <div class="company-actions">
                 <button
                   v-if="confirmDeleteCompanyId !== cc.companyId"

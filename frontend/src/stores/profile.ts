@@ -30,6 +30,7 @@ export interface Company {
   name: string
   foundingDate: string  // YYYY-MM-DD 格式
   memo?: string
+  jobUrl?: string       // 104 職缺連結
 }
 
 export interface UserProfile {
@@ -160,10 +161,11 @@ export function useProfile() {
     for (const c of list) {
       const existing = profile.value.companies.find(e => e.name === c.name)
       if (existing) {
-        // 更新 memo 和 foundingDate
-        if (existing.memo !== c.memo || existing.foundingDate !== c.foundingDate) {
+        // 更新 memo、foundingDate、jobUrl
+        if (existing.memo !== c.memo || existing.foundingDate !== c.foundingDate || existing.jobUrl !== c.jobUrl) {
           existing.memo = c.memo
           existing.foundingDate = c.foundingDate
+          existing.jobUrl = c.jobUrl
           changed++
         }
       } else if (profile.value.companies.length < 20) {

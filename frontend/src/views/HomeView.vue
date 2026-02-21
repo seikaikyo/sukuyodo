@@ -175,7 +175,7 @@ function deletePartner(id: string) {
   confirmDeleteId.value = null
 }
 
-function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string }) {
+function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
   addCompany(data)
   fetchCompanyCompatibilities()
 }
