@@ -1,7 +1,8 @@
-"""公司自動搜尋服務 - 爬取 104 + twincn.com，計算宿曜相性"""
+"""公司自動搜尋服務 - 爬取 104 + findcompany.com.tw，計算宿曜相性"""
 import logging
 import re
 from datetime import date
+from urllib.parse import quote
 
 import httpx
 from bs4 import BeautifulSoup
@@ -67,7 +68,7 @@ class CompanySearchService:
                 try:
                     headers = {
                         **_104_HEADERS,
-                        "Referer": f"https://www.104.com.tw/jobs/search/?keyword={keywords}&area={area}",
+                        "Referer": f"https://www.104.com.tw/jobs/search/?keyword={quote(keywords)}&area={area}",
                     }
                     resp = await client.get(
                         _104_SEARCH_URL,
