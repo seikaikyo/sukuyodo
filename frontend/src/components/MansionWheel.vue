@@ -63,7 +63,7 @@ const elementColors: Record<string, string> = {
 
 // 關係名稱對照
 const RELATION_NAMES: Record<string, string> = {
-  eishin: '榮親',
+  eishin: '栄親',
   gyotai: '業胎',
   mei: '命',
   yusui: '友衰',

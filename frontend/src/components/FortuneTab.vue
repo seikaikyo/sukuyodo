@@ -70,7 +70,7 @@ const SPECIAL_DAY_PRACTICE: Record<string, string> = {
 // 凌犯逆轉時追加引文（品第五, T21 p.392a-b）
 const RYOUHAN_REVERSAL_PRACTICE: Record<string, string> = {
   kanro: '犯逼守命胎之宿，是厄會之時，宜修功德持真言念誦以禳之',
-  rasetsu: '犯衰危壞等宿者，則所求稱意百事通達'
+  rasetsu: '犯衰危壊等宿者，則所求稱意百事通達'
 }
 
 // 三九法修行提示（卷下, T21 p.397c-398a）
@@ -375,7 +375,7 @@ function exportDecadeReport() {
                 <ruby v-if="dailyFortune.sanki.day_type_reading">{{ dailyFortune.sanki.day_type }}<rp>(</rp><rt>{{ dailyFortune.sanki.day_type_reading }}</rt><rp>)</rp></ruby>
                 <template v-else>{{ dailyFortune.sanki.day_type }}</template>
               </span>
-              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黑週（暗黒の一週間）</span>
+              <span v-if="dailyFortune.sanki.is_dark_week" class="dark-week-label">暗黒週（暗黒の一週間）</span>
             </div>
             <p class="sanki-day-desc">{{ dailyFortune.sanki.day_description }}</p>
             <p class="sanki-period-desc">{{ dailyFortune.sanki.period_description }}</p>

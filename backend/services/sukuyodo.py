@@ -539,7 +539,7 @@ class SukuyodoService:
             solar_date: 西曆生日
 
         Returns:
-            包含榮親、業胎、安壊三類配對宿位的資料
+            包含栄親、業胎、安壊三類配對宿位的資料
         """
         mansion = self.get_mansion(solar_date)
         user_index = mansion["index"]
@@ -563,12 +563,12 @@ class SukuyodoService:
                 "detailed": "業胎是宿曜道中最神秘的關係。初次見面就覺得對方好像認識了很久，聊起天來完全沒有陌生感。宿曜道認為這是前世累積的緣分在今生延續。這段關係的特點是自然、不費力，你們不需要刻意經營就能維持默契。但也正因如此，容易把對方的存在視為理所當然。記得偶爾表達感謝，讓這份難得的緣分持續發酵。"
             },
             "eishin": {
-                "relation": "榮親",
+                "relation": "栄親",
                 "reading": "えいしん",
                 "distances": [1, 8, 10, 17, 19, 26],
                 "score": 95,
                 "description": "最適合結婚的對象，互相提攜成長的良緣",
-                "detailed": "榮親在宿曜道中被視為最理想的結合。你們的能量場互相加持，一方有光芒時另一方也會跟著閃耀。不是那種激烈的來電，而是越相處越覺得「跟這個人在一起什麼都會變好」的踏實感。在職場上你們是天然的好搭檔，在感情中是能共同成長的伴侶。維持這段關係的秘訣是讓彼此都有發光的舞台，不要只有一方在付出。"
+                "detailed": "栄親在宿曜道中被視為最理想的結合。你們的能量場互相加持，一方有光芒時另一方也會跟著閃耀。不是那種激烈的來電，而是越相處越覺得「跟這個人在一起什麼都會變好」的踏實感。在職場上你們是天然的好搭檔，在感情中是能共同成長的伴侶。維持這段關係的秘訣是讓彼此都有發光的舞台，不要只有一方在付出。"
             },
             "yusui": {
                 "relation": "友衰",
@@ -712,12 +712,12 @@ class SukuyodoService:
     # 三九秘法：關係類型對應的基礎分數範圍
     # key 使用羅馬拼音，與 relations 資料一致
     RELATION_SCORE_RANGES = {
-        "eishin": (85, 95),   # 榮親 - 大吉 - 最佳配對日
+        "eishin": (85, 95),   # 栄親 - 大吉 - 最佳配對日
         "gyotai": (78, 88),   # 業胎 - 吉 - 前世因緣日
         "mei": (72, 82),      # 命 - 中吉 - 同宿日
         "yusui": (60, 72),    # 友衰 - 中吉偏低 - 舒適但易懈怠
         "kisei": (45, 58),    # 危成 - 小吉 - 需謹慎
-        "ankai": (32, 48),    # 安壞 - 凶 - 權力不對等日
+        "ankai": (32, 48),    # 安壊 - 凶 - 權力不對等日
     }
 
     # === 等級優先制常數（原典依據） ===
@@ -1134,7 +1134,7 @@ class SukuyodoService:
         "special_day": 5,   # 特殊日（甘露/金剛峯/羅刹）— 七曜與宿的特殊共鳴
         "rokugai": 4,       # 六害宿 — 人際層面的干擾
         "dark_week": 3,     # 暗黒の一週間 — 27 日循環的低潮期
-        "relation": 2,      # 宿關係（榮親/安壊等）— 每日基本盤
+        "relation": 2,      # 宿關係（栄親/安壊等）— 每日基本盤
         "sanki_day": 1,     # 三期サイクル日類型 — 最細緻的日常節奏
     }
 
@@ -1694,10 +1694,10 @@ class SukuyodoService:
     # 角色別相處建議：根據關係類型提供不同身份的互動指南
     ROLE_DESCRIPTIONS = {
         "eishin": {
-            "colleague": "榮親在職場上是最強的搭檔組合。你們天然地互相加持，一個人的提案被另一個人補充之後總是變得更完整。分工的時候各自負責擅長的部分，彙整時反而比一個人全做更快更好。如果有機會合作專案，不要猶豫直接組隊。唯一要注意的是功勞的歸屬——因為你們太容易合作成功，有時候會忘了釐清各自的貢獻，事先講清楚比事後爭論好。",
-            "friend": "榮親的友誼有一種自然而然的滋養感，跟對方聊完天之後你會覺得被充電了。你們適合一起做有建設性的事——一起運動、一起學東西、一起參加活動。這種朋友不會讓你越來越懶，反而是在對方身邊你會不自覺地想變得更好。遇到人生重大決定的時候，聽聽對方的想法，榮親朋友給的建議通常特別有參考價值。",
-            "lover": "榮親在感情中是越相處越舒服的類型。初識時可能不是一見鍾情的驚天動地，但日子一長你會發現這個人讓你的生活全面升級。彼此的價值觀契合度高，生活習慣也容易磨合。重點是兩個人都要有各自的舞台——如果只有一方在成長，另一方容易產生不安全感。安排定期的共同活動和各自的獨處時間，維持健康的距離。",
-            "family": "榮親關係的家人相處起來最輕鬆。你們之間的理解是天然的，很多事不需要解釋對方就能體會。作為親子關係，父母和孩子之間很少有真正的衝突，因為雙方都願意替對方著想。作為兄弟姐妹，你們是對方最強的後盾。家庭中如果有重大決策需要討論，你們之間的溝通效率最高。"
+            "colleague": "栄親在職場上是最強的搭檔組合。你們天然地互相加持，一個人的提案被另一個人補充之後總是變得更完整。分工的時候各自負責擅長的部分，彙整時反而比一個人全做更快更好。如果有機會合作專案，不要猶豫直接組隊。唯一要注意的是功勞的歸屬——因為你們太容易合作成功，有時候會忘了釐清各自的貢獻，事先講清楚比事後爭論好。",
+            "friend": "栄親的友誼有一種自然而然的滋養感，跟對方聊完天之後你會覺得被充電了。你們適合一起做有建設性的事——一起運動、一起學東西、一起參加活動。這種朋友不會讓你越來越懶，反而是在對方身邊你會不自覺地想變得更好。遇到人生重大決定的時候，聽聽對方的想法，栄親朋友給的建議通常特別有參考價值。",
+            "lover": "栄親在感情中是越相處越舒服的類型。初識時可能不是一見鍾情的驚天動地，但日子一長你會發現這個人讓你的生活全面升級。彼此的價值觀契合度高，生活習慣也容易磨合。重點是兩個人都要有各自的舞台——如果只有一方在成長，另一方容易產生不安全感。安排定期的共同活動和各自的獨處時間，維持健康的距離。",
+            "family": "栄親關係的家人相處起來最輕鬆。你們之間的理解是天然的，很多事不需要解釋對方就能體會。作為親子關係，父母和孩子之間很少有真正的衝突，因為雙方都願意替對方著想。作為兄弟姐妹，你們是對方最強的後盾。家庭中如果有重大決策需要討論，你們之間的溝通效率最高。"
         },
         "gyotai": {
             "colleague": "業胎關係的同事之間有一種說不出的默契，有時候對方還沒開口你就知道他想表達什麼。合作的時候可以省掉很多溝通成本，工作節奏也容易對上。不過要注意一點：你們太熟悉彼此的思考模式，有可能陷入同溫層效應。遇到需要創新的時候，主動引入第三方的觀點來打破慣性思維。",
@@ -3356,7 +3356,7 @@ class SukuyodoService:
                 if streak_start is not None:
                     streak_end = monthly_trend[monthly_trend.index(m) - 1]["month"]
                     if streak_end - streak_start + 1 >= 2:
-                        # 判斷是否為榮親或業胎集群
+                        # 判斷是否為栄親或業胎集群
                         cluster_months = [x for x in monthly_trend if streak_start <= x["month"] <= streak_end]
                         eishin_count = sum(1 for x in cluster_months if x["relation_type"] == "eishin")
                         gyotai_count = sum(1 for x in cluster_months if x["relation_type"] == "gyotai")
@@ -3510,7 +3510,7 @@ class SukuyodoService:
         """避風港區段的描述文字"""
         period = f"{start}-{end}月"
         if cluster_type == "eishin_cluster":
-            return f"{period}連續榮親高分，這段期間是全年最穩固的避風港，適合推進重要事項。"
+            return f"{period}連續栄親高分，這段期間是全年最穩固的避風港，適合推進重要事項。"
         elif cluster_type == "gyotai_cluster":
             return f"{period}連續業胎月，前世因緣深厚的時期，人際合作和共同事業特別順利。"
         return f"{period}連續高分段，運勢穩定向好，適合積極行動和做出重要決定。"
@@ -3522,7 +3522,7 @@ class SukuyodoService:
         month = m["month"]
 
         if rel == "eishin":
-            return f"{month}月榮親月（{score}分），全年最佳行動期之一，大膽推進計畫。"
+            return f"{month}月栄親月（{score}分），全年最佳行動期之一，大膽推進計畫。"
         elif rel == "gyotai":
             return f"{month}月業胎月（{score}分），適合合作、簽約、建立夥伴關係。"
         elif rel == "mei":
@@ -3570,9 +3570,9 @@ class SukuyodoService:
         rel = m["relation_type"]
         ryouhan = m["ryouhan_ratio"]
 
-        # 高分 + 榮親
+        # 高分 + 栄親
         if score >= 80 and rel == "eishin":
-            return "榮親高分月，放手去做想做的事，成功率高。"
+            return "栄親高分月，放手去做想做的事，成功率高。"
         # 高分 + 業胎
         if score >= 80 and rel == "gyotai":
             return "業胎高分月，人際合作會帶來好結果，主動出擊。"
@@ -3722,7 +3722,7 @@ class SukuyodoService:
     # ==================== 通用吉日查詢 ====================
 
     # 吉日查詢類別定義
-    # 關係類型對照：mei(命), gyotai(業胎), eishin(榮親), yusui(友衰), ankai(安壞), kisei(危成)
+    # 關係類型對照：mei(命), gyotai(業胎), eishin(栄親), yusui(友衰), ankai(安壊), kisei(危成)
     LUCKY_DAY_CATEGORIES = {
         "career": {
             "name": "事業",
@@ -4058,7 +4058,7 @@ class SukuyodoService:
             "yusui": "旅途平順、不容易遇到延誤或意外。適合需要穩定行程的出差旅行，或者帶長輩出遊"
         },
         "grooming": {
-            "eishin": "淨身修儀的最佳時機。剃髮時心念清明，身心調和。宿曜榮親之力加持，當日行法功德倍增",
+            "eishin": "淨身修儀的最佳時機。剃髮時心念清明，身心調和。宿曜栄親之力加持，當日行法功德倍增",
             "gyotai": "業胎之日的淨身，能深化自身與宿曜的連結。剃髮後身輕意淨，直覺敏銳，適合接續行法或誦經",
             "mei": "本命宿能量最強之日。身儀端正本身即是修行的體現，今天的剃髮能強化本命宿的守護力",
             "yusui": "穩定安寧之日，適合從容淨身。不急不躁地完成剃髮，保持平常心即是最好的狀態"
@@ -4614,7 +4614,7 @@ class SukuyodoService:
         is_auspicious_relation = mansion_relation_type in ("eishin", "mei")
         is_mild_auspicious = mansion_relation_type in ("eishin", "mei", "kisei")
 
-        # 1. triple_auspicious：甘露/金剛 + 榮親/命 + 非暗黒
+        # 1. triple_auspicious：甘露/金剛 + 栄親/命 + 非暗黒
         if special_day_type in ("kanro", "kongou") and is_auspicious_relation and not is_dark_week:
             if not ryouhan:
                 results.append({
@@ -4626,7 +4626,7 @@ class SukuyodoService:
                     "description_classic": "吉日吉宿相重，三因具足，百事大吉。此日興造百事，無不成就。"
                 })
 
-        # 2. ryouhan_trap：凌犯 + 榮親/命
+        # 2. ryouhan_trap：凌犯 + 栄親/命
         if ryouhan and is_auspicious_relation:
             results.append({
                 "pattern": "ryouhan_trap",
@@ -4667,7 +4667,7 @@ class SukuyodoService:
                 "name": "凶因重疊",
                 "description": "安壊的破壞性與暗黒の一週間的低迷期重疊，運勢處於谷底。今天不是行動的日子，專注在不需要外界配合的事情上。",
                 "description_ja": "安壊の破壊性と暗黒の一週間の低迷期が重なり、運勢は最低点に。行動を控え、外部との関わりを最小限に留めるべし。",
-                "description_classic": "安壞逢暗黑，凶上加凶。宜靜守本分，不可妄動求進。"
+                "description_classic": "安壊逢暗黒，凶上加凶。宜靜守本分，不可妄動求進。"
             })
 
         # 6. dark_rasetsu：羅刹日 + 暗黒の一週間
@@ -4679,10 +4679,10 @@ class SukuyodoService:
                     "name": "暗黒羅刹",
                     "description": "羅刹日的障礙加上暗黒の一週間的低迷，今天做什麼都容易卡住。放低期待，處理簡單的例行事務就好。",
                     "description_ja": "羅刹日の障碍と暗黒の一週間の低迷が重なる。何事も停滞しやすく、期待値を下げて日常の事務に専念すべし。",
-                    "description_classic": "羅刹逢暗黑，障碍重重。宜低首靜行，不可強求。"
+                    "description_classic": "羅刹逢暗黒，障碍重重。宜低首靜行，不可強求。"
                 })
 
-        # 7. double_auspicious：金剛峯 + 榮親/命
+        # 7. double_auspicious：金剛峯 + 栄親/命
         if special_day_type == "kongou" and is_auspicious_relation:
             if not ryouhan:  # 凌犯中已觸發 ryouhan_trap，不重複
                 results.append({
