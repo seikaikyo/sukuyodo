@@ -151,6 +151,23 @@ export function useProfile() {
     }
   }
 
+  // 從 /companies.json 載入推薦公司清單，依名稱去重
+  async function importCompaniesFromJson(): Promise<number> {
+    const res = await fetch('/companies.json')
+    if (!res.ok) throw new Error('無法讀取 companies.json')
+    const list: Omit<Company, 'id'>[] = await res.json()
+    const existingNames = new Set(profile.value.companies.map(c => c.name))
+    let added = 0
+    for (const c of list) {
+      if (!existingNames.has(c.name) && profile.value.companies.length < 20) {
+        profile.value.companies.push({ ...c, id: crypto.randomUUID() })
+        existingNames.add(c.name)
+        added++
+      }
+    }
+    return added
+  }
+
   function clearProfile() {
     profile.value = {
       birthDate: null,
@@ -173,6 +190,7 @@ export function useProfile() {
     addCompany,
     updateCompany,
     removeCompany,
+    importCompaniesFromJson,
     clearProfile,
     RELATION_TYPES,
     PRACTITIONER_LEVELS

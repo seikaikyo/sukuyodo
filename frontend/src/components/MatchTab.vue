@@ -144,6 +144,7 @@ const emit = defineEmits<{
   calculateCompanyCompatibility: []
   saveCompany: [data: { name: string; foundingDate: string; memo?: string }]
   removeCompany: [id: string]
+  importCompanies: []
   'navigate-knowledge': [tab: string]
   'navigate-lucky': []
 }>()
@@ -654,6 +655,12 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           class="btn-save-company"
           @click="emit('saveCompany', { name: companyName || '未命名公司', foundingDate: companyDate })"
         >收藏此公司</button>
+      </div>
+
+      <!-- 載入推薦清單 -->
+      <div class="import-section">
+        <button class="btn-import-companies" @click="emit('importCompanies')">載入推薦清單</button>
+        <span class="import-hint">從 companies.json 匯入</span>
       </div>
 
       <!-- Saved Companies -->
@@ -1885,6 +1892,32 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
 
 .company-verdict-mini {
   margin-top: 2px;
+}
+
+.import-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+}
+
+.btn-import-companies {
+  padding: var(--space-xs) var(--space-md);
+  background: var(--surface-c, #d4c5a9);
+  color: var(--text-primary, #3d3425);
+  border: none;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-import-companies:hover {
+  background: var(--surface-d, #c4b599);
+}
+
+.import-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b5e4f);
 }
 
 .company-memo {

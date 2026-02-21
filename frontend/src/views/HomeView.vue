@@ -117,7 +117,7 @@ const {
   init
 } = useSukuyodo()
 
-const { addPartner, updatePartner, removePartner, addCompany, removeCompany, profile } = useProfile()
+const { addPartner, updatePartner, removePartner, addCompany, removeCompany, importCompaniesFromJson, profile } = useProfile()
 
 // Profile & Partner management state
 const showProfilePanel = ref(false)
@@ -177,6 +177,15 @@ function handleSaveCompany(data: { name: string; foundingDate: string; memo?: st
 function handleRemoveCompany(id: string) {
   removeCompany(id)
   fetchCompanyCompatibilities()
+}
+
+async function handleImportCompanies() {
+  try {
+    const added = await importCompaniesFromJson()
+    if (added > 0) fetchCompanyCompatibilities()
+  } catch (e) {
+    console.error('載入推薦清單失敗', e)
+  }
 }
 
 function handleEscape(e: KeyboardEvent) {
@@ -523,6 +532,7 @@ onUnmounted(() => {
         @calculate-company-compatibility="calculateCompanyCompatibility"
         @save-company="handleSaveCompany"
         @remove-company="handleRemoveCompany"
+        @import-companies="handleImportCompanies"
         @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />
