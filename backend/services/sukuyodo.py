@@ -3791,7 +3791,7 @@ class SukuyodoService:
         },
         "grooming": {
             "name": "剃髮",
-            "icon": "sparkles",
+            "icon": "brightness-high",
             "actions": {
                 "teihatsu": {
                     "name": "剃髮",
