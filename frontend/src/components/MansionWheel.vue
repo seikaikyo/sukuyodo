@@ -19,6 +19,7 @@ interface Props {
   rokugaiIndices?: number[]
   isRyouhan?: boolean
   showRelationOverview?: boolean
+  focusedRelationType?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +30,7 @@ const props = withDefaults(defineProps<Props>(), {
   sankiPeriodIndex: 0,
   isRyouhan: false,
   showRelationOverview: false,
+  focusedRelationType: null,
 })
 
 interface RelationInfo {
@@ -41,6 +43,7 @@ interface RelationInfo {
 const emit = defineEmits<{
   (e: 'select', mansion: Mansion): void
   (e: 'relation-detail', data: { mansion: Mansion, relation: RelationInfo } | null): void
+  (e: 'update:focusedRelationType', value: string | null): void
 }>()
 
 // SVG 配置
@@ -52,7 +55,7 @@ const innerRadius = 100
 const textRadius = 140
 const sankiOuterR = outerRadius + 14
 const sankiInnerR = outerRadius + 8
-const sevenDayOuterR = outerRadius + 4
+const sevenDayOuterR = outerRadius + 8
 const sevenDayInnerR = outerRadius + 1
 
 // 七曜歸屬（27 宿按 index 順序的七曜名）
@@ -317,8 +320,9 @@ const connectionLines = computed(() => {
     relation: RelationInfo
   }> = []
 
+  // 全覽模式不畫連線，只靠填色區分
   const indices = props.showRelationOverview
-    ? Array.from({ length: 27 }, (_, i) => i).filter(i => i !== props.highlightIndex)
+    ? []
     : (props.selectedIndex >= 0 && props.selectedIndex !== props.highlightIndex ? [props.selectedIndex] : [])
 
   const from = getPoint(props.highlightIndex)
@@ -360,7 +364,12 @@ const centerInfo = computed(() => {
   }
   // 全覽模式
   if (props.showRelationOverview && props.highlightIndex >= 0) {
-    return { title: '關係全覽', sub: '六種關係', tertiary: '' }
+    if (props.focusedRelationType) {
+      const name = RELATION_NAMES[props.focusedRelationType] || ''
+      const count = RELATION_DISTANCES[props.focusedRelationType]?.length || 0
+      return { title: name, sub: `${count} 宿`, tertiary: '' }
+    }
+    return { title: '關係全覽', sub: '點擊圖例篩選', tertiary: '' }
   }
   // 運勢模式
   if (props.mode === 'fortune') {
@@ -388,10 +397,10 @@ function handleClick(mansion: Mansion & { path: string }) {
 function getSegmentFill(seg: typeof mansionSegments.value[0]): string {
   if (seg.isDayMansion) return 'var(--accent)'
   if (seg.isHighlight) return 'var(--kongou-color)'
-  // 全覽模式：用關係色填充
-  if (props.showRelationOverview && props.highlightIndex >= 0) {
+  // 全覽模式：有聚焦才用關係色，無聚焦用元素色
+  if (props.showRelationOverview && props.focusedRelationType && props.highlightIndex >= 0) {
     const rel = mansionRelationMap.value.get(seg.index)
-    if (rel) return RELATION_COLORS[rel.type] || seg.color
+    if (rel && rel.type === props.focusedRelationType) return RELATION_COLORS[rel.type] || seg.color
   }
   if (seg.isSelected) return 'rgba(139, 105, 20, 0.6)'
   return seg.color
@@ -400,6 +409,12 @@ function getSegmentFill(seg: typeof mansionSegments.value[0]): string {
 function getSegmentOpacity(seg: typeof mansionSegments.value[0]): number {
   if (seg.isDayMansion || seg.isHighlight) return 1
   if (seg.isSelected) return 0.9
+  // 全覽聚焦模式：匹配的關係 1.0，其他 0.25
+  if (props.showRelationOverview && props.focusedRelationType && props.highlightIndex >= 0) {
+    const rel = mansionRelationMap.value.get(seg.index)
+    if (rel && rel.type === props.focusedRelationType) return 1.0
+    return 0.25
+  }
   return 0.7
 }
 
@@ -419,6 +434,44 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
   if (seg.isRokugai) return '3 2'
   return 'none'
 }
+
+// 全覽 hover 時的關係資訊
+const hoveredRelation = computed(() => {
+  if (!props.showRelationOverview || hoveredIndex.value === null) return null
+  return mansionRelationMap.value.get(hoveredIndex.value) ?? null
+})
+
+// 圖例切換：全覽模式用關係圖例，否則用五行圖例
+const RELATION_LEGEND_ITEMS = [
+  { key: 'eishin', label: '栄親', color: '#B8860B' },
+  { key: 'yusui', label: '友衰', color: '#7B9CC5' },
+  { key: 'ankai', label: '安壊', color: '#C53030' },
+  { key: 'kisei', label: '危成', color: '#9B7B1C' },
+  { key: 'mei', label: '命', color: '#A08050' },
+  { key: 'gyotai', label: '業胎', color: '#5A7FA5' },
+]
+
+const activeLegend = computed(() => {
+  if (props.showRelationOverview) {
+    return RELATION_LEGEND_ITEMS.map(item => ({
+      ...item,
+      clickable: true,
+      active: props.focusedRelationType === item.key,
+    }))
+  }
+  return Object.entries(elementColors).map(([element, color]) => ({
+    key: element,
+    label: element,
+    color,
+    clickable: false,
+    active: false,
+  }))
+})
+
+function toggleRelationFocus(type: string) {
+  const newVal = props.focusedRelationType === type ? null : type
+  emit('update:focusedRelationType', newVal)
+}
 </script>
 
 <template>
@@ -432,8 +485,8 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
       @pointerup="onPointerUp"
       @pointercancel="onPointerUp"
     >
-      <!-- 三期弧形色帶 -->
-      <g v-if="sankiArcs.length" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
+      <!-- 三期弧形色帶（全覽模式隱藏） -->
+      <g v-if="sankiArcs.length && !showRelationOverview" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
         <path
           v-for="(arc, idx) in sankiArcs"
           :key="`sanki-${idx}`"
@@ -443,8 +496,8 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
         />
       </g>
 
-      <!-- 七曜環 L3 -->
-      <g v-if="sevenDayRingSegments.length" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
+      <!-- 七曜環（全覽模式隱藏） -->
+      <g v-if="sevenDayRingSegments.length && !showRelationOverview" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
         <path
           v-for="(seg, idx) in sevenDayRingSegments"
           :key="`sd-${idx}`"
@@ -481,7 +534,7 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
           :key="`conn-${idx}`"
           :d="line.path"
           :stroke="line.color"
-          stroke-width="2"
+          stroke-width="2.5"
           fill="none"
           :stroke-dasharray="line.dashArray"
           :opacity="line.opacity"
@@ -545,10 +598,19 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
     </svg>
 
     <div class="wheel-legend">
-      <div class="legend-item" v-for="(color, element) in elementColors" :key="element">
-        <span class="legend-dot" :style="{ background: color }"></span>
-        <span class="legend-text">{{ element }}</span>
+      <div
+        v-for="item in activeLegend"
+        :key="item.key"
+        class="legend-item"
+        :class="{ clickable: item.clickable, active: item.active }"
+        @click="item.clickable ? toggleRelationFocus(item.key) : undefined"
+      >
+        <span class="legend-dot" :style="{ background: item.color }"></span>
+        <span class="legend-text">{{ item.label }}</span>
       </div>
+      <span v-if="showRelationOverview && !focusedRelationType" class="legend-hint">
+        點擊篩選
+      </span>
     </div>
 
     <div v-if="hoveredMansion" class="hover-tooltip">
@@ -562,6 +624,7 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
       </span>
       <span v-if="hoveredMansion.isDayMansion" class="tooltip-tag day">當日宿</span>
       <span v-if="hoveredMansion.isRokugai" class="tooltip-tag rokugai">六害宿</span>
+      <span v-if="hoveredRelation" class="tooltip-tag relation">{{ hoveredRelation.name }}</span>
     </div>
   </div>
 </template>
@@ -581,7 +644,7 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 
 .wheel-svg {
   width: 100%;
-  max-width: 400px;
+  max-width: 560px;
   height: auto;
   cursor: grab;
   touch-action: none;
@@ -623,18 +686,18 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 }
 
 .center-title {
-  font-size: 14px;
+  font-size: 18px;
   fill: var(--accent);
   font-weight: 600;
 }
 
 .center-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   fill: var(--text-secondary);
 }
 
 .center-tertiary {
-  font-size: 10px;
+  font-size: 12px;
   fill: var(--text-muted, var(--text-secondary));
   opacity: 0.7;
 }
@@ -669,6 +732,30 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 .legend-text {
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.legend-item.clickable {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.legend-item.clickable:hover {
+  background: var(--bg-elevated);
+}
+
+.legend-item.clickable.active {
+  background: var(--bg-elevated);
+  outline: 1.5px solid var(--accent);
+}
+
+.legend-hint {
+  width: 100%;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted, var(--text-secondary));
+  opacity: 0.6;
 }
 
 .hover-tooltip {
@@ -717,9 +804,14 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
   color: var(--rasetsu-color);
 }
 
+.tooltip-tag.relation {
+  background: rgba(139, 105, 20, 0.15);
+  color: var(--accent);
+}
+
 @media (max-width: 500px) {
   .wheel-svg {
-    max-width: 320px;
+    max-width: 360px;
   }
 
   .mansion-name {
@@ -727,11 +819,11 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
   }
 
   .center-title {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .center-subtitle {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .hover-tooltip {
@@ -742,7 +834,7 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 
 @media (max-width: 479px) {
   .wheel-svg {
-    max-width: 280px;
+    max-width: 320px;
   }
 }
 </style>

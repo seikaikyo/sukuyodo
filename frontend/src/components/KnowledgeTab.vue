@@ -33,6 +33,7 @@ interface RelationInfo {
   distanceCategory: 'near' | 'mid' | 'far'
 }
 const selectedRelation = ref<{ mansion: WheelMansion, relation: RelationInfo } | null>(null)
+const focusedRelationType = ref<string | null>(null)
 
 function handleRelationDetail(data: { mansion: WheelMansion, relation: RelationInfo } | null) {
   selectedRelation.value = data
@@ -161,6 +162,15 @@ function handleWheelSelect(m: WheelMansion) {
   }
 }
 
+function toggleOverview() {
+  showRelationOverview.value = !showRelationOverview.value
+  if (!showRelationOverview.value) focusedRelationType.value = null
+}
+
+function setFocusedRelation(type: string) {
+  focusedRelationType.value = focusedRelationType.value === type ? null : type
+}
+
 const natureTypeColors: Record<string, string> = {
   '安住宿': '#6B8E6B',
   '和善宿': '#7BA7C9',
@@ -179,6 +189,17 @@ function getKuyouRowClass(level?: string) {
     '大凶': 'kuyou-row-bad'
   }
   return (level && classMap[level]) || ''
+}
+
+const TAB_INTROS: Record<string, string> = {
+  relations: '27宿間的位置關係分為六種，距離不同，吉凶各異。',
+  elements: '每宿歸屬七曜之一，七曜對應五行，相生相剋影響相性加成。',
+  'nature-types': '27宿按性質分為七科，反映行動適性與處事風格。',
+  'special-days': '甘露日、金剛峯日、羅刹日 — 由當日宿與曜日組合決定。',
+  kuyou: '九星按數え年循環，每年主星不同，影響整年運勢基調。',
+  ryouhan: '特定月份本命宿受凌犯，吉凶逆轉，全面影響運勢判定。',
+  sanki: '以本命宿為起點，27日一週期分三段，含暗黒の一週間。',
+  calendar: '農曆每月初一對應固定起始宿，逐日推進，27日一循環。',
 }
 </script>
 
@@ -201,6 +222,8 @@ function getKuyouRowClass(level?: string) {
         </div>
       </div>
     </div>
+
+    <p v-if="TAB_INTROS[activeTab]" class="tab-intro">{{ TAB_INTROS[activeTab] }}</p>
 
     <!-- My Mansion -->
     <div v-if="activeTab === 'mansion'" id="panel-knowledge-mansion" class="knowledge-content" role="tabpanel">
@@ -292,7 +315,7 @@ function getKuyouRowClass(level?: string) {
         <button
           class="pill-btn"
           :class="{ active: showRelationOverview }"
-          @click="showRelationOverview = !showRelationOverview"
+          @click="toggleOverview"
         >{{ showRelationOverview ? '關係全覽 ON' : '關係全覽' }}</button>
       </div>
 
@@ -302,8 +325,10 @@ function getKuyouRowClass(level?: string) {
         :selected-index="selectedWheelMansion?.index ?? -1"
         :highlight-index="mansion?.index ?? -1"
         :show-relation-overview="showRelationOverview"
+        :focused-relation-type="focusedRelationType"
         @select="handleWheelSelect"
         @relation-detail="handleRelationDetail"
+        @update:focused-relation-type="focusedRelationType = $event"
       />
 
       <!-- 關係詳情面板（選中單一宿時） -->
@@ -330,15 +355,26 @@ function getKuyouRowClass(level?: string) {
       <!-- 全覽面板 -->
       <div v-else-if="showRelationOverview && mansion" class="wheel-detail overview-panel">
         <h4>{{ mansion.name_jp }} 的關係分佈</h4>
+        <p class="overview-intro">以本命宿為中心，27宿分佈六種關係。點擊篩選特定關係。</p>
         <div class="overview-grid">
           <div v-for="stat in overviewStats" :key="stat.type" class="overview-item">
-            <div class="overview-item-header">
+            <div
+              class="overview-item-header"
+              :class="{ active: focusedRelationType === stat.type }"
+              :style="focusedRelationType === stat.type ? { borderLeftColor: stat.color } : undefined"
+              @click="setFocusedRelation(stat.type)"
+            >
               <span class="relation-color-dot" :style="{ background: stat.color }"></span>
               <span class="overview-type-name">{{ stat.name }}</span>
               <span class="overview-count">{{ stat.mansions.length }} 宿</span>
             </div>
             <div class="overview-mansions">
-              <span v-for="m in stat.mansions" :key="m.distance" class="overview-mansion-tag">{{ m.name }}</span>
+              <span
+                v-for="m in stat.mansions"
+                :key="m.distance"
+                class="overview-mansion-tag"
+                @click.stop="allMansions[(mansion!.index + m.distance) % 27] && handleWheelSelect(allMansions[(mansion!.index + m.distance) % 27]!)"
+              >{{ m.name }}</span>
             </div>
           </div>
         </div>
@@ -351,6 +387,41 @@ function getKuyouRowClass(level?: string) {
           {{ selectedWheelMansion.element }}
         </span>
         <p>{{ selectedWheelMansion.personality }}</p>
+      </div>
+
+      <!-- 輪盤視覺指南（預設狀態） -->
+      <div v-else class="wheel-guide">
+        <div class="guide-item" @click="emit('update:activeTab', 'elements')">
+          <div class="guide-dots">
+            <span v-for="c in ['#4A9B5A','#C4A052','#8B7355','#E89B3C','#7CB3D9','#E85D4C','#4A7A90']"
+              :key="c" class="guide-dot" :style="{ background: c }"></span>
+          </div>
+          <div class="guide-text">
+            <strong>五行元素</strong>
+            <span>底色代表宿的元素屬性</span>
+          </div>
+        </div>
+        <div class="guide-item" @click="emit('update:activeTab', 'elements')">
+          <div class="guide-dots bar">
+            <span v-for="c in ['#E89B3C','#7CB3D9','#E85D4C','#4A7A90','#4A9B5A','#C4A052','#8B7355']"
+              :key="c" class="guide-bar" :style="{ background: c }"></span>
+          </div>
+          <div class="guide-text">
+            <strong>七曜環</strong>
+            <span>外圈環帶，27宿依七曜循環歸屬</span>
+          </div>
+        </div>
+        <div class="guide-item" @click="emit('update:activeTab', 'sanki')">
+          <div class="guide-dots bar">
+            <span class="guide-bar" style="background: var(--kanro-color, #C4A052)"></span>
+            <span class="guide-bar" style="background: var(--rasetsu-color, #E85D4C)"></span>
+            <span class="guide-bar" style="background: #5C8FA8"></span>
+          </div>
+          <div class="guide-text">
+            <strong>三期週期</strong>
+            <span>最外弧形，甘露/羅刹/中性各9宿</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -869,6 +940,19 @@ function getKuyouRowClass(level?: string) {
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-xs);
+  cursor: pointer;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  transition: background-color 0.2s;
+}
+
+.overview-item-header:hover {
+  background: var(--bg-elevated);
+}
+
+.overview-item-header.active {
+  background: var(--bg-elevated);
 }
 
 .overview-type-name {
@@ -895,6 +979,13 @@ function getKuyouRowClass(level?: string) {
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.overview-mansion-tag:hover {
+  background: var(--bg-surface);
+  color: var(--accent);
 }
 
 .relations-list {
@@ -1280,6 +1371,82 @@ function getKuyouRowClass(level?: string) {
 .stage-quote {
   padding: var(--space-2) var(--space-3);
   font-size: 0.8rem;
+}
+
+.tab-intro {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-md);
+  line-height: 1.5;
+}
+
+.overview-intro {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+}
+
+.wheel-guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.guide-item:hover {
+  background: var(--bg-elevated);
+}
+
+.guide-dots {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.guide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.guide-dots.bar {
+  gap: 2px;
+}
+
+.guide-bar {
+  width: 6px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.guide-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guide-text strong {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+.guide-text span {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
 }
 
 @media (prefers-reduced-motion: reduce) {
