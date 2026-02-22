@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { useProfile } from '../stores/profile'
-import { getApiUrl } from '../config/api'
+import { getApiUrl, apiFetch } from '../config/api'
 import {
   getScoreClass,
   getFortuneLevel,
@@ -1050,7 +1050,7 @@ export function useSukuyodo() {
     yearlyRange.value = []
 
     try {
-      const res = await fetch(getApiUrl(`/mansion/${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/mansion/${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1085,7 +1085,7 @@ export function useSukuyodo() {
     finderLoading.value = true
 
     try {
-      const res = await fetch(getApiUrl(`/compatibility-finder/${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/compatibility-finder/${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1103,7 +1103,7 @@ export function useSukuyodo() {
     if (!birthDate.value) return
     const today = getLocalDateStr()
     try {
-      const res = await fetch(getApiUrl(`/fortune/daily/${today}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/daily/${today}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1118,7 +1118,7 @@ export function useSukuyodo() {
   async function fetchDailyFortuneForDate(targetDate: string) {
     if (!birthDate.value) return
     try {
-      const res = await fetch(getApiUrl(`/fortune/daily/${targetDate}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/daily/${targetDate}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1137,7 +1137,7 @@ export function useSukuyodo() {
     const today = getLocalDateStr()
 
     try {
-      const res = await fetch(getApiUrl(`/fortune/weekly/${today}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/weekly/${today}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1176,7 +1176,7 @@ export function useSukuyodo() {
     yearlyMonthLoading.value = true
     const year = yearlyFortune.value?.year ?? new Date().getFullYear()
     try {
-      const res = await fetch(getApiUrl(`/fortune/monthly/${year}/${month}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/monthly/${year}/${month}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) yearlyMonthDetail.value = data.data
@@ -1193,7 +1193,7 @@ export function useSukuyodo() {
     if (!birthDate.value) return
     const now = new Date()
     try {
-      const res = await fetch(getApiUrl(`/fortune/monthly/${now.getFullYear()}/${now.getMonth() + 1}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/monthly/${now.getFullYear()}/${now.getMonth() + 1}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1213,7 +1213,7 @@ export function useSukuyodo() {
     if (!birthDate.value) return
     const year = new Date().getFullYear()
     try {
-      const res = await fetch(getApiUrl(`/fortune/yearly/${year}?birth_date=${birthDate.value}`))
+      const res = await apiFetch(getApiUrl(`/fortune/yearly/${year}?birth_date=${birthDate.value}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1229,7 +1229,7 @@ export function useSukuyodo() {
     if (!birthDate.value) return
     yearlyRangeLoading.value = true
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         getApiUrl(`/fortune/yearly-range?birth_date=${birthDate.value}&start_year=${startYear}&end_year=${endYear}`)
       )
       if (res.ok) {
@@ -1256,7 +1256,7 @@ export function useSukuyodo() {
 
   async function fetchLuckyDayCategories() {
     try {
-      const res = await fetch(getApiUrl('/lucky-days/categories'))
+      const res = await apiFetch(getApiUrl('/lucky-days/categories'))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1279,7 +1279,7 @@ export function useSukuyodo() {
     const catParam = cats.length > 0 ? `?categories=${cats.join(',')}` : ''
 
     try {
-      const res = await fetch(getApiUrl(`/lucky-days/summary/${queryDate}${catParam}`))
+      const res = await apiFetch(getApiUrl(`/lucky-days/summary/${queryDate}${catParam}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1302,7 +1302,7 @@ export function useSukuyodo() {
     japaneseCalendar.value = null
 
     try {
-      const res = await fetch(getApiUrl(`/calendar/lucky-days/${targetYear}/${targetMonth}`))
+      const res = await apiFetch(getApiUrl(`/calendar/lucky-days/${targetYear}/${targetMonth}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1324,7 +1324,7 @@ export function useSukuyodo() {
     specialDaysLoading.value = true
 
     try {
-      const res = await fetch(getApiUrl(`/special-days/${targetYear}/${targetMonth}`))
+      const res = await apiFetch(getApiUrl(`/special-days/${targetYear}/${targetMonth}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1349,7 +1349,7 @@ export function useSukuyodo() {
       if (birthDate.value) {
         url += `?birth_date=${birthDate.value}`
       }
-      const res = await fetch(url)
+      const res = await apiFetch(url)
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1379,7 +1379,7 @@ export function useSukuyodo() {
     const promises = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1
       const url = getApiUrl(`/calendar/monthly/${year}/${month}?birth_date=${birthDate.value}`)
-      return fetch(url).then(res => res.ok ? res.json() : null)
+      return apiFetch(url).then(res => res.ok ? res.json() : null)
     })
 
     const results = await Promise.allSettled(promises)
@@ -1404,7 +1404,7 @@ export function useSukuyodo() {
     pairLuckyDays.value = null
 
     try {
-      const res = await fetch(
+      const res = await apiFetch(
         getApiUrl(`/lucky-days/pair/${myDate}/${partner.birthDate}?relation=${partner.relation}`)
       )
       if (res.ok) {
@@ -1433,7 +1433,7 @@ export function useSukuyodo() {
     compatibility.value = null
 
     try {
-      const res = await fetch(getApiUrl('/compatibility'), {
+      const res = await apiFetch(getApiUrl('/compatibility'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1469,7 +1469,7 @@ export function useSukuyodo() {
       const results: PartnerCompatibility[] = []
 
       for (const partner of partnersWithBirthDate.value) {
-        const res = await fetch(getApiUrl('/compatibility'), {
+        const res = await apiFetch(getApiUrl('/compatibility'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1522,7 +1522,7 @@ export function useSukuyodo() {
     companyCompat.value = null
 
     try {
-      const res = await fetch(getApiUrl('/compatibility'), {
+      const res = await apiFetch(getApiUrl('/compatibility'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1563,7 +1563,7 @@ export function useSukuyodo() {
       const results: typeof companyCompatibilities.value = []
 
       for (const company of companies) {
-        const res = await fetch(getApiUrl('/compatibility'), {
+        const res = await apiFetch(getApiUrl('/compatibility'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1621,7 +1621,7 @@ export function useSukuyodo() {
     companySearchResults.value = []
 
     try {
-      const res = await fetch(getApiUrl('/company-search'), {
+      const res = await apiFetch(getApiUrl('/company-search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1662,7 +1662,7 @@ export function useSukuyodo() {
 
     try {
       const year = new Date().getFullYear()
-      const res = await fetch(getApiUrl('/company-batch-analysis'), {
+      const res = await apiFetch(getApiUrl('/company-batch-analysis'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1692,7 +1692,7 @@ export function useSukuyodo() {
 
   async function loadMetadata() {
     try {
-      const res = await fetch(getApiUrl('/metadata'))
+      const res = await apiFetch(getApiUrl('/metadata'))
       if (res.ok) {
         metadata.value = await res.json()
       }
@@ -1703,7 +1703,7 @@ export function useSukuyodo() {
 
   async function loadAllMansions() {
     try {
-      const res = await fetch(getApiUrl('/mansions'))
+      const res = await apiFetch(getApiUrl('/mansions'))
       if (res.ok) {
         const data = await res.json()
         if (data.success && data.mansions) {
@@ -1717,7 +1717,7 @@ export function useSukuyodo() {
 
   async function loadRelations() {
     try {
-      const res = await fetch(getApiUrl('/relations'))
+      const res = await apiFetch(getApiUrl('/relations'))
       if (res.ok) {
         const data = await res.json()
         if (data.relations) {
@@ -1731,7 +1731,7 @@ export function useSukuyodo() {
 
   async function loadElements() {
     try {
-      const res = await fetch(getApiUrl('/elements'))
+      const res = await apiFetch(getApiUrl('/elements'))
       if (res.ok) {
         const data = await res.json()
         if (data.elements) {

@@ -1,6 +1,7 @@
 """宿曜道 API 路由"""
+import os
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlmodel import Session
 
@@ -11,7 +12,19 @@ from services.stats import stats_service
 from services.japanese_calendar import japanese_calendar_service
 from models.stats import Features
 
-router = APIRouter(tags=["宿曜道"])
+APP_PIN = os.environ.get("APP_PIN", "")
+
+
+def verify_pin(request: Request):
+    """驗證 PIN。APP_PIN 未設定時放行（本地開發）"""
+    if not APP_PIN:
+        return
+    pin = request.headers.get("X-App-Pin", "")
+    if pin != APP_PIN:
+        raise HTTPException(status_code=401, detail="存取碼錯誤")
+
+
+router = APIRouter(tags=["宿曜道"], dependencies=[Depends(verify_pin)])
 
 
 class CompatibilityRequest(BaseModel):
