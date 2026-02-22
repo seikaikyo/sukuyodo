@@ -453,7 +453,7 @@ async function exportIcsCalendar() {
           <div class="mansion-hint">
             <h4>
               今日宿曜提示
-              <span class="hint-relation term-link" :class="dailyFortune.mansion_relation.type" @click="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name }}</span>
+              <span class="hint-relation term-link" :class="dailyFortune.mansion_relation.type" @click="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name_jp || dailyFortune.mansion_relation.name }}</span>
             </h4>
             <p class="hint-mansions">
               本命宿 <strong>{{ dailyFortune.your_mansion.name_jp }}</strong>（{{ dailyFortune.your_mansion.element }}）
@@ -634,8 +634,8 @@ async function exportIcsCalendar() {
               當月宿：<strong>{{ monthlyFortune.month_mansion.name_jp }}</strong>（{{ monthlyFortune.month_mansion.element }}）
             </span>
             <span v-if="monthlyFortune.relation" class="month-relation hint-relation term-link" :class="monthlyFortune.relation.type" @click="emit('navigate-knowledge', 'relations')">
-              <ruby v-if="monthlyFortune.relation.reading">{{ monthlyFortune.relation.name }}<rp>(</rp><rt>{{ monthlyFortune.relation.reading }}</rt><rp>)</rp></ruby>
-              <template v-else>{{ monthlyFortune.relation.name }}</template>
+              <ruby v-if="monthlyFortune.relation.reading">{{ monthlyFortune.relation.name_jp || monthlyFortune.relation.name }}<rp>(</rp><rt>{{ monthlyFortune.relation.reading }}</rt><rp>)</rp></ruby>
+              <template v-else>{{ monthlyFortune.relation.name_jp || monthlyFortune.relation.name }}</template>
             </span>
           </div>
           <p v-if="monthlyFortune.relation?.description" class="month-relation-desc">{{ monthlyFortune.relation.description }}</p>

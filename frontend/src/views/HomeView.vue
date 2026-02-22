@@ -79,6 +79,10 @@ const {
   companySearchLoading,
   companySearchError,
 
+  // Company Batch Analysis
+  companyBatchResult,
+  companyBatchLoading,
+
   // Lucky Days
   luckyDayCategories,
   luckyDaySummary,
@@ -105,6 +109,7 @@ const {
   calculateCompatibility,
   calculateCompanyCompatibility,
   fetchCompanyCompatibilities,
+  fetchCompanyBatchAnalysis,
   searchCompanies,
   fetchLuckyDaySummary,
   fetchPairLuckyDays,
@@ -186,17 +191,22 @@ function deletePartner(id: string) {
 function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
   addCompany(data)
   fetchCompanyCompatibilities()
+  fetchCompanyBatchAnalysis()
 }
 
 function handleRemoveCompany(id: string) {
   removeCompany(id)
   fetchCompanyCompatibilities()
+  fetchCompanyBatchAnalysis()
 }
 
 async function handleImportCompanies() {
   try {
     const added = await importCompaniesFromJson()
-    if (added > 0) fetchCompanyCompatibilities()
+    if (added > 0) {
+      fetchCompanyCompatibilities()
+      fetchCompanyBatchAnalysis()
+    }
   } catch (e) {
     console.error('載入推薦清單失敗', e)
   }
@@ -542,6 +552,8 @@ onUnmounted(() => {
         :company-search-results="companySearchResults"
         :company-search-loading="companySearchLoading"
         :company-search-error="companySearchError"
+        :company-batch-result="companyBatchResult"
+        :company-batch-loading="companyBatchLoading"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @update:company-name="companyName = $event"

@@ -298,6 +298,247 @@ class CompanySearchService:
         results.sort(key=lambda r: r["score"], reverse=True)
         return results
 
+    def batch_analyze(
+        self,
+        birth_date: date,
+        year: int,
+        companies: list[dict],
+    ) -> dict:
+        """
+        批次分析公司：相性 + 公司流年 + 梯隊排名 + RC 風險
+
+        Args:
+            birth_date: 使用者生日
+            year: 分析年份
+            companies: [{id, name, founding_date, memo?, job_url?}]
+
+        Returns:
+            使用者流年 + 每間公司的綜合分析 + 梯隊統計
+        """
+        # 1. 計算使用者九曜流年（只做一次）
+        user_yearly = sukuyodo_service.calculate_yearly_fortune(birth_date, year)
+
+        # 2. 逐間公司計算
+        results = []
+        for company in companies:
+            founding_date_str = company.get("founding_date", "")
+            try:
+                founding = date.fromisoformat(founding_date_str)
+            except (ValueError, TypeError):
+                continue
+
+            # 相性
+            try:
+                compat = sukuyodo_service.calculate_compatibility(birth_date, founding)
+            except Exception:
+                continue
+
+            score = compat.get("score", 0)
+            relation = compat.get("relation", {})
+            relation_type = relation.get("type", "")
+            direction = relation.get("direction", "")
+
+            # 公司九曜流年（輕量：只取 kuyou_star + overall + career）
+            try:
+                company_yearly = sukuyodo_service.calculate_yearly_fortune(founding, year)
+                company_kuyou = company_yearly.get("kuyou_star", {})
+                company_fortune = {
+                    "kuyou_star": company_kuyou,
+                    "overall": company_yearly.get("fortune", {}).get("overall", 50),
+                    "career": company_yearly.get("fortune", {}).get("career", 50),
+                }
+            except Exception:
+                company_kuyou = {}
+                company_fortune = {"kuyou_star": {}, "overall": 50, "career": 50}
+
+            company_level = company_kuyou.get("level", "末吉")
+
+            # 梯隊
+            tier = self._calculate_tier(score, company_level, relation_type, direction)
+
+            # RC 風險
+            memo = company.get("memo", "")
+            ref_check = self._estimate_ref_check(company.get("name", ""), memo)
+
+            # 投遞建議
+            recommendation = self._build_recommendation(
+                tier, ref_check, score, company_level, relation_type, direction
+            )
+
+            results.append({
+                "id": company.get("id", ""),
+                "name": company.get("name", ""),
+                "compatibility": {
+                    "score": score,
+                    "relation": relation,
+                    "person2": compat.get("person2", {}),
+                },
+                "company_fortune": company_fortune,
+                "tier": tier,
+                "ref_check": ref_check,
+                "recommendation": recommendation,
+                "memo": memo,
+                "job_url": company.get("job_url", ""),
+            })
+
+        # 3. 按梯隊 + 分數排序
+        results.sort(key=lambda r: (r["tier"]["rank"], -r["compatibility"]["score"]))
+
+        # 4. 設定 priority
+        for i, r in enumerate(results, 1):
+            r["recommendation"]["priority"] = i
+
+        # 5. 梯隊統計
+        tier_summary = {"tier_1": 0, "tier_2": 0, "tier_3": 0, "tier_4": 0}
+        for r in results:
+            key = f"tier_{r['tier']['rank']}"
+            tier_summary[key] = tier_summary.get(key, 0) + 1
+
+        return {
+            "user": {
+                "mansion": user_yearly.get("your_mansion", {}),
+                "yearly_fortune": {
+                    "kuyou_star": user_yearly.get("kuyou_star", {}),
+                    "overall": user_yearly.get("fortune", {}).get("overall", 50),
+                    "career": user_yearly.get("fortune", {}).get("career", 50),
+                },
+            },
+            "companies": results,
+            "tier_summary": tier_summary,
+        }
+
+    def _calculate_tier(
+        self,
+        compat_score: int,
+        company_kuyou_level: str,
+        relation_type: str,
+        direction: str,
+    ) -> dict:
+        """計算梯隊排名"""
+        is_good_fortune = company_kuyou_level in ("大吉", "半吉")
+        is_great_fortune = company_kuyou_level == "大吉"
+        is_bad_fortune = company_kuyou_level == "大凶"
+
+        if compat_score >= 90 and is_great_fortune:
+            rank = 1
+        elif (compat_score >= 65 and is_good_fortune) or (compat_score >= 90 and is_good_fortune):
+            rank = 2
+        elif compat_score >= 90 and is_bad_fortune:
+            rank = 3
+        else:
+            rank = 4
+
+        # 安壊壊方向降一級
+        if relation_type == "ankai" and direction == "壊" and rank < 4:
+            rank += 1
+
+        labels = {
+            1: "第一梯隊",
+            2: "第二梯隊",
+            3: "第三梯隊",
+            4: "第四梯隊",
+        }
+        css_classes = {
+            1: "tier-1",
+            2: "tier-2",
+            3: "tier-3",
+            4: "tier-4",
+        }
+        reasons = {
+            1: "相性極佳且公司今年大吉",
+            2: "相性良好且公司今年運勢不差",
+            3: "相性佳但公司今年運勢低迷",
+            4: "綜合條件需審慎評估",
+        }
+
+        return {
+            "rank": rank,
+            "label": labels[rank],
+            "css_class": css_classes[rank],
+            "reason": reasons[rank],
+        }
+
+    def _estimate_ref_check(self, company_name: str, memo: str) -> dict:
+        """估算 Reference Check 風險"""
+        combined = f"{company_name} {memo}".lower()
+
+        # 高風險：上市大廠、金融業
+        high_keywords = [
+            "台積電", "鴻海", "聯發科", "日月光", "中華電信",
+            "台達電", "廣達", "仁寶", "緯創", "和碩",
+            "國泰", "富邦", "中信", "玉山", "兆豐",
+            "銀行", "證券", "保險", "金控",
+        ]
+        for kw in high_keywords:
+            if kw in combined:
+                return {
+                    "risk_level": "high",
+                    "risk_label": "高",
+                    "reason": f"大型企業/金融業，RC 流程嚴謹（含 {kw}）",
+                }
+
+        # 中風險：科技/半導體/製造業
+        mid_keywords = [
+            "科技", "半導體", "光電", "精密", "電子",
+            "資訊", "通訊", "系統", "智慧", "自動化",
+            "製造", "工業", "材料",
+        ]
+        for kw in mid_keywords:
+            if kw in combined:
+                return {
+                    "risk_level": "medium",
+                    "risk_label": "中",
+                    "reason": f"中型科技/製造業，可能有基本 RC（含 {kw}）",
+                }
+
+        return {
+            "risk_level": "low",
+            "risk_label": "低",
+            "reason": "一般企業，RC 機率較低",
+        }
+
+    def _build_recommendation(
+        self,
+        tier: dict,
+        ref_check: dict,
+        score: int,
+        company_level: str,
+        relation_type: str,
+        direction: str,
+    ) -> dict:
+        """產生投遞建議"""
+        rank = tier["rank"]
+        action_items = []
+
+        if rank == 1:
+            summary = "強力推薦投遞，相性和時機都好"
+            action_items.append("優先準備履歷和面試")
+            action_items.append("把握今年的好運勢積極爭取")
+        elif rank == 2:
+            summary = "值得投遞，條件良好"
+            action_items.append("正常準備即可")
+        elif rank == 3:
+            summary = "相性好但今年時機一般，可投但別押寶"
+            action_items.append("同時準備其他選項")
+            action_items.append("面試時注意公司近期狀況")
+        else:
+            summary = "條件一般，當備選方案"
+            action_items.append("先投其他梯隊的公司")
+
+        if ref_check["risk_level"] == "high":
+            action_items.append("RC 風險高，確認前東家關係良好")
+        elif ref_check["risk_level"] == "medium":
+            action_items.append("可能有 RC，準備好推薦人選")
+
+        if relation_type == "ankai" and direction == "壊":
+            action_items.append("壊方關係，面試和入職後留意人際衝突")
+
+        return {
+            "priority": 0,  # 排序後再設定
+            "summary": summary,
+            "action_items": action_items,
+        }
+
     def _get_verdict(self, relation_type: str, direction: str, score: int) -> str:
         """根據關係類型和方向判定推薦等級"""
         if relation_type == "eishin":

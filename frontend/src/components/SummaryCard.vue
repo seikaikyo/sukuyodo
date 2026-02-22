@@ -33,7 +33,7 @@ const emit = defineEmits<{
         class="mansion-relation"
         :class="getMansionRelationClass(dailyFortune.mansion_relation.type)"
       >
-        <span class="relation-title">今日與本命宿關係：<strong class="term-link" @click.stop="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）</strong></span>
+        <span class="relation-title">今日與本命宿關係：<strong class="term-link" @click.stop="emit('navigate-knowledge', 'relations')">{{ dailyFortune.mansion_relation.name_jp || dailyFortune.mansion_relation.name }}（{{ dailyFortune.mansion_relation.reading }}）</strong></span>
         <span class="relation-desc">{{ dailyFortune.mansion_relation.description }}</span>
       </div>
     </div>

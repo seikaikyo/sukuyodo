@@ -129,6 +129,7 @@ export interface FortuneScores {
 export interface MansionRelation {
   type: string
   name: string
+  name_jp?: string
   reading: string
   description: string
 }
@@ -316,6 +317,7 @@ export interface MonthlyFortune {
   relation: {
     type: string
     name: string
+    name_jp?: string
     reading: string
     description: string
   }
@@ -821,6 +823,79 @@ export interface Metadata {
 }
 
 // ============================================================================
+// Company Batch Analysis Types
+// ============================================================================
+
+export interface CompanyTier {
+  rank: number
+  label: string
+  css_class: string
+  reason: string
+}
+
+export interface CompanyRefCheck {
+  risk_level: 'high' | 'medium' | 'low'
+  risk_label: string
+  reason: string
+}
+
+export interface CompanyRecommendation {
+  priority: number
+  summary: string
+  action_items: string[]
+}
+
+export interface CompanyFortuneInfo {
+  kuyou_star: {
+    name: string
+    reading: string
+    level: string
+    fortune_name: string
+    element: string | null
+    buddha: string
+    description: string
+    kazoe_age: number
+  }
+  overall: number
+  career: number
+}
+
+export interface CompanyAnalysisItem {
+  id: string
+  name: string
+  compatibility: {
+    score: number
+    relation: Relation
+    person2: Person
+  }
+  company_fortune: CompanyFortuneInfo
+  tier: CompanyTier
+  ref_check: CompanyRefCheck
+  recommendation: CompanyRecommendation
+  memo: string
+  job_url: string
+}
+
+export interface CompanyBatchResult {
+  user: {
+    mansion: {
+      name_jp: string
+      reading: string
+      element: string
+      index: number
+    }
+    yearly_fortune: CompanyFortuneInfo
+  }
+  companies: CompanyAnalysisItem[]
+  tier_summary: {
+    tier_1: number
+    tier_2: number
+    tier_3: number
+    tier_4: number
+  }
+}
+
+// ============================================================================
 // Composable
 // ============================================================================
 
@@ -899,6 +974,10 @@ export function useSukuyodo() {
   const companySearchResults = ref<any[]>([])
   const companySearchLoading = ref(false)
   const companySearchError = ref('')
+
+  // Company Batch Analysis
+  const companyBatchResult = ref<CompanyBatchResult | null>(null)
+  const companyBatchLoading = ref(false)
 
   // Lucky Days
   const luckyDayCategories = ref<LuckyDayCategoryMeta[]>([])
@@ -1569,6 +1648,48 @@ export function useSukuyodo() {
     }
   }
 
+  async function fetchCompanyBatchAnalysis() {
+    const queryDate = birthDate.value || myBirthDate.value
+    if (!queryDate) return
+    const companies = profile.value.companies
+    if (companies.length === 0) {
+      companyBatchResult.value = null
+      return
+    }
+
+    companyBatchLoading.value = true
+    companyBatchResult.value = null
+
+    try {
+      const year = new Date().getFullYear()
+      const res = await fetch(getApiUrl('/company-batch-analysis'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birth_date: queryDate,
+          year,
+          companies: companies.map(c => ({
+            id: c.id,
+            name: c.name,
+            founding_date: c.foundingDate,
+            memo: c.memo || '',
+            job_url: c.jobUrl || '',
+          })),
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          companyBatchResult.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch company batch analysis')
+    } finally {
+      companyBatchLoading.value = false
+    }
+  }
+
   async function loadMetadata() {
     try {
       const res = await fetch(getApiUrl('/metadata'))
@@ -1644,8 +1765,13 @@ export function useSukuyodo() {
     if (tab === 'partners' && partnerCompatibilities.value.length === 0) {
       fetchPartnerCompatibilities()
     }
-    if (tab === 'company' && companyCompatibilities.value.length === 0 && profile.value.companies.length > 0) {
-      fetchCompanyCompatibilities()
+    if (tab === 'company' && profile.value.companies.length > 0) {
+      if (companyCompatibilities.value.length === 0) {
+        fetchCompanyCompatibilities()
+      }
+      if (!companyBatchResult.value) {
+        fetchCompanyBatchAnalysis()
+      }
     }
   })
 
@@ -1736,6 +1862,10 @@ export function useSukuyodo() {
     companySearchLoading,
     companySearchError,
 
+    // Company Batch Analysis
+    companyBatchResult,
+    companyBatchLoading,
+
     // Lucky Days
     luckyDayCategories,
     luckyDaySummary,
@@ -1776,6 +1906,7 @@ export function useSukuyodo() {
     calculateCompatibility,
     calculateCompanyCompatibility,
     fetchCompanyCompatibilities,
+    fetchCompanyBatchAnalysis,
     searchCompanies,
     fetchPartnerCompatibilities,
     fetchDailyFortuneForDate,

@@ -2015,6 +2015,7 @@ class SukuyodoService:
             "mansion_relation": {
                 "type": mansion_relation_type,
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(mansion_relation_type, mansion_relation["name"]),
+                "name_jp": mansion_relation.get("name_jp", mansion_relation["name"]),
                 "reading": mansion_relation.get("reading", ""),
                 "description": self._seeded_choice(f"{birth_date.isoformat()}{target_date.isoformat()}rel_desc", self.DAILY_FORTUNE_DESCRIPTIONS.get(mansion_relation_type, [mansion_relation["description"]])),
                 "description_classic": mansion_relation.get("description_classic", ""),
@@ -2256,6 +2257,7 @@ class SukuyodoService:
             "relation": {
                 "type": relation["type"],
                 "name": self.DAILY_FORTUNE_RELATION_NAMES.get(relation["type"], relation["name"]),
+                "name_jp": relation.get("name_jp", relation["name"]),
                 "reading": relation.get("reading", ""),
                 "description": self._seeded_choice(f"{birth_date.isoformat()}{year}{month}rel_desc", self.MONTHLY_FORTUNE_DESCRIPTIONS.get(relation["type"], [relation["description"]]))
             },

@@ -28,6 +28,22 @@ class CompanySearchRequest(BaseModel):
     min_score: int = 0      # 最低分數門檻（0 表示不篩選）
 
 
+class CompanyBatchItem(BaseModel):
+    """批次分析用的公司資料"""
+    id: str
+    name: str
+    founding_date: str      # YYYY-MM-DD
+    memo: str = ""
+    job_url: str = ""
+
+
+class CompanyBatchRequest(BaseModel):
+    """公司批次分析請求"""
+    birth_date: str         # 使用者生日 YYYY-MM-DD
+    year: int               # 分析年份
+    companies: list[CompanyBatchItem]
+
+
 @router.get("/mansions")
 async def get_all_mansions():
     """
@@ -790,6 +806,67 @@ def get_pair_lucky_days(
     return {
         "success": True,
         "data": result
+    }
+
+
+@router.post("/company-batch-analysis")
+def company_batch_analysis(request: CompanyBatchRequest):
+    """
+    公司批次分析
+
+    計算每間公司的相性、九曜流年、梯隊排名、RC 風險。
+    一次呼叫取得所有已收藏公司的綜合決策資訊。
+
+    Args:
+        request: 使用者生日、年份、公司清單
+    """
+    try:
+        birth = date.fromisoformat(request.birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth > today:
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    if request.year < 1900 or request.year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    if len(request.companies) == 0:
+        return {
+            "success": True,
+            "data": {"user": {}, "companies": [], "tier_summary": {}},
+        }
+
+    companies_data = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "founding_date": c.founding_date,
+            "memo": c.memo,
+            "job_url": c.job_url,
+        }
+        for c in request.companies
+    ]
+
+    result = company_search_service.batch_analyze(
+        birth_date=birth,
+        year=request.year,
+        companies=companies_data,
+    )
+
+    return {
+        "success": True,
+        "data": result,
     }
 
 
