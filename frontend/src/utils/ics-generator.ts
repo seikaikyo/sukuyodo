@@ -142,22 +142,43 @@ function buildDayEvent(day: CalendarDay, index: number): string[] {
     ? getFortuneLevel(personal.fortune_score, personal.level_name)
     : null
 
-  // 標題: 【中吉】婁宿(金) - 月曜 [甘露日]
-  const titleParts: string[] = []
-  if (level) titleParts.push(`【${level}】`)
-  titleParts.push(`${day.day_mansion.name_jp}(${day.day_mansion.element})`)
-  titleParts.push(`- ${day.weekday}`)
-  if (day.special_day) {
-    const reversed = day.special_day.ryouhan_reversed ? '*逆転' : ''
-    titleParts.push(`[${day.special_day.name}${reversed}]`)
+  // 標題: 等級 | 三期 | 特殊日/凌犯/暗黒
+  // 例: 中吉 | 躍動 | 甘露日
+  //     凶 | 破壊 | 羅刹日 凌犯 暗黒
+  //     大吉 | 再生
+  const titleSegments: string[] = []
+  if (level) titleSegments.push(level)
+  if (personal) {
+    // 三期：去掉「の週」縮短
+    const sankiShort = personal.sanki_period.replace('の週', '')
+    titleSegments.push(sankiShort)
   }
-  const summary = titleParts.join(' ')
+  // 第三段：特殊標記
+  const markers: string[] = []
+  if (day.special_day) {
+    const reversed = day.special_day.ryouhan_reversed ? '(逆転)' : ''
+    markers.push(`${day.special_day.name}${reversed}`)
+  }
+  if (day.ryouhan?.active && !day.special_day) {
+    markers.push('凌犯')
+  }
+  if (personal?.is_dark_week) {
+    markers.push('暗黒')
+  }
+  if (personal?.rokugai) {
+    markers.push('六害宿')
+  }
+  if (markers.length > 0) {
+    titleSegments.push(markers.join(' '))
+  }
+  const summary = titleSegments.join(' | ')
 
-  // 描述
+  // 描述（詳細資訊）
   const descParts: string[] = []
   if (personal) {
     descParts.push(`運勢: ${personal.fortune_score} (${level})`)
     descParts.push(`關係: ${personal.relation_name}`)
+    descParts.push(`宿: ${day.day_mansion.name_jp}(${day.day_mansion.element}) - ${day.weekday}`)
     descParts.push(`三期: ${personal.sanki_period}`)
   }
   if (day.special_day) {
