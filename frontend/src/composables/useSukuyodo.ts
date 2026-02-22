@@ -1241,6 +1241,25 @@ export function useSukuyodo() {
     fetchCalendarMonth(y, m)
   }
 
+  async function fetchFullYearCalendar(year: number): Promise<any[]> {
+    if (!birthDate.value) return []
+
+    const promises = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1
+      const url = getApiUrl(`/calendar/monthly/${year}/${month}?birth_date=${birthDate.value}`)
+      return fetch(url).then(res => res.ok ? res.json() : null)
+    })
+
+    const results = await Promise.allSettled(promises)
+    const calendars: any[] = []
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value?.success) {
+        calendars.push(r.value.data)
+      }
+    }
+    return calendars
+  }
+
   async function fetchPairLuckyDays(partnerId: string) {
     const myDate = birthDate.value || myBirthDate.value
     if (!myDate) return
@@ -1711,6 +1730,7 @@ export function useSukuyodo() {
     fetchYearlyRange,
     fetchCalendarMonth,
     changeCalendarMonth,
+    fetchFullYearCalendar,
 
     // Event Handlers
     handleWheelSelect,

@@ -112,6 +112,7 @@ const {
   fetchSpecialDays,
   fetchCalendarMonth,
   changeCalendarMonth,
+  fetchFullYearCalendar,
 
   // Event Handlers
   quickSelect,
@@ -499,6 +500,7 @@ onUnmounted(() => {
         :yearly-month-detail="yearlyMonthDetail"
         :yearly-month-loading="yearlyMonthLoading"
         :expanded-yearly-week="expandedYearlyWeek"
+        :fetch-full-year-calendar="fetchFullYearCalendar"
         @toggle-week="toggleMonthlyWeek"
         @select-day="fetchDailyFortuneForDate"
         @toggle-yearly-month="toggleYearlyMonth"

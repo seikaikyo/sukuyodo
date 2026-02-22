@@ -4,6 +4,7 @@ import { ref, computed, watch } from 'vue'
 import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune, Mansion } from '../composables/useSukuyodo'
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 import { generateDecadeReport } from '../utils/report-generator'
+import { generateIcsCalendar, downloadIcs } from '../utils/ics-generator'
 import { useProfile } from '../stores/profile'
 
 const props = defineProps<{
@@ -22,6 +23,7 @@ const props = defineProps<{
   yearlyMonthDetail: MonthlyFortune | null
   yearlyMonthLoading: boolean
   expandedYearlyWeek: number | null
+  fetchFullYearCalendar: (year: number) => Promise<any[]>
 }>()
 
 const emit = defineEmits<{
@@ -220,6 +222,40 @@ function exportDecadeReport() {
     birthDate: props.birthDate,
     perspective: decadePerspective.value,
   })
+}
+
+const icsExporting = ref(false)
+
+async function exportIcsCalendar() {
+  if (!props.mansion || !props.birthDate || icsExporting.value) return
+  const year = props.yearlyFortune?.year ?? new Date().getFullYear()
+
+  icsExporting.value = true
+  try {
+    const calendars = await props.fetchFullYearCalendar(year)
+    if (calendars.length === 0) {
+      console.error('No calendar data available for ICS export')
+      return
+    }
+
+    const icsContent = generateIcsCalendar({
+      calendars,
+      mansionName: props.mansion.name_jp,
+      mansionElement: props.mansion.element,
+      birthDate: props.birthDate,
+      year,
+    })
+
+    if (icsContent) {
+      const bd = props.birthDate.replace(/-/g, '')
+      const filename = `sukuyodo_${year}_${props.mansion.name_jp}_${bd}.ics`
+      downloadIcs(icsContent, filename)
+    }
+  } catch (e) {
+    console.error('ICS export failed', e)
+  } finally {
+    icsExporting.value = false
+  }
 }
 </script>
 
@@ -808,6 +844,12 @@ function exportDecadeReport() {
               :aria-checked="decadePerspective === 'practitioner'"
               @click="decadePerspective = 'practitioner'"
             >修行者觀</button>
+            <button
+              v-if="birthDate"
+              class="export-btn"
+              :disabled="icsExporting"
+              @click="exportIcsCalendar"
+            >{{ icsExporting ? '匯出中...' : '匯出日曆' }}</button>
           </div>
 
           <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
