@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import MansionWheel from './MansionWheel.vue'
 import type { Mansion, WheelMansion, RelationType, ElementType, Metadata } from '../composables/useSukuyodo'
 
@@ -21,6 +21,101 @@ const emit = defineEmits<{
   'update:activeTab': [value: KnowledgeActiveTab]
   'update:selectedWheelMansion': [value: WheelMansion | null]
 }>()
+
+// 全覽模式
+const showRelationOverview = ref(false)
+
+// 選中宿的關係資訊
+interface RelationInfo {
+  type: string
+  name: string
+  distance: number
+  distanceCategory: 'near' | 'mid' | 'far'
+}
+const selectedRelation = ref<{ mansion: WheelMansion, relation: RelationInfo } | null>(null)
+
+function handleRelationDetail(data: { mansion: WheelMansion, relation: RelationInfo } | null) {
+  selectedRelation.value = data
+}
+
+// 關係距離表（前端常數，與 MansionWheel 一致）
+const RELATION_DISTANCES: Record<string, number[]> = {
+  eishin: [1, 8, 10, 17, 19, 26],
+  yusui: [2, 7, 11, 16, 20, 25],
+  ankai: [3, 6, 12, 15, 21, 24],
+  kisei: [4, 5, 13, 14, 22, 23],
+  mei: [0],
+  gyotai: [9, 18],
+}
+
+const RELATION_NAMES: Record<string, string> = {
+  eishin: '栄親',
+  yusui: '友衰',
+  ankai: '安壊',
+  kisei: '危成',
+  mei: '命',
+  gyotai: '業胎',
+}
+
+const RELATION_COLORS_HEX: Record<string, string> = {
+  eishin: '#B8860B',
+  gyotai: '#5A7FA5',
+  mei: '#A08050',
+  yusui: '#7B9CC5',
+  kisei: '#9B7B1C',
+  ankai: '#C53030',
+}
+
+const DISTANCE_CATEGORY_LABELS: Record<string, string> = {
+  near: '近距離',
+  mid: '中距離',
+  far: '遠距離',
+}
+
+// 全覽模式統計
+const overviewStats = computed(() => {
+  if (props.mansion?.index === undefined) return []
+  const baseIdx = props.mansion.index
+  const stats: Array<{ type: string, name: string, color: string, mansions: Array<{ name: string, distance: number }> }> = []
+
+  for (const [type, distances] of Object.entries(RELATION_DISTANCES)) {
+    const mansions: Array<{ name: string, distance: number }> = []
+    for (const d of distances) {
+      const idx = (baseIdx + d) % 27
+      const m = props.allMansions[idx]
+      if (m) mansions.push({ name: m.name_zh, distance: d })
+    }
+    stats.push({
+      type,
+      name: RELATION_NAMES[type] || type,
+      color: RELATION_COLORS_HEX[type] || '#666',
+      mansions,
+    })
+  }
+  return stats
+})
+
+// 選中宿的五行互動描述
+const elementInteraction = computed(() => {
+  if (!selectedRelation.value || !props.mansion) return null
+  const myEl = props.mansion.element
+  const theirEl = selectedRelation.value.mansion.element
+  if (myEl === theirEl) return { label: '同元素', desc: `兩宿同屬${myEl}，能量共振` }
+  const generating: Record<string, string> = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' }
+  const specialGen: Record<string, string> = { '日': '火', '月': '水' }
+  if (generating[myEl] === theirEl || specialGen[myEl] === theirEl) return { label: '相生', desc: `${myEl}生${theirEl}，有助益關係` }
+  if (generating[theirEl] === myEl || specialGen[theirEl] === myEl) return { label: '被生', desc: `${theirEl}生${myEl}，受惠關係` }
+  const overcoming: Record<string, string> = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' }
+  if (overcoming[myEl] === theirEl) return { label: '相剋', desc: `${myEl}剋${theirEl}，制約關係` }
+  if (overcoming[theirEl] === myEl) return { label: '被剋', desc: `${theirEl}剋${myEl}，受制關係` }
+  return null
+})
+
+// 從 allRelations 取出對應的關係描述
+const matchedRelationDetail = computed(() => {
+  if (!selectedRelation.value) return null
+  return props.allRelations.find(r => r.type === selectedRelation.value!.relation.type) || null
+})
 
 // 六種關係手風琴
 const expandedRelation = ref<string | null>(null)
@@ -192,14 +287,65 @@ function getKuyouRowClass(level?: string) {
 
     <!-- Wheel -->
     <div v-if="activeTab === 'wheel'" id="panel-knowledge-wheel" class="knowledge-content" role="tabpanel">
+      <!-- 全覽切換 -->
+      <div v-if="mansion" class="wheel-controls">
+        <button
+          class="pill-btn"
+          :class="{ active: showRelationOverview }"
+          @click="showRelationOverview = !showRelationOverview"
+        >{{ showRelationOverview ? '關係全覽 ON' : '關係全覽' }}</button>
+      </div>
+
       <MansionWheel
         v-if="allMansions.length > 0"
         :mansions="allMansions"
         :selected-index="selectedWheelMansion?.index ?? -1"
         :highlight-index="mansion?.index ?? -1"
+        :show-relation-overview="showRelationOverview"
         @select="handleWheelSelect"
+        @relation-detail="handleRelationDetail"
       />
-      <div v-if="selectedWheelMansion" class="wheel-detail">
+
+      <!-- 關係詳情面板（選中單一宿時） -->
+      <div v-if="selectedRelation && !showRelationOverview" class="wheel-detail relation-detail-panel">
+        <div class="relation-detail-header">
+          <h4>{{ selectedRelation.mansion.name_jp }}（{{ selectedRelation.mansion.reading }}）</h4>
+          <span class="element-badge" :style="{ background: elementColors[selectedRelation.mansion.element] }">
+            {{ selectedRelation.mansion.element }}
+          </span>
+        </div>
+        <div class="relation-type-row">
+          <span class="relation-color-dot" :style="{ background: RELATION_COLORS_HEX[selectedRelation.relation.type] }"></span>
+          <span class="relation-type-name">{{ selectedRelation.relation.name }}</span>
+          <span class="relation-distance-tag">{{ DISTANCE_CATEGORY_LABELS[selectedRelation.relation.distanceCategory] }}</span>
+          <span class="relation-distance-num">距離 {{ selectedRelation.relation.distance }}</span>
+        </div>
+        <p v-if="matchedRelationDetail">{{ matchedRelationDetail.description }}</p>
+        <div v-if="elementInteraction" class="element-interaction">
+          <span class="interaction-label">{{ elementInteraction.label }}</span>
+          <span>{{ elementInteraction.desc }}</span>
+        </div>
+      </div>
+
+      <!-- 全覽面板 -->
+      <div v-else-if="showRelationOverview && mansion" class="wheel-detail overview-panel">
+        <h4>{{ mansion.name_jp }} 的關係分佈</h4>
+        <div class="overview-grid">
+          <div v-for="stat in overviewStats" :key="stat.type" class="overview-item">
+            <div class="overview-item-header">
+              <span class="relation-color-dot" :style="{ background: stat.color }"></span>
+              <span class="overview-type-name">{{ stat.name }}</span>
+              <span class="overview-count">{{ stat.mansions.length }} 宿</span>
+            </div>
+            <div class="overview-mansions">
+              <span v-for="m in stat.mansions" :key="m.distance" class="overview-mansion-tag">{{ m.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 預設面板（無選擇時） -->
+      <div v-else-if="selectedWheelMansion && !selectedRelation" class="wheel-detail">
         <h4>{{ selectedWheelMansion.name_jp }}（{{ selectedWheelMansion.reading }}）</h4>
         <span class="element-badge term-link" :style="{ background: elementColors[selectedWheelMansion.element] }" @click="emit('update:activeTab', 'elements')">
           {{ selectedWheelMansion.element }}
@@ -627,6 +773,12 @@ function getKuyouRowClass(level?: string) {
   text-align: center;
 }
 
+.wheel-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-sm);
+}
+
 .wheel-detail h4 {
   margin: 0 0 var(--space-sm);
 }
@@ -634,6 +786,115 @@ function getKuyouRowClass(level?: string) {
 .wheel-detail p {
   color: var(--text-secondary);
   margin: var(--space-sm) 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.6;
+}
+
+.relation-detail-panel .relation-detail-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.relation-detail-panel .relation-detail-header h4 {
+  margin: 0;
+}
+
+.relation-type-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-sm);
+}
+
+.relation-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.relation-type-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.relation-distance-tag {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+}
+
+.relation-distance-num {
+  font-size: var(--font-xs);
+  color: var(--text-muted, var(--text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+.element-interaction {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.interaction-label {
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.overview-panel h4 {
+  color: var(--accent);
+}
+
+.overview-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.overview-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.overview-type-name {
+  font-weight: 600;
+  font-size: var(--font-sm);
+}
+
+.overview-count {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+.overview-mansions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 20px;
+}
+
+.overview-mansion-tag {
+  font-size: var(--font-xs);
+  padding: 2px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
 .relations-list {

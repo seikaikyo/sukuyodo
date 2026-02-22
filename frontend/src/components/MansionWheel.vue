@@ -18,6 +18,7 @@ interface Props {
   sankiPeriodIndex?: number
   rokugaiIndices?: number[]
   isRyouhan?: boolean
+  showRelationOverview?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,10 +28,19 @@ const props = withDefaults(defineProps<Props>(), {
   dayMansionIndex: -1,
   sankiPeriodIndex: 0,
   isRyouhan: false,
+  showRelationOverview: false,
 })
+
+interface RelationInfo {
+  type: string
+  name: string
+  distance: number
+  distanceCategory: 'near' | 'mid' | 'far'
+}
 
 const emit = defineEmits<{
   (e: 'select', mansion: Mansion): void
+  (e: 'relation-detail', data: { mansion: Mansion, relation: RelationInfo } | null): void
 }>()
 
 // SVG 配置
@@ -42,6 +52,50 @@ const innerRadius = 100
 const textRadius = 140
 const sankiOuterR = outerRadius + 14
 const sankiInnerR = outerRadius + 8
+const sevenDayOuterR = outerRadius + 4
+const sevenDayInnerR = outerRadius + 1
+
+// 七曜歸屬（27 宿按 index 順序的七曜名）
+const SEVEN_DAY_CYCLE = ['日', '月', '火', '水', '木', '金', '土']
+
+// 關係距離表
+const RELATION_DISTANCES: Record<string, number[]> = {
+  eishin: [1, 8, 10, 17, 19, 26],
+  yusui: [2, 7, 11, 16, 20, 25],
+  ankai: [3, 6, 12, 15, 21, 24],
+  kisei: [4, 5, 13, 14, 22, 23],
+  mei: [0],
+  gyotai: [9, 18],
+}
+
+const RELATION_NAMES: Record<string, string> = {
+  eishin: '栄親',
+  yusui: '友衰',
+  ankai: '安壊',
+  kisei: '危成',
+  mei: '命',
+  gyotai: '業胎',
+}
+
+const RELATION_COLORS: Record<string, string> = {
+  eishin: 'var(--stellar-gold)',
+  gyotai: 'var(--astral-medium)',
+  mei: 'var(--stellar-soft)',
+  yusui: 'var(--astral-light)',
+  kisei: 'var(--caution)',
+  ankai: 'var(--warning)',
+}
+
+// 七曜色
+const sevenDayColors: Record<string, string> = {
+  '日': '#E89B3C',
+  '月': '#7CB3D9',
+  '火': '#E85D4C',
+  '水': '#4A7A90',
+  '木': '#4A9B5A',
+  '金': '#C4A052',
+  '土': '#8B7355',
+}
 
 // 旋轉狀態
 const rotation = ref(0)
@@ -184,24 +238,161 @@ const hoveredMansion = computed(() => {
   return mansionSegments.value[hoveredIndex.value] ?? null
 })
 
-// 中心文字
-const centerText = computed(() => {
+// 七曜環 segments
+const sevenDayRingSegments = computed(() => {
+  if (!props.mansions || props.mansions.length === 0) return []
+  const count = props.mansions.length
+  const anglePerMansion = 360 / count
+  return props.mansions.map((_m, i) => {
+    const dayIdx = i % 7
+    const dayName = SEVEN_DAY_CYCLE[dayIdx]!
+    const startAngle = -90 + i * anglePerMansion
+    const endAngle = startAngle + anglePerMansion
+    const startRad = (startAngle * Math.PI) / 180
+    const endRad = (endAngle * Math.PI) / 180
+    const x1 = centerX + sevenDayOuterR * Math.cos(startRad)
+    const y1 = centerY + sevenDayOuterR * Math.sin(startRad)
+    const x2 = centerX + sevenDayOuterR * Math.cos(endRad)
+    const y2 = centerY + sevenDayOuterR * Math.sin(endRad)
+    const x3 = centerX + sevenDayInnerR * Math.cos(endRad)
+    const y3 = centerY + sevenDayInnerR * Math.sin(endRad)
+    const x4 = centerX + sevenDayInnerR * Math.cos(startRad)
+    const y4 = centerY + sevenDayInnerR * Math.sin(startRad)
+    const largeArc = anglePerMansion > 180 ? 1 : 0
+    return {
+      path: `M ${x1} ${y1} A ${sevenDayOuterR} ${sevenDayOuterR} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${sevenDayInnerR} ${sevenDayInnerR} 0 ${largeArc} 0 ${x4} ${y4} Z`,
+      color: sevenDayColors[dayName] || '#666',
+      dayName,
+    }
+  })
+})
+
+// 選中宿與本命宿的關係
+function getRelationForDistance(dist: number): RelationInfo | null {
+  const d = ((dist % 27) + 27) % 27
+  for (const [type, distances] of Object.entries(RELATION_DISTANCES)) {
+    if (distances.includes(d)) {
+      const absDist = Math.min(d, 27 - d)
+      let category: 'near' | 'mid' | 'far' = 'mid'
+      if (absDist <= 4 || d === 9 || d === 18) category = 'near'
+      else if (absDist >= 10 && absDist <= 13) category = 'far'
+      else category = 'mid'
+      return { type, name: RELATION_NAMES[type] || type, distance: d, distanceCategory: category }
+    }
+  }
+  return null
+}
+
+// 全覽模式：每宿的關係映射
+const mansionRelationMap = computed(() => {
+  if (props.highlightIndex < 0) return new Map<number, RelationInfo>()
+  const map = new Map<number, RelationInfo>()
+  for (let i = 0; i < 27; i++) {
+    const dist = ((i - props.highlightIndex) % 27 + 27) % 27
+    const rel = getRelationForDistance(dist)
+    if (rel) map.set(i, rel)
+  }
+  return map
+})
+
+// 連線資料（本命宿到選中宿 / 全覽模式到全部宿）
+const connectionLines = computed(() => {
+  if (props.highlightIndex < 0 || !props.mansions.length) return []
+  const count = props.mansions.length
+  const anglePerMansion = 360 / count
+  const connR = innerRadius - 5
+
+  function getPoint(idx: number) {
+    const angle = -90 + idx * anglePerMansion + anglePerMansion / 2
+    const rad = (angle * Math.PI) / 180
+    return { x: centerX + connR * Math.cos(rad), y: centerY + connR * Math.sin(rad) }
+  }
+
+  const lines: Array<{
+    path: string
+    color: string
+    dashArray: string
+    opacity: number
+    targetIndex: number
+    relation: RelationInfo
+  }> = []
+
+  const indices = props.showRelationOverview
+    ? Array.from({ length: 27 }, (_, i) => i).filter(i => i !== props.highlightIndex)
+    : (props.selectedIndex >= 0 && props.selectedIndex !== props.highlightIndex ? [props.selectedIndex] : [])
+
+  const from = getPoint(props.highlightIndex)
+
+  for (const idx of indices) {
+    const rel = mansionRelationMap.value.get(idx)
+    if (!rel) continue
+    const to = getPoint(idx)
+    const mx = (from.x + to.x) / 2
+    const my = (from.y + to.y) / 2
+    const dx = mx - centerX
+    const dy = my - centerY
+    const len = Math.sqrt(dx * dx + dy * dy) || 1
+    const pull = connR * 0.3
+    const cx = mx - (dx / len) * pull
+    const cy = my - (dy / len) * pull
+    const dashMap: Record<string, string> = { near: 'none', mid: '8 4', far: '3 3' }
+    lines.push({
+      path: `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`,
+      color: RELATION_COLORS[rel.type] || 'var(--text-secondary)',
+      dashArray: dashMap[rel.distanceCategory] || 'none',
+      opacity: props.showRelationOverview ? 0.35 : 0.8,
+      targetIndex: idx,
+      relation: rel,
+    })
+  }
+  return lines
+})
+
+// 中心資訊（三種狀態）
+const centerInfo = computed(() => {
+  // 有選中宿且有關係
+  if (props.selectedIndex >= 0 && props.highlightIndex >= 0 && props.selectedIndex !== props.highlightIndex) {
+    const rel = mansionRelationMap.value.get(props.selectedIndex)
+    if (rel) {
+      const m = props.mansions[props.selectedIndex]
+      return { title: m?.name_zh?.replace('宿', '') || '', sub: rel.name, tertiary: `距離 ${rel.distance}` }
+    }
+  }
+  // 全覽模式
+  if (props.showRelationOverview && props.highlightIndex >= 0) {
+    return { title: '關係全覽', sub: '六種關係', tertiary: '' }
+  }
+  // 運勢模式
   if (props.mode === 'fortune') {
     if (props.dayMansionIndex >= 0 && props.mansions[props.dayMansionIndex]) {
-      return { title: props.mansions[props.dayMansionIndex]!.name_jp, sub: '當日宿' }
+      return { title: props.mansions[props.dayMansionIndex]!.name_jp, sub: '當日宿', tertiary: '' }
     }
-    return { title: '運勢', sub: '模式' }
+    return { title: '運勢', sub: '模式', tertiary: '' }
   }
-  return { title: '二十七宿', sub: '輪盤' }
+  return { title: '二十七宿', sub: '輪盤', tertiary: '' }
 })
 
 function handleClick(mansion: Mansion & { path: string }) {
   emit('select', mansion)
+  // 計算關係並 emit
+  if (props.highlightIndex >= 0 && mansion.index !== props.highlightIndex) {
+    const rel = mansionRelationMap.value.get(mansion.index)
+    if (rel) {
+      emit('relation-detail', { mansion, relation: rel })
+    }
+  } else {
+    emit('relation-detail', null)
+  }
 }
 
 function getSegmentFill(seg: typeof mansionSegments.value[0]): string {
   if (seg.isDayMansion) return 'var(--accent)'
   if (seg.isHighlight) return 'var(--kongou-color)'
+  // 全覽模式：用關係色填充
+  if (props.showRelationOverview && props.highlightIndex >= 0) {
+    const rel = mansionRelationMap.value.get(seg.index)
+    if (rel) return RELATION_COLORS[rel.type] || seg.color
+  }
   if (seg.isSelected) return 'rgba(139, 105, 20, 0.6)'
   return seg.color
 }
@@ -252,6 +443,17 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
         />
       </g>
 
+      <!-- 七曜環 L3 -->
+      <g v-if="sevenDayRingSegments.length" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
+        <path
+          v-for="(seg, idx) in sevenDayRingSegments"
+          :key="`sd-${idx}`"
+          :d="seg.path"
+          :fill="seg.color"
+          opacity="0.7"
+        />
+      </g>
+
       <!-- 外圈 -->
       <circle
         :cx="centerX"
@@ -272,19 +474,41 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
         stroke-width="1"
       />
 
-      <!-- 中心文字 -->
+      <!-- 關係連線 L5 -->
+      <g v-if="connectionLines.length" :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
+        <path
+          v-for="(line, idx) in connectionLines"
+          :key="`conn-${idx}`"
+          :d="line.path"
+          :stroke="line.color"
+          stroke-width="2"
+          fill="none"
+          :stroke-dasharray="line.dashArray"
+          :opacity="line.opacity"
+          class="connection-line"
+        />
+      </g>
+
+      <!-- 中心面板 L6 -->
       <text
         :x="centerX"
-        :y="centerY - 15"
+        :y="centerInfo.tertiary ? centerY - 20 : centerY - 15"
         text-anchor="middle"
         class="center-title"
-      >{{ centerText.title }}</text>
+      >{{ centerInfo.title }}</text>
       <text
         :x="centerX"
-        :y="centerY + 10"
+        :y="centerInfo.tertiary ? centerY + 5 : centerY + 10"
         text-anchor="middle"
         class="center-subtitle"
-      >{{ centerText.sub }}</text>
+      >{{ centerInfo.sub }}</text>
+      <text
+        v-if="centerInfo.tertiary"
+        :x="centerX"
+        :y="centerY + 25"
+        text-anchor="middle"
+        class="center-tertiary"
+      >{{ centerInfo.tertiary }}</text>
 
       <!-- 宿位 segments -->
       <g :transform="`rotate(${rotation}, ${centerX}, ${centerY})`">
@@ -407,6 +631,17 @@ function getSegmentStrokeDash(seg: typeof mansionSegments.value[0]): string {
 .center-subtitle {
   font-size: 12px;
   fill: var(--text-secondary);
+}
+
+.center-tertiary {
+  font-size: 10px;
+  fill: var(--text-muted, var(--text-secondary));
+  opacity: 0.7;
+}
+
+.connection-line {
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .wheel-legend {
