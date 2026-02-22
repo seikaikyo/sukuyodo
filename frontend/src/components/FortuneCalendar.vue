@@ -105,7 +105,7 @@ const monthLabel = computed(() => {
 const calendarGrid = computed(() => {
   if (!props.calendarData || props.calendarData.days.length === 0) return []
 
-  const firstDay = new Date(props.calendarData.days[0].date)
+  const firstDay = new Date(props.calendarData.days[0]!.date)
   const startWeekday = firstDay.getDay() // 0=Sun
 
   const grid: (CalendarDay | null)[] = []

@@ -110,7 +110,7 @@ async function handleExportPairedReport() {
         reading: c.relation.reading,
         distanceTypeName: c.relation.distance_type_name,
         elementRelation: c.calculation?.element_relation || '',
-        direction: c.relation.direction,
+        direction: c.relation.direction ?? undefined,
         summary: c.summary
       },
       apiUrl: getApiUrl('')
@@ -147,7 +147,7 @@ async function handlePartnerPairedReport(pc: PartnerCompatibility) {
         reading: pc.relation.reading,
         distanceTypeName: pc.relation.distance_type_name,
         elementRelation: pc.calculation?.element_relation || '',
-        direction: pc.relation.direction,
+        direction: pc.relation.direction ?? undefined,
         summary: pc.summary
       },
       apiUrl: getApiUrl('')

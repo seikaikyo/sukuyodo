@@ -61,7 +61,8 @@ function loadProfile(): UserProfile {
           id: c.id,
           name: c.name,
           foundingDate: c.foundingDate,
-          memo: c.memo
+          memo: c.memo,
+          jobUrl: c.jobUrl
         })),
         practitionerLevel: parsed.practitionerLevel || 'none'
       }

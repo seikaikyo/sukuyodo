@@ -76,14 +76,14 @@ const natureTypeColors: Record<string, string> = {
   '剛柔宿': '#8B7D6B'
 }
 
-function getKuyouRowClass(level: string) {
+function getKuyouRowClass(level?: string) {
   const classMap: Record<string, string> = {
     '大吉': 'kuyou-row-great',
     '吉': 'kuyou-row-good',
     '半吉': 'kuyou-row-half',
     '大凶': 'kuyou-row-bad'
   }
-  return classMap[level] || ''
+  return (level && classMap[level]) || ''
 }
 </script>
 

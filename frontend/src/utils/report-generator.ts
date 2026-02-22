@@ -33,20 +33,6 @@ function scoreColor(score: number): string {
   return map[cls] || '#6B6560'
 }
 
-function scoreLevelText(score: number, level?: string): string {
-  // 優先使用 API 回傳的 level
-  const levelMap: Record<string, string> = {
-    daikichi: '大吉', kichi: '吉', chukichi: '中吉', shokyo: '小凶', kyo: '凶'
-  }
-  if (level && levelMap[level]) return levelMap[level]
-  // fallback
-  if (score >= 90) return '大吉'
-  if (score >= 75) return '吉'
-  if (score >= 60) return '中吉'
-  if (score >= 45) return '小凶'
-  return '凶'
-}
-
 function kuyouLevelColor(level: string): string {
   if (level === '大吉') return '#9B7B1C'
   if (level === '吉') return '#4a9b6b'
@@ -391,8 +377,8 @@ export function generateDecadeReport(options: DecadeReportOptions): void {
   if (yearlyRange.length === 0) return
 
   const isPrac = perspective === 'practitioner'
-  const startYear = yearlyRange[0].year
-  const endYear = yearlyRange[yearlyRange.length - 1].year
+  const startYear = yearlyRange[0]!.year
+  const endYear = yearlyRange[yearlyRange.length - 1]!.year
   const perspLabel = isPrac ? '修行者觀' : '世俗觀'
 
   // 封面
@@ -633,8 +619,8 @@ interface PairedDecadeReportOptions {
 function buildDualLineSvg(
   p1Data: YearlyFortune[],
   p2Data: YearlyFortune[],
-  p1Name: string,
-  p2Name: string,
+  _p1Name: string,
+  _p2Name: string,
   field: 'overall' | 'career' | 'wealth' = 'overall'
 ): string {
   if (p1Data.length < 2) return ''
@@ -848,6 +834,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
   const p2CarriedYears: number[] = []
   p1Data.forEach((y1, i) => {
     const y2 = p2Data[i]
+    if (!y2) return
     if (y1.fortune.overall < lowThreshold && y2.fortune.overall >= highThreshold) p2CarriedYears.push(y1.year)
     if (y2.fortune.overall < lowThreshold && y1.fortune.overall >= highThreshold) p1CarriedYears.push(y1.year)
   })
@@ -897,6 +884,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
   let tableRows = ''
   p1Data.forEach((y1, i) => {
     const y2 = p2Data[i]
+    if (!y2) return
     const isHighlight = y1.fortune.overall >= 75 || y2.fortune.overall >= 75 || bothLowYears.includes(y1.year)
     tableRows += `<tr${isHighlight ? ' class="row-highlight"' : ''}>
       <td><strong>${y1.year}</strong></td>
@@ -944,6 +932,7 @@ export async function generatePairedDecadeReport(options: PairedDecadeReportOpti
   // 逐年區塊
   const yearSections = p1Data.map((y1, i) => {
     const y2 = p2Data[i]
+    if (!y2) return ''
 
     const monthlyChart = buildDualMonthlyChart(
       y1.monthly_trend,

@@ -303,7 +303,7 @@ function buildDayEvent(day: CalendarDay, index: number): string[] {
 }
 
 export function generateIcsCalendar(params: IcsParams): string | null {
-  const { calendars, mansionName, mansionElement, birthDate, year } = params
+  const { calendars, mansionName, mansionElement, birthDate: _birthDate, year } = params
 
   // 收集所有日期的事件
   const allDays: CalendarDay[] = []
@@ -327,7 +327,7 @@ export function generateIcsCalendar(params: IcsParams): string | null {
   ]
 
   for (let i = 0; i < allDays.length; i++) {
-    const day = allDays[i]
+    const day = allDays[i]!
     const eventLines = buildDayEvent(day, i)
     // 每個事件加入 DTSTAMP
     const insertIdx = eventLines.indexOf('BEGIN:VEVENT') + 1

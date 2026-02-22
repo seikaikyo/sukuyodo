@@ -67,6 +67,7 @@ export interface Relation {
   good_for: string[]
   distance_type?: 'near' | 'mid' | 'far' | null
   distance_type_name?: string
+  distance_type_reading?: string
   direction?: string | null
   love?: string
   career?: string
@@ -104,6 +105,7 @@ export interface FortuneScores {
   level?: string
   level_name?: string
   level_name_ja?: string
+  level_reading?: string
   base_level?: string
   overall: number
   career: number
@@ -190,6 +192,7 @@ export interface DailyFortune {
     end_day: number
     weekday_name?: string
     period_label?: string
+    reading?: string
     description: string
     description_ja?: string
     description_classic?: string
@@ -199,6 +202,7 @@ export interface DailyFortune {
   rokugai?: {
     active: boolean
     name: string
+    name_reading?: string
     severity: number
     description: string
   } | null
@@ -319,6 +323,7 @@ export interface MonthlyFortune {
     title: string
     focus: string
     element_boost: string
+    description?: string
   }
   fortune: FortuneScores
   weekly: {
@@ -438,6 +443,9 @@ export interface YearlyFortune {
       name: string
       text: string
       reading: string
+      siddham_unicode?: string
+      siddham_roman?: string
+      siddham_bija?: string
     }
     homa_type: string
     homa_description: string
@@ -674,6 +682,9 @@ export interface MonthMansionEntry {
 export interface MonthMansionTable {
   calendar_description: string
   months: MonthMansionEntry[]
+  source_classic?: string
+  source_ref?: string
+  source_ja?: string
 }
 
 export interface PartnerCompatibility {
@@ -700,6 +711,9 @@ export interface PartnerCompatibility {
 export interface KeyConcept {
   title: string
   content: string
+  content_classic?: string
+  content_ja?: string
+  source?: string
 }
 
 export interface PracticalGuide {
@@ -724,12 +738,14 @@ export interface SpecialDaysKnowledge {
   title: string
   sections: KnowledgeSection[]
   day_map_table: KnowledgeTable
+  source?: string
 }
 
 export interface KuyouKnowledge {
   title: string
   sections: KnowledgeSection[]
   stars_table: KnowledgeTable
+  source?: string
 }
 
 export interface NatureTypeEntry {
@@ -768,6 +784,7 @@ export interface Metadata {
   ryouhan_knowledge?: {
     title: string
     sections: KnowledgeSection[]
+    source?: string
     ryouhan_table?: {
       description: string
       headers: string[]
@@ -777,6 +794,7 @@ export interface Metadata {
   sanki_knowledge?: {
     title: string
     sections: KnowledgeSection[]
+    source?: string
   }
   nature_types_knowledge?: NatureTypesKnowledge
   month_mansion_table?: MonthMansionTable
@@ -854,7 +872,7 @@ export function useSukuyodo() {
   const companyCompat = ref<CompatibilityResult | null>(null)
   const companyCompatLoading = ref(false)
   const companyCompatError = ref('')
-  const companyCompatibilities = ref<(PartnerCompatibility & { companyId: string; companyName: string; companyMemo?: string })[]>([])
+  const companyCompatibilities = ref<(PartnerCompatibility & { companyId: string; companyName: string; companyMemo?: string; jobUrl?: string })[]>([])
   const companyCompatLoading2 = ref(false)
 
   // Company Auto Search
@@ -885,9 +903,6 @@ export function useSukuyodo() {
   const calendarLoading = ref(false)
   const calendarYear = ref(new Date().getFullYear())
   const calendarMonth = ref(new Date().getMonth() + 1)
-
-  // Knowledge
-  const expandedRelation = ref<string | null>(null)
 
   // ============================================================================
   // Computed
@@ -1579,10 +1594,6 @@ export function useSukuyodo() {
     } else {
       selectedWheelMansion.value = m
     }
-  }
-
-  function toggleRelation(type: string) {
-    expandedRelation.value = expandedRelation.value === type ? null : type
   }
 
   function quickSelect(date: string) {

@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useSukuyodo } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, PRACTITIONER_LEVELS } from '../stores/profile'
-import type { RelationType, PractitionerLevel } from '../stores/profile'
+import type { RelationType } from '../stores/profile'
 import { getLocalDateStr } from '../utils/fortune-helpers'
 import SummaryCard from '../components/SummaryCard.vue'
 import FortuneTab from '../components/FortuneTab.vue'
@@ -430,7 +430,7 @@ onUnmounted(() => {
       :element-color="mansionElementColor"
       @query="showQueryDialog = true"
       @navigate-fortune="activeMainTab = 'fortune'; activeFortuneTab = 'daily'"
-      @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
+      @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
     />
 
     <!-- Empty State -->
@@ -506,7 +506,7 @@ onUnmounted(() => {
         @toggle-yearly-month="toggleYearlyMonth"
         @toggle-yearly-week="toggleYearlyWeek"
         @fetch-yearly-range="(s: number, e: number) => fetchYearlyRange(s, e)"
-        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
+        @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
       />
 
       <MatchTab
@@ -545,7 +545,7 @@ onUnmounted(() => {
         @remove-company="handleRemoveCompany"
         @import-companies="handleImportCompanies"
         @search-companies="(kw: string, area: string) => searchCompanies(kw, area)"
-        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
+        @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />
 
@@ -575,7 +575,7 @@ onUnmounted(() => {
         @clear-partner="clearPairSelection"
         @refresh-partner="fetchPairLuckyDays"
         @fetch-special-days="fetchSpecialDays"
-        @navigate-knowledge="activeMainTab = 'knowledge'; activeKnowledgeTab = $event"
+        @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
       />
 
       <KnowledgeTab

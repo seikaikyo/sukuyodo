@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 
 interface Mansion {
   index: number
@@ -59,16 +59,6 @@ const elementColors: Record<string, string> = {
   '月': '#7CB3D9',
   '火': '#E85D4C',
   '水': '#4A7A90'
-}
-
-// 關係名稱對照
-const RELATION_NAMES: Record<string, string> = {
-  eishin: '栄親',
-  gyotai: '業胎',
-  mei: '命',
-  yusui: '友衰',
-  ankai: '安壊',
-  kisei: '危成',
 }
 
 function getAngleFromEvent(e: MouseEvent | Touch): number {
@@ -198,7 +188,7 @@ const hoveredMansion = computed(() => {
 const centerText = computed(() => {
   if (props.mode === 'fortune') {
     if (props.dayMansionIndex >= 0 && props.mansions[props.dayMansionIndex]) {
-      return { title: props.mansions[props.dayMansionIndex].name_jp, sub: '當日宿' }
+      return { title: props.mansions[props.dayMansionIndex]!.name_jp, sub: '當日宿' }
     }
     return { title: '運勢', sub: '模式' }
   }
