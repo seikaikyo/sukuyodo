@@ -38,7 +38,11 @@ export interface UserProfile {
   partners: Partner[]
   companies: Company[]
   practitionerLevel: PractitionerLevel
+  luckyDayCategories: string[]
 }
+
+const DEFAULT_CATEGORIES_PRACTITIONER = ['career', 'medical', 'travel', 'shopping', 'grooming']
+const DEFAULT_CATEGORIES_GENERAL = ['career', 'medical', 'travel', 'shopping', 'beauty']
 
 const STORAGE_KEY = 'sukuyodo_profile'
 
@@ -49,6 +53,10 @@ function loadProfile(): UserProfile {
     if (saved) {
       const parsed = JSON.parse(saved)
       // 遷移舊資料：移除不再使用的欄位
+      const level: PractitionerLevel = parsed.practitionerLevel || 'none'
+      const defaultCats = level !== 'none'
+        ? DEFAULT_CATEGORIES_PRACTITIONER
+        : DEFAULT_CATEGORIES_GENERAL
       return {
         birthDate: parsed.birthDate || null,
         partners: (parsed.partners || []).map((p: Partner & { gender?: string; isPrimary?: boolean }) => ({
@@ -64,7 +72,10 @@ function loadProfile(): UserProfile {
           memo: c.memo,
           jobUrl: c.jobUrl
         })),
-        practitionerLevel: parsed.practitionerLevel || 'none'
+        practitionerLevel: level,
+        luckyDayCategories: Array.isArray(parsed.luckyDayCategories)
+          ? parsed.luckyDayCategories
+          : defaultCats
       }
     }
   } catch (e) {
@@ -74,7 +85,8 @@ function loadProfile(): UserProfile {
     birthDate: null,
     partners: [],
     companies: [],
-    practitionerLevel: 'none' as PractitionerLevel
+    practitionerLevel: 'none' as PractitionerLevel,
+    luckyDayCategories: DEFAULT_CATEGORIES_GENERAL
   }
 }
 
@@ -167,7 +179,18 @@ export function useProfile() {
       birthDate: null,
       partners: [],
       companies: [],
-      practitionerLevel: 'none'
+      practitionerLevel: 'none',
+      luckyDayCategories: DEFAULT_CATEGORIES_GENERAL
+    }
+  }
+
+  function toggleLuckyCategory(key: string) {
+    const cats = profile.value.luckyDayCategories
+    const idx = cats.indexOf(key)
+    if (idx !== -1) {
+      cats.splice(idx, 1)
+    } else {
+      cats.push(key)
     }
   }
 
@@ -186,6 +209,7 @@ export function useProfile() {
     removeCompany,
     importCompaniesFromJson,
     clearProfile,
+    toggleLuckyCategory,
     RELATION_TYPES,
     PRACTITIONER_LEVELS
   }

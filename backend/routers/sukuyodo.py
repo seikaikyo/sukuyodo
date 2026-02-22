@@ -474,22 +474,36 @@ def get_yearly_fortune_range(
     }
 
 
+@router.get("/lucky-days/categories")
+def get_lucky_day_categories():
+    """取得吉日分類 metadata（名稱、icon、動作清單）"""
+    cats = sukuyodo_service.LUCKY_DAY_CATEGORIES
+    data = []
+    for key, cat in cats.items():
+        actions = [
+            {"key": act_key, "name": act_val["name"]}
+            for act_key, act_val in cat["actions"].items()
+        ]
+        data.append({
+            "key": key,
+            "name": cat["name"],
+            "icon": cat["icon"],
+            "actions": actions
+        })
+    return {"success": True, "data": data}
+
+
 @router.get("/lucky-days/summary/{date_str}")
 def get_lucky_days_summary(
     date_str: str,
+    categories: str = "",
     session: Session = Depends(get_session)
 ):
     """
-    取得吉日彙整
+    取得吉日彙整（依分類分組）
 
-    一次返回所有重要類別的吉日：
-    - 求職面試
-    - 簽約談判
-    - 搬家入宅
-    - 結婚登記
-    - 手術開刀
-    - 出遊出國
-    - 重要約會
+    Query params:
+    - categories: 逗號分隔的分類 key，空值=全部
     """
     try:
         birth_date = date.fromisoformat(date_str)
@@ -512,43 +526,37 @@ def get_lucky_days_summary(
             detail="僅支援 1900 年後的日期"
         )
 
-    # 個人吉日項目
-    actions = [
-        # 事業
-        {"category": "career", "action": "interview", "name": "求職面試"},
-        {"category": "career", "action": "contract", "name": "簽約談判"},
-        # 居住
-        {"category": "housing", "action": "move_in", "name": "搬家入宅"},
-        # 醫療
-        {"category": "medical", "action": "surgery", "name": "手術開刀"},
-        # 旅行
-        {"category": "travel", "action": "abroad", "name": "出遊出國"},
-        # 剃髮
-        {"category": "grooming", "action": "teihatsu", "name": "剃髮"},
-        # 美容
-        {"category": "beauty", "action": "hair_coloring", "name": "染髮造型"},
-        # 購物
-        {"category": "shopping", "action": "big_purchase", "name": "大額消費"},
-    ]
+    all_cats = sukuyodo_service.LUCKY_DAY_CATEGORIES
+    requested = [c.strip() for c in categories.split(",") if c.strip()] if categories else list(all_cats.keys())
 
-    summary = []
-    for item in actions:
-        try:
-            result = sukuyodo_service.get_lucky_days(
-                birth_date,
-                item["category"],
-                item["action"],
-                days_ahead=30
-            )
-            summary.append({
-                "name": item["name"],
-                "lucky_days": result["lucky_days"][:5],  # 只取前 5 個
-            })
-        except Exception:
-            summary.append({
-                "name": item["name"],
-                "lucky_days": [],
-            })
+    result_categories = []
+    for cat_key in requested:
+        cat_def = all_cats.get(cat_key)
+        if not cat_def:
+            continue
+        cat_actions = []
+        for act_key, act_val in cat_def["actions"].items():
+            try:
+                result = sukuyodo_service.get_lucky_days(
+                    birth_date, cat_key, act_key, days_ahead=30
+                )
+                cat_actions.append({
+                    "key": act_key,
+                    "name": act_val["name"],
+                    "lucky_days": result["lucky_days"][:5],
+                })
+            except Exception:
+                cat_actions.append({
+                    "key": act_key,
+                    "name": act_val["name"],
+                    "lucky_days": [],
+                })
+        result_categories.append({
+            "key": cat_key,
+            "name": cat_def["name"],
+            "icon": cat_def["icon"],
+            "actions": cat_actions,
+        })
 
     stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
 
@@ -556,7 +564,7 @@ def get_lucky_days_summary(
         "success": True,
         "data": {
             "your_mansion": sukuyodo_service.get_mansion(birth_date),
-            "summary": summary
+            "categories": result_categories
         }
     }
 

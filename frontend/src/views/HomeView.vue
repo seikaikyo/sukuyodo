@@ -80,6 +80,7 @@ const {
   companySearchError,
 
   // Lucky Days
+  luckyDayCategories,
   luckyDaySummary,
   luckyDaySummaryLoading,
   japaneseCalendar,
@@ -105,6 +106,7 @@ const {
   calculateCompanyCompatibility,
   fetchCompanyCompatibilities,
   searchCompanies,
+  fetchLuckyDaySummary,
   fetchPairLuckyDays,
   clearPairSelection,
   fetchDailyFortuneForDate,
@@ -124,7 +126,12 @@ const {
   init
 } = useSukuyodo()
 
-const { addPartner, updatePartner, removePartner, addCompany, removeCompany, importCompaniesFromJson, profile } = useProfile()
+const { addPartner, updatePartner, removePartner, addCompany, removeCompany, importCompaniesFromJson, toggleLuckyCategory, profile } = useProfile()
+
+function handleToggleCategory(key: string) {
+  toggleLuckyCategory(key)
+  fetchLuckyDaySummary()
+}
 
 // Profile & Partner management state
 const showProfilePanel = ref(false)
@@ -562,6 +569,7 @@ onUnmounted(() => {
         v-if="activeMainTab === 'lucky'"
         :lucky-day-summary="luckyDaySummary"
         :lucky-day-summary-loading="luckyDaySummaryLoading"
+        :lucky-day-categories="luckyDayCategories"
         :japanese-calendar="japaneseCalendar"
         :japanese-calendar-loading="japaneseCalendarLoading"
         :special-days="specialDays"
@@ -575,6 +583,7 @@ onUnmounted(() => {
         @clear-partner="clearPairSelection"
         @refresh-partner="fetchPairLuckyDays"
         @fetch-special-days="fetchSpecialDays"
+        @toggle-category="handleToggleCategory"
         @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
       />
 

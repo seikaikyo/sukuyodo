@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { LuckyDaySummary, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
+import type { LuckyDaySummary, LuckyDayCategoryMeta, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
 import { getScoreClass, getRating, formatDate, getLocalDateStr } from '../utils/fortune-helpers'
 
 const props = defineProps<{
   luckyDaySummary: LuckyDaySummary | null
   luckyDaySummaryLoading: boolean
+  luckyDayCategories: LuckyDayCategoryMeta[]
   japaneseCalendar: JapaneseCalendarResult | null
   japaneseCalendarLoading: boolean
   specialDays: SpecialDaysResult | null
@@ -24,6 +25,7 @@ const emit = defineEmits<{
   (e: 'refreshPartner', partnerId: string): void
   (e: 'fetchSpecialDays', year: number, month: number): void
   (e: 'navigate-knowledge', tab: string): void
+  (e: 'toggleCategory', key: string): void
 }>()
 
 const { profile, addPartner, updatePartner, removePartner } = useProfile()
@@ -295,41 +297,69 @@ function getSpecialDayAdvice(type: string): string {
           </h3>
           <p class="section-desc">根據您的本命宿計算的個人吉日</p>
 
+          <!-- 分類 chip 列 -->
+          <div v-if="luckyDayCategories.length > 0" class="category-chips">
+            <button
+              v-for="cat in luckyDayCategories"
+              :key="cat.key"
+              class="category-chip"
+              :class="{ active: profile.luckyDayCategories.includes(cat.key) }"
+              @click="emit('toggleCategory', cat.key)"
+            >
+              <sl-icon :name="cat.icon"></sl-icon>
+              <span>{{ cat.name }}</span>
+            </button>
+          </div>
+
+          <!-- 依分類分組結果 -->
           <div class="category-list">
             <div
-              v-for="item in luckyDaySummary.summary"
-              :key="item.name"
-              class="category-section"
+              v-for="cat in luckyDaySummary.categories"
+              :key="cat.key"
+              class="category-group"
             >
-              <h4 class="category-name">{{ item.name }}</h4>
+              <h4 class="category-group-title">
+                <sl-icon :name="cat.icon"></sl-icon>
+                {{ cat.name }}
+              </h4>
 
-              <div v-if="item.lucky_days.length > 0" class="day-cards">
+              <div class="category-actions">
                 <div
-                  v-for="day in item.lucky_days"
-                  :key="day.date"
-                  class="day-card"
-                  :class="getScoreClass(day.score)"
+                  v-for="action in cat.actions"
+                  :key="action.key"
+                  class="category-section"
                 >
-                  <div class="day-card-header">
-                    <span class="chip-date">{{ formatDate(day.date) }}</span>
-                    <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                    <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                  <h5 class="category-name">{{ action.name }}</h5>
+
+                  <div v-if="action.lucky_days.length > 0" class="day-cards">
+                    <div
+                      v-for="day in action.lucky_days"
+                      :key="day.date"
+                      class="day-card"
+                      :class="getScoreClass(day.score)"
+                    >
+                      <div class="day-card-header">
+                        <span class="chip-date">{{ formatDate(day.date) }}</span>
+                        <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
+                        <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
+                      </div>
+                      <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
+                      <div v-if="day.best_time || day.avoid_time" class="day-times">
+                        <div v-if="day.best_time" class="time-row best">
+                          <span class="time-label">推薦時段</span>
+                          <span class="time-value">{{ day.best_time }}</span>
+                        </div>
+                        <div v-if="day.avoid_time" class="time-row avoid">
+                          <span class="time-label">留意事項</span>
+                          <span class="time-value">{{ day.avoid_time }}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
-                  <div v-if="day.best_time || day.avoid_time" class="day-times">
-                    <div v-if="day.best_time" class="time-row best">
-                      <span class="time-label">推薦時段</span>
-                      <span class="time-value">{{ day.best_time }}</span>
-                    </div>
-                    <div v-if="day.avoid_time" class="time-row avoid">
-                      <span class="time-label">留意事項</span>
-                      <span class="time-value">{{ day.avoid_time }}</span>
-                    </div>
+                  <div v-else class="no-lucky-days">
+                    <span>近期無特別吉日</span>
                   </div>
                 </div>
-              </div>
-              <div v-else class="no-lucky-days">
-                <span>近期無特別吉日</span>
               </div>
             </div>
           </div>
@@ -756,6 +786,86 @@ function getSpecialDayAdvice(type: string): string {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   margin: var(--space-xs) 0 var(--space-md);
+}
+
+/* 分類 chip 列 */
+.category-chips {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.category-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.category-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.category-chip:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.category-chip.active {
+  border-color: var(--accent);
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  font-weight: 500;
+}
+
+.category-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.category-chip sl-icon {
+  font-size: 1em;
+}
+
+/* 分類群組 */
+.category-group {
+  margin-bottom: var(--space-lg);
+}
+
+.category-group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-md);
+  font-weight: 700;
+  color: #8b5cf6;
+  margin: 0 0 var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.category-group-title sl-icon {
+  font-size: 1.1em;
+}
+
+.category-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 /* 個人吉日 */

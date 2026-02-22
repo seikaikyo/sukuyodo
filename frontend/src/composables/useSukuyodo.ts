@@ -526,9 +526,29 @@ export interface LuckyDaySummaryItem {
   lucky_days: LuckyDay[]
 }
 
+export interface LuckyDayCategoryMeta {
+  key: string
+  name: string
+  icon: string
+  actions: { key: string; name: string }[]
+}
+
+export interface LuckyDayActionResult {
+  key: string
+  name: string
+  lucky_days: LuckyDay[]
+}
+
+export interface LuckyDayCategoryResult {
+  key: string
+  name: string
+  icon: string
+  actions: LuckyDayActionResult[]
+}
+
 export interface LuckyDaySummary {
   your_mansion: Mansion
-  summary: LuckyDaySummaryItem[]
+  categories: LuckyDayCategoryResult[]
 }
 
 export interface PairLuckyAction {
@@ -881,6 +901,7 @@ export function useSukuyodo() {
   const companySearchError = ref('')
 
   // Lucky Days
+  const luckyDayCategories = ref<LuckyDayCategoryMeta[]>([])
   const luckyDaySummary = ref<LuckyDaySummary | null>(null)
   const luckyDaySummaryLoading = ref(false)
 
@@ -1154,6 +1175,20 @@ export function useSukuyodo() {
     ])
   }
 
+  async function fetchLuckyDayCategories() {
+    try {
+      const res = await fetch(getApiUrl('/lucky-days/categories'))
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          luckyDayCategories.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch lucky day categories')
+    }
+  }
+
   async function fetchLuckyDaySummary() {
     const queryDate = birthDate.value || myBirthDate.value
     if (!queryDate) return
@@ -1161,8 +1196,11 @@ export function useSukuyodo() {
     luckyDaySummaryLoading.value = true
     luckyDaySummary.value = null
 
+    const cats = profile.value.luckyDayCategories
+    const catParam = cats.length > 0 ? `?categories=${cats.join(',')}` : ''
+
     try {
-      const res = await fetch(getApiUrl(`/lucky-days/summary/${queryDate}`))
+      const res = await fetch(getApiUrl(`/lucky-days/summary/${queryDate}${catParam}`))
       if (res.ok) {
         const data = await res.json()
         if (data.success) {
@@ -1620,7 +1658,8 @@ export function useSukuyodo() {
       loadMetadata(),
       loadAllMansions(),
       loadRelations(),
-      loadElements()
+      loadElements(),
+      fetchLuckyDayCategories()
     ])
 
     // Auto-load if profile has birthdate
@@ -1698,6 +1737,7 @@ export function useSukuyodo() {
     companySearchError,
 
     // Lucky Days
+    luckyDayCategories,
     luckyDaySummary,
     luckyDaySummaryLoading,
     japaneseCalendar,
@@ -1727,6 +1767,7 @@ export function useSukuyodo() {
 
     // API Functions
     lookupMansion,
+    fetchLuckyDayCategories,
     fetchLuckyDaySummary,
     fetchJapaneseCalendar,
     fetchSpecialDays,
