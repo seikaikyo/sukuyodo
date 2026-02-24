@@ -57,6 +57,72 @@ class CompanyBatchRequest(BaseModel):
     companies: list[CompanyBatchItem]
 
 
+class GcisSearchRequest(BaseModel):
+    """GCIS 經濟部商工登記搜尋請求"""
+    keyword: str
+
+
+class LuckyDatesRequest(BaseModel):
+    """吉凶日期查詢請求"""
+    birth_date: str         # YYYY-MM-DD
+    start_date: str = ""    # 預設 today
+    days: int = 30          # 查詢天數
+
+
+@router.post("/fortune/lucky-dates")
+def get_lucky_dates(request: LuckyDatesRequest):
+    """
+    取得個人吉凶日期清單
+
+    根據每日運勢的 career 分數篩選吉日和凶日，
+    用於求職投遞/面試/談判的日期選擇。
+
+    Args:
+        request: 出生日期、起始日期、天數
+    """
+    try:
+        birth = date.fromisoformat(request.birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth > today:
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    start = None
+    if request.start_date:
+        try:
+            start = date.fromisoformat(request.start_date)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="start_date 格式錯誤，請使用 YYYY-MM-DD"
+            )
+
+    if request.days < 1 or request.days > 90:
+        raise HTTPException(
+            status_code=400,
+            detail="days 須介於 1-90"
+        )
+
+    result = company_search_service.calculate_lucky_dates(
+        birth_date=birth,
+        start_date=start,
+        days=request.days,
+    )
+
+    return {
+        "success": True,
+        "data": result,
+    }
+
+
 @router.get("/mansions")
 async def get_all_mansions():
     """
@@ -880,6 +946,26 @@ def company_batch_analysis(request: CompanyBatchRequest):
     return {
         "success": True,
         "data": result,
+    }
+
+
+@router.post("/gcis/search")
+async def gcis_search(req: GcisSearchRequest):
+    """
+    GCIS 經濟部商工登記公司搜尋
+
+    根據關鍵字模糊搜尋公司名稱，回傳公司列表含設立日期。
+    用於手動查詢時自動帶入設立日期。
+    """
+    if len(req.keyword.strip()) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="關鍵字至少 2 個字"
+        )
+    results = await company_search_service.search_gcis(req.keyword.strip())
+    return {
+        "success": True,
+        "data": results,
     }
 
 

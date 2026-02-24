@@ -57,17 +57,10 @@ function getPracticeLevelClass(level: string) {
   return 'level-diligent'
 }
 
-// 修行者觀 / 世俗觀 切換（根據 Profile 修行背景自動初始化）
+// 修行者觀 / 世俗觀 切換（永遠預設世俗觀，使用者手動切換）
 const { isPractitioner: profileIsPractitioner } = useProfile()
-const decadePerspective = ref<'secular' | 'practitioner'>(
-  profileIsPractitioner.value ? 'practitioner' : 'secular'
-)
+const decadePerspective = ref<'secular' | 'practitioner'>('secular')
 const isPractitioner = computed(() => decadePerspective.value === 'practitioner')
-
-// Profile 修行背景變更時同步 decadePerspective
-watch(profileIsPractitioner, (val) => {
-  decadePerspective.value = val ? 'practitioner' : 'secular'
-})
 
 // 特殊日修法指引（品第八, T21 p.398b-c）
 const SPECIAL_DAY_PRACTICE: Record<string, string> = {
@@ -743,7 +736,7 @@ async function exportIcsCalendar() {
           </div>
 
           <div class="weekly-overview">
-            <h4>每週概覽</h4>
+            <h4>三期概覽</h4>
             <div class="weekly-list">
               <div
                 v-for="w in monthlyFortune.weekly"
@@ -752,7 +745,7 @@ async function exportIcsCalendar() {
               >
                 <button
                   class="weekly-item"
-                  :class="{ expanded: expandedMonthlyWeek === w.week }"
+                  :class="{ expanded: expandedMonthlyWeek === w.week, 'has-dark': w.has_dark_week }"
                   :aria-expanded="expandedMonthlyWeek === w.week"
                   :aria-controls="`week-detail-${w.week}`"
                   @click="emit('toggleWeek', w.week)"
@@ -760,8 +753,9 @@ async function exportIcsCalendar() {
                   @keydown.space.prevent="emit('toggleWeek', w.week)"
                 >
                   <span class="week-toggle" aria-hidden="true">{{ expandedMonthlyWeek === w.week ? '▼' : '▶' }}</span>
-                  <span class="week-num">第 {{ w.week }} 週</span>
-                  <span v-if="w.week === currentWeekNumber" class="week-current-tag">本週</span>
+                  <span class="week-num"><ruby>{{ w.period_name }}<rp>(</rp><rt>{{ w.period_reading }}</rt><rp>)</rp></ruby></span>
+                  <span class="week-days-count">{{ w.days_count }}日</span>
+                  <span v-if="w.week === currentWeekNumber" class="week-current-tag">本期</span>
                   <div class="week-bar">
                     <div class="week-fill" :class="getScoreClass(w.score)" :style="{ width: w.score + '%' }"></div>
                   </div>
@@ -791,10 +785,11 @@ async function exportIcsCalendar() {
                           :key="day.date"
                           class="daily-chip clickable"
                           :class="[getScoreClass(day.score), { 'chip-ryouhan': day.ryouhan_active, 'chip-dark-week': day.is_dark_week }]"
-                          :aria-label="`${formatDate(day.date)} ${day.weekday} 運勢 ${day.score} 分，點擊查看詳情`"
+                          :aria-label="`${formatDate(day.date)} ${day.weekday} ${day.sanki_day_type || ''} 運勢 ${day.score} 分，點擊查看詳情`"
                           @click="emit('selectDay', day.date)"
                         >
                           {{ formatDate(day.date) }} {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
+                          <span v-if="day.sanki_day_type" class="day-type">{{ day.sanki_day_type.replace('の日', '') }}</span>
                           <span v-if="day.special_day" class="day-special">{{ day.special_day.charAt(0) }}</span>
                         </button>
                       </div>
@@ -999,14 +994,15 @@ async function exportIcsCalendar() {
                     >
                       <button
                         class="weekly-item"
-                        :class="{ expanded: expandedYearlyWeek === w.week }"
+                        :class="{ expanded: expandedYearlyWeek === w.week, 'has-dark': w.has_dark_week }"
                         :aria-expanded="expandedYearlyWeek === w.week"
                         :aria-controls="`yearly-week-detail-${m.month}-${w.week}`"
                         @click.stop="emit('toggleYearlyWeek', w.week)"
                       >
                         <span class="week-toggle" aria-hidden="true">{{ expandedYearlyWeek === w.week ? '▼' : '▶' }}</span>
-                        <span class="week-num">第 {{ w.week }} 週</span>
-                        <span v-if="m.month === currentMonth && w.week === currentWeekNumber" class="week-current-tag">本週</span>
+                        <span class="week-num"><ruby>{{ w.period_name }}<rp>(</rp><rt>{{ w.period_reading }}</rt><rp>)</rp></ruby></span>
+                        <span class="week-days-count">{{ w.days_count }}日</span>
+                        <span v-if="m.month === currentMonth && w.week === currentWeekNumber" class="week-current-tag">本期</span>
                         <div class="week-bar">
                           <div class="week-fill" :class="getScoreClass(w.score)" :style="{ width: w.score + '%' }"></div>
                         </div>
@@ -1029,11 +1025,12 @@ async function exportIcsCalendar() {
                                 v-for="day in w.daily_overview"
                                 :key="day.date"
                                 class="daily-chip clickable"
-                                :class="getScoreClass(day.score)"
-                                :aria-label="`${formatDate(day.date)} ${day.weekday} 運勢 ${day.score} 分，點擊查看詳情`"
+                                :class="[getScoreClass(day.score), { 'chip-ryouhan': day.ryouhan_active, 'chip-dark-week': day.is_dark_week }]"
+                                :aria-label="`${formatDate(day.date)} ${day.weekday} ${day.sanki_day_type || ''} 運勢 ${day.score} 分，點擊查看詳情`"
                                 @click.stop="emit('selectDay', day.date)"
                               >
                                 {{ formatDate(day.date) }} {{ day.weekday?.replace('曜日', '') }} {{ day.score }}
+                                <span v-if="day.sanki_day_type" class="day-type">{{ day.sanki_day_type.replace('の日', '') }}</span>
                               </button>
                             </div>
                           </div>
@@ -2364,6 +2361,12 @@ async function exportIcsCalendar() {
   color: var(--text-secondary);
 }
 
+.daily-chip .day-type {
+  font-size: 10px;
+  margin-left: 2px;
+  color: var(--text-muted);
+}
+
 .weekly-list {
   display: flex;
   flex-direction: column;
@@ -2416,10 +2419,25 @@ async function exportIcsCalendar() {
 }
 
 .week-num {
-  width: 56px;
+  min-width: 56px;
   font-size: var(--font-sm);
   color: var(--text-secondary);
   flex-shrink: 0;
+}
+
+.week-num ruby rt {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.week-days-count {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.weekly-item.has-dark {
+  border-left: 2px solid var(--dark-week-bg, #4a3a5c);
 }
 
 .week-current-tag {

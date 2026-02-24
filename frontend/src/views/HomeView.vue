@@ -79,9 +79,24 @@ const {
   companySearchLoading,
   companySearchError,
 
+  // GCIS Company Search
+  gcisResults,
+  gcisLoading,
+  searchGcis,
+
   // Company Batch Analysis
   companyBatchResult,
   companyBatchLoading,
+  seekerBatchResults,
+  seekerBatchLoading,
+  fetchSeekerBatchAnalysis,
+
+  // Career Lucky Dates
+  luckyDatesResult,
+  luckyDatesLoading,
+  seekerLuckyDates,
+  fetchLuckyDates,
+  fetchSeekerLuckyDates,
 
   // Lucky Days
   luckyDayCategories,
@@ -131,7 +146,10 @@ const {
   init
 } = useSukuyodo()
 
-const { addPartner, updatePartner, removePartner, addCompany, removeCompany, importCompaniesFromJson, toggleLuckyCategory, profile } = useProfile()
+const { addPartner, updatePartner, removePartner, addCompany, removeCompany, importCompaniesFromJson, addJobSeeker, removeJobSeeker, addCompanyToSeeker, removeCompanyFromSeeker, importCompaniesForSeeker, toggleLuckyCategory, profile } = useProfile()
+
+// Per-seeker state
+const activeSeekerId = ref<string>('self')
 
 function handleToggleCategory(key: string) {
   toggleLuckyCategory(key)
@@ -192,6 +210,8 @@ function handleSaveCompany(data: { name: string; foundingDate: string; memo?: st
   addCompany(data)
   fetchCompanyCompatibilities()
   fetchCompanyBatchAnalysis()
+  const bd = birthDate.value || myBirthDate.value
+  if (bd) fetchLuckyDates(bd)
 }
 
 function handleRemoveCompany(id: string) {
@@ -206,9 +226,52 @@ async function handleImportCompanies() {
     if (added > 0) {
       fetchCompanyCompatibilities()
       fetchCompanyBatchAnalysis()
+      const bd = birthDate.value || myBirthDate.value
+      if (bd) fetchLuckyDates(bd)
     }
   } catch (e) {
     console.error('載入推薦清單失敗', e)
+  }
+}
+
+function handleSeekerSaveCompany(seekerId: string, data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
+  addCompanyToSeeker(seekerId, data)
+  const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+  if (seeker) {
+    fetchSeekerBatchAnalysis(seekerId, seeker.birthDate, seeker.companies)
+  }
+}
+
+function handleSeekerRemoveCompany(seekerId: string, companyId: string) {
+  removeCompanyFromSeeker(seekerId, companyId)
+  const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+  if (seeker) {
+    fetchSeekerBatchAnalysis(seekerId, seeker.birthDate, seeker.companies)
+  }
+}
+
+async function handleSeekerImportCompanies(seekerId: string, jsonFile: string) {
+  try {
+    const added = await importCompaniesForSeeker(seekerId, jsonFile)
+    if (added > 0) {
+      const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+      if (seeker) {
+        fetchSeekerBatchAnalysis(seekerId, seeker.birthDate, seeker.companies)
+      }
+    }
+  } catch (e) {
+    console.error('載入推薦清單失敗', e)
+  }
+}
+
+function handleAddJobSeeker(data: { name: string; birthDate: string }) {
+  addJobSeeker(data)
+}
+
+function handleRemoveJobSeeker(id: string) {
+  removeJobSeeker(id)
+  if (activeSeekerId.value === id) {
+    activeSeekerId.value = 'self'
   }
 }
 
@@ -230,6 +293,24 @@ watch([showQueryDialog, showProfilePanel], ([query, profile]) => {
 
 watch(showProfilePanel, (open) => {
   if (!open) showPartnerDialog.value = false
+})
+
+// 切換求職者時自動觸發 batch analysis + lucky dates
+watch(activeSeekerId, (id) => {
+  if (id === 'self') {
+    // 自己的 batch：已有 watch(activeMatchTab) 處理
+    const bd = birthDate.value || myBirthDate.value
+    if (bd && !luckyDatesResult.value) fetchLuckyDates(bd)
+    return
+  }
+  const seeker = profile.value.jobSeekers.find(s => s.id === id)
+  if (!seeker) return
+  if (!seekerBatchResults.value[id] && seeker.companies.length > 0) {
+    fetchSeekerBatchAnalysis(id, seeker.birthDate, seeker.companies)
+  }
+  if (!seekerLuckyDates.value[id]) {
+    fetchSeekerLuckyDates(id, seeker.birthDate)
+  }
 })
 
 onMounted(() => {
@@ -552,18 +633,36 @@ onUnmounted(() => {
         :company-search-results="companySearchResults"
         :company-search-loading="companySearchLoading"
         :company-search-error="companySearchError"
+        :gcis-results="gcisResults"
+        :gcis-loading="gcisLoading"
         :company-batch-result="companyBatchResult"
         :company-batch-loading="companyBatchLoading"
+        :job-seekers="profile.jobSeekers"
+        :active-seeker-id="activeSeekerId"
+        :seeker-batch-results="seekerBatchResults"
+        :seeker-batch-loading="seekerBatchLoading"
+        :lucky-dates-result="luckyDatesResult"
+        :lucky-dates-loading="luckyDatesLoading"
+        :seeker-lucky-dates="seekerLuckyDates"
+        :user-name="profile.birthDate ? 'Dash' : ''"
         @update:selected-mansion="selectedMansion = $event"
         @update:date2="date2 = $event"
         @update:company-name="companyName = $event"
         @update:company-date="companyDate = $event"
+        @update:active-seeker-id="activeSeekerId = $event"
         @calculate-compatibility="calculateCompatibility"
         @calculate-company-compatibility="calculateCompanyCompatibility"
         @save-company="handleSaveCompany"
         @remove-company="handleRemoveCompany"
         @import-companies="handleImportCompanies"
         @search-companies="(kw: string, area: string) => searchCompanies(kw, area)"
+        @search-gcis="searchGcis"
+        @select-gcis="(c: { name: string; founding_date: string }) => { companyName = c.name; companyDate = c.founding_date }"
+        @add-job-seeker="handleAddJobSeeker"
+        @remove-job-seeker="handleRemoveJobSeeker"
+        @seeker-save-company="(sid: string, data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) => handleSeekerSaveCompany(sid, data)"
+        @seeker-remove-company="(sid: string, cid: string) => handleSeekerRemoveCompany(sid, cid)"
+        @seeker-import-companies="(sid: string, file: string) => handleSeekerImportCompanies(sid, file)"
         @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
         @navigate-lucky="activeMainTab = 'lucky'; activeLuckyTab = 'pair'"
       />

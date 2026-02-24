@@ -33,10 +33,18 @@ export interface Company {
   jobUrl?: string       // 104 職缺連結
 }
 
+export interface JobSeeker {
+  id: string
+  name: string
+  birthDate: string  // YYYY-MM-DD 格式
+  companies: Company[]
+}
+
 export interface UserProfile {
   birthDate: string | null  // YYYY-MM-DD 格式
   partners: Partner[]
   companies: Company[]
+  jobSeekers: JobSeeker[]
   practitionerLevel: PractitionerLevel
   luckyDayCategories: string[]
 }
@@ -72,6 +80,18 @@ function loadProfile(): UserProfile {
           memo: c.memo,
           jobUrl: c.jobUrl
         })),
+        jobSeekers: (parsed.jobSeekers || []).map((s: JobSeeker) => ({
+          id: s.id,
+          name: s.name,
+          birthDate: s.birthDate,
+          companies: (s.companies || []).map((c: Company) => ({
+            id: c.id,
+            name: c.name,
+            foundingDate: c.foundingDate,
+            memo: c.memo,
+            jobUrl: c.jobUrl
+          }))
+        })),
         practitionerLevel: level,
         luckyDayCategories: Array.isArray(parsed.luckyDayCategories)
           ? parsed.luckyDayCategories
@@ -85,6 +105,7 @@ function loadProfile(): UserProfile {
     birthDate: null,
     partners: [],
     companies: [],
+    jobSeekers: [],
     practitionerLevel: 'none' as PractitionerLevel,
     luckyDayCategories: DEFAULT_CATEGORIES_GENERAL
   }
@@ -174,11 +195,58 @@ export function useProfile() {
     return list.length
   }
 
+  function addJobSeeker(seeker: Omit<JobSeeker, 'id' | 'companies'>) {
+    if (profile.value.jobSeekers.length >= 5) {
+      throw new Error('最多只能新增 5 位求職者')
+    }
+    profile.value.jobSeekers.push({
+      ...seeker,
+      id: crypto.randomUUID(),
+      companies: []
+    })
+  }
+
+  function removeJobSeeker(id: string) {
+    const idx = profile.value.jobSeekers.findIndex(s => s.id === id)
+    if (idx !== -1) {
+      profile.value.jobSeekers.splice(idx, 1)
+    }
+  }
+
+  function addCompanyToSeeker(seekerId: string, company: Omit<Company, 'id'>) {
+    const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+    if (!seeker) return
+    if (seeker.companies.length >= 20) {
+      throw new Error('最多只能新增 20 間公司')
+    }
+    seeker.companies.push({ ...company, id: crypto.randomUUID() })
+  }
+
+  function removeCompanyFromSeeker(seekerId: string, companyId: string) {
+    const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+    if (!seeker) return
+    const idx = seeker.companies.findIndex(c => c.id === companyId)
+    if (idx !== -1) {
+      seeker.companies.splice(idx, 1)
+    }
+  }
+
+  async function importCompaniesForSeeker(seekerId: string, jsonFile: string): Promise<number> {
+    const res = await fetch(`/${jsonFile}`)
+    if (!res.ok) throw new Error(`無法讀取 ${jsonFile}`)
+    const list: Omit<Company, 'id'>[] = await res.json()
+    const seeker = profile.value.jobSeekers.find(s => s.id === seekerId)
+    if (!seeker) throw new Error('找不到該求職者')
+    seeker.companies = list.map(c => ({ ...c, id: crypto.randomUUID() }))
+    return list.length
+  }
+
   function clearProfile() {
     profile.value = {
       birthDate: null,
       partners: [],
       companies: [],
+      jobSeekers: [],
       practitionerLevel: 'none',
       luckyDayCategories: DEFAULT_CATEGORIES_GENERAL
     }
@@ -208,6 +276,11 @@ export function useProfile() {
     updateCompany,
     removeCompany,
     importCompaniesFromJson,
+    addJobSeeker,
+    removeJobSeeker,
+    addCompanyToSeeker,
+    removeCompanyFromSeeker,
+    importCompaniesForSeeker,
     clearProfile,
     toggleLuckyCategory,
     RELATION_TYPES,

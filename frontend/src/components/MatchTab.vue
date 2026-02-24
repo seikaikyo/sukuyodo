@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type {
   CompatibilityFinderResult,
   CompatibleMansion,
@@ -7,8 +7,11 @@ import type {
   PartnerCompatibility,
   Relation,
   CompanyBatchResult,
-  CompanyAnalysisItem
+  CompanyAnalysisItem,
+  LuckyDatesResult,
+  GcisCompany
 } from '../composables/useSukuyodo'
+import type { JobSeeker } from '../stores/profile'
 import { getScoreClass, getScoreLevel, getLocalDateStr } from '../utils/fortune-helpers'
 import { generateCompatReport, generatePairedDecadeReport } from '../utils/report-generator'
 import { getApiUrl } from '../config/api'
@@ -16,6 +19,35 @@ import { getApiUrl } from '../config/api'
 const expandedPartnerId = ref<string | null>(null)
 const pairedReportLoading = ref(false)
 const partnerPairedLoading = ref<string | null>(null)
+
+// GCIS 搜尋下拉
+const gcisDropdownOpen = ref(false)
+let gcisDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+function handleCompanyNameInput(value: string) {
+  emit('update:companyName', value)
+  if (gcisDebounceTimer) clearTimeout(gcisDebounceTimer)
+  if (value.trim().length < 2) {
+    gcisDropdownOpen.value = false
+    return
+  }
+  gcisDebounceTimer = setTimeout(() => {
+    emit('searchGcis', value)
+    gcisDropdownOpen.value = true
+  }, 500)
+}
+
+function handleSelectGcis(company: GcisCompany) {
+  emit('selectGcis', company)
+  emit('update:companyName', company.name)
+  emit('update:companyDate', company.founding_date)
+  gcisDropdownOpen.value = false
+}
+
+function handleGcisBlur() {
+  // 延遲關閉以允許點擊選項
+  setTimeout(() => { gcisDropdownOpen.value = false }, 200)
+}
 
 function togglePartner(id: string) {
   const isExpanding = expandedPartnerId.value !== id
@@ -82,9 +114,21 @@ const props = defineProps<{
   companySearchResults: CompanySearchResult[]
   companySearchLoading: boolean
   companySearchError: string
+  // GCIS Company Search
+  gcisResults: GcisCompany[]
+  gcisLoading: boolean
   // Company Batch Analysis
   companyBatchResult: CompanyBatchResult | null
   companyBatchLoading: boolean
+  // Job Seekers
+  jobSeekers: JobSeeker[]
+  activeSeekerId: string
+  seekerBatchResults: Record<string, CompanyBatchResult | null>
+  seekerBatchLoading: Record<string, boolean>
+  luckyDatesResult: LuckyDatesResult | null
+  luckyDatesLoading: boolean
+  seekerLuckyDates: Record<string, LuckyDatesResult | null>
+  userName: string
 }>()
 
 async function handleExportPairedReport() {
@@ -176,7 +220,7 @@ const areaOptions = [
 ]
 
 function saveSearchResult(result: CompanySearchResult) {
-  emit('saveCompany', {
+  handleCurrentSaveCompany({
     name: result.name,
     foundingDate: result.founding_date,
     memo: `${result.job_title} | ${result.location}`,
@@ -190,12 +234,20 @@ const emit = defineEmits<{
   'update:date2': [value: string]
   'update:companyName': [value: string]
   'update:companyDate': [value: string]
+  'update:activeSeekerId': [value: string]
   calculateCompatibility: []
   calculateCompanyCompatibility: []
   saveCompany: [data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }]
   removeCompany: [id: string]
   importCompanies: []
   searchCompanies: [keywords: string, area: string]
+  searchGcis: [keyword: string]
+  selectGcis: [company: GcisCompany]
+  addJobSeeker: [data: { name: string; birthDate: string }]
+  removeJobSeeker: [id: string]
+  seekerSaveCompany: [seekerId: string, data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }]
+  seekerRemoveCompany: [seekerId: string, companyId: string]
+  seekerImportCompanies: [seekerId: string, jsonFile: string]
   'navigate-knowledge': [tab: string]
   'navigate-lucky': []
 }>()
@@ -273,6 +325,85 @@ function handleMansionClick(m: CompatibleMansion) {
   emit('update:selectedMansion', props.selectedMansion?.index === m.index ? null : m)
 }
 
+// Job Seeker state
+const showAddSeekerDialog = ref(false)
+const newSeekerName = ref('')
+const newSeekerBirthDate = ref('')
+const confirmDeleteSeekerId = ref<string | null>(null)
+
+function switchSeeker(id: string) {
+  emit('update:activeSeekerId', id)
+}
+
+function submitAddSeeker() {
+  if (!newSeekerName.value.trim() || !newSeekerBirthDate.value) return
+  emit('addJobSeeker', {
+    name: newSeekerName.value.trim(),
+    birthDate: newSeekerBirthDate.value
+  })
+  newSeekerName.value = ''
+  newSeekerBirthDate.value = ''
+  showAddSeekerDialog.value = false
+}
+
+function confirmRemoveSeeker(id: string) {
+  confirmDeleteSeekerId.value = id
+}
+
+function executeRemoveSeeker(id: string) {
+  emit('removeJobSeeker', id)
+  confirmDeleteSeekerId.value = null
+}
+
+// Computed: 當前 seeker 的 batch result / loading / companies
+const currentBatchResult = computed(() => {
+  if (props.activeSeekerId === 'self') return props.companyBatchResult
+  return props.seekerBatchResults[props.activeSeekerId] || null
+})
+
+const currentBatchLoading = computed(() => {
+  if (props.activeSeekerId === 'self') return props.companyBatchLoading
+  return props.seekerBatchLoading[props.activeSeekerId] || false
+})
+
+const currentSeeker = computed(() => {
+  if (props.activeSeekerId === 'self') return null
+  return props.jobSeekers.find(s => s.id === props.activeSeekerId) || null
+})
+
+const isSelf = computed(() => props.activeSeekerId === 'self')
+
+const currentLuckyDates = computed(() => {
+  if (props.activeSeekerId === 'self') return props.luckyDatesResult
+  return props.seekerLuckyDates[props.activeSeekerId] || null
+})
+
+// 處理 seeker 的儲存/刪除/匯入
+function handleCurrentSaveCompany(data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
+  if (isSelf.value) {
+    emit('saveCompany', data)
+  } else {
+    emit('seekerSaveCompany', props.activeSeekerId, data)
+  }
+}
+
+function handleCurrentRemoveCompany(id: string) {
+  if (isSelf.value) {
+    emit('removeCompany', id)
+  } else {
+    emit('seekerRemoveCompany', props.activeSeekerId, id)
+  }
+}
+
+function handleCurrentImport() {
+  if (isSelf.value) {
+    emit('importCompanies')
+  } else if (currentSeeker.value) {
+    const jsonFile = `companies-${currentSeeker.value.name.toLowerCase()}.json`
+    emit('seekerImportCompanies', props.activeSeekerId, jsonFile)
+  }
+}
+
 // Company verdict
 const expandedCompanyId = ref<string | null>(null)
 const confirmDeleteCompanyId = ref<string | null>(null)
@@ -289,7 +420,7 @@ function toggleCompany(id: string) {
 }
 
 function deleteCompany(id: string) {
-  emit('removeCompany', id)
+  handleCurrentRemoveCompany(id)
   confirmDeleteCompanyId.value = null
   if (expandedCompanyId.value === id) expandedCompanyId.value = null
 }
@@ -302,11 +433,17 @@ interface CompanyVerdict {
 
 // 梯隊分組
 function getCompaniesByTier(tier: number): CompanyAnalysisItem[] {
-  if (!props.companyBatchResult) return []
-  return props.companyBatchResult.companies.filter(c => c.tier.rank === tier)
+  const result = currentBatchResult.value
+  if (!result) return []
+  return result.companies.filter(c => c.tier.rank === tier)
 }
 
 // 九曜等級 CSS class
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
 function getKuyouLevelClass(level: string): string {
   switch (level) {
     case '大吉': return 'kuyou-daikichi'
@@ -352,14 +489,14 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   // 危成
   if (type === 'kisei') {
     if (dir === '危') {
-      return { level: 'caution', text: '留意', detail: '你是危方，這間公司可能帶來不穩定因素' }
+      return { level: 'caution', text: '留意', detail: '你是危方，這間公司會帶來變化與挑戰，需主動適應並調整策略' }
     }
     return { level: 'caution', text: '可考慮', detail: '你是成方（被借力），能發揮價值但留意風險' }
   }
   // 安壊
   if (type === 'ankai') {
     if (dir === '壊') {
-      return { level: 'avoid', text: '避開', detail: '你是壊方，容易與這間公司產生破壞性衝突' }
+      return { level: 'caution', text: '謹慎', detail: '你是壊方，有能力打破現狀推動改變，但需注意節奏避免過度衝突' }
     }
     return { level: 'caution', text: '留意', detail: '你是安方，表面穩定但可能被動、難以主導' }
   }
@@ -621,8 +758,64 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
 
     <!-- Company -->
     <div v-if="activeTab === 'company'" id="panel-match-company" class="match-content" role="tabpanel">
-      <!-- 自動搜尋 -->
-      <div class="auto-search-section">
+      <!-- 求職者頁籤 -->
+      <div class="seeker-tabs">
+        <button
+          class="seeker-tab"
+          :class="{ active: activeSeekerId === 'self' }"
+          @click="switchSeeker('self')"
+        >{{ userName || '我' }}</button>
+        <button
+          v-for="s in jobSeekers"
+          :key="s.id"
+          class="seeker-tab"
+          :class="{ active: activeSeekerId === s.id }"
+          @click="switchSeeker(s.id)"
+        >
+          {{ s.name }}
+          <span
+            v-if="confirmDeleteSeekerId === s.id"
+            class="seeker-delete-confirm"
+            @click.stop="executeRemoveSeeker(s.id)"
+          >確認刪除</span>
+          <span
+            v-else
+            class="seeker-delete"
+            @click.stop="confirmRemoveSeeker(s.id)"
+          >x</span>
+        </button>
+        <button class="seeker-tab seeker-add" @click="showAddSeekerDialog = true">+</button>
+      </div>
+
+      <!-- 新增求職者 Dialog -->
+      <div v-if="showAddSeekerDialog" class="seeker-dialog-overlay" @click.self="showAddSeekerDialog = false">
+        <div class="seeker-dialog">
+          <h4>新增求職者</h4>
+          <sl-input
+            :value="newSeekerName"
+            label="名稱"
+            placeholder="例：正念"
+            @sl-input="newSeekerName = ($event.target as HTMLInputElement).value"
+          ></sl-input>
+          <sl-input
+            type="date"
+            :value="newSeekerBirthDate"
+            label="生日"
+            @sl-input="newSeekerBirthDate = ($event.target as HTMLInputElement).value"
+          ></sl-input>
+          <div class="seeker-dialog-actions">
+            <button class="btn-secondary" @click="showAddSeekerDialog = false">取消</button>
+            <button
+              class="btn-primary"
+              :disabled="!newSeekerName.trim() || !newSeekerBirthDate"
+              @click="submitAddSeeker"
+            >確認</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自動搜尋（僅在 self 模式顯示） -->
+      <div v-if="isSelf" class="auto-search-section">
         <h4 class="section-title">自動搜尋 104 職缺</h4>
         <p class="section-desc">輸入關鍵字，自動搜尋 104 → 查設立日期 → 算相性</p>
         <div class="auto-search-form">
@@ -718,20 +911,39 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
         </div>
       </div>
 
+      <div v-if="isSelf" class="self-only-section">
       <hr class="section-divider" />
 
       <!-- 手動查詢 -->
       <div class="company-intro">
-        <p>或手動輸入公司設立日期，查看與你的宿曜相性。設立日期可至經濟部商業司查詢。</p>
+        <p>輸入公司名稱，自動從經濟部商工登記查詢設立日期。</p>
       </div>
 
       <div class="company-form">
-        <sl-input
-          :value="companyName"
-          label="公司名稱"
-          placeholder="例：台積電"
-          @sl-input="emit('update:companyName', ($event.target as HTMLInputElement).value)"
-        ></sl-input>
+        <div class="gcis-input-wrapper">
+          <sl-input
+            :value="companyName"
+            label="公司名稱"
+            placeholder="例：研華、台積電"
+            @sl-input="handleCompanyNameInput(($event.target as HTMLInputElement).value)"
+            @sl-blur="handleGcisBlur"
+          ></sl-input>
+          <sl-spinner v-if="gcisLoading" class="gcis-spinner"></sl-spinner>
+          <div v-if="gcisDropdownOpen && gcisResults.length > 0" class="gcis-dropdown">
+            <div
+              v-for="company in gcisResults"
+              :key="company.business_no"
+              class="gcis-option"
+              @mousedown.prevent="handleSelectGcis(company)"
+            >
+              <span class="gcis-name">{{ company.name }}</span>
+              <span class="gcis-meta">{{ company.founding_date }} | {{ company.responsible }}</span>
+            </div>
+          </div>
+          <div v-if="gcisDropdownOpen && !gcisLoading && gcisResults.length === 0 && companyName.trim().length >= 2" class="gcis-dropdown">
+            <div class="gcis-empty">查無結果，可手動輸入設立日期</div>
+          </div>
+        </div>
         <sl-input
           type="date"
           :value="companyDate"
@@ -831,52 +1043,93 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
         <!-- 儲存按鈕 -->
         <button
           class="btn-save-company"
-          @click="emit('saveCompany', { name: companyName || '未命名公司', foundingDate: companyDate })"
+          @click="handleCurrentSaveCompany({ name: companyName || '未命名公司', foundingDate: companyDate })"
         >收藏此公司</button>
+      </div>
       </div>
 
       <!-- 載入推薦清單 -->
       <div class="import-section">
-        <button class="btn-import-companies" @click="emit('importCompanies')">載入推薦清單</button>
-        <span class="import-hint">從 companies.json 匯入</span>
+        <button class="btn-import-companies" @click="handleCurrentImport">載入推薦清單</button>
+        <span class="import-hint">{{ isSelf ? '從 companies.json 匯入' : `從 companies-${currentSeeker?.name?.toLowerCase() || ''}.json 匯入` }}</span>
       </div>
 
       <!-- Batch Analysis Loading -->
-      <div v-if="companyBatchLoading" class="loading-state">
+      <div v-if="currentBatchLoading" class="loading-state">
         <sl-spinner></sl-spinner>
         <span class="loading-text">分析公司流年與梯隊排名...</span>
       </div>
 
       <!-- Batch Analysis Results -->
-      <div v-else-if="companyBatchResult && companyBatchResult.companies.length > 0" class="batch-analysis">
+      <div v-else-if="currentBatchResult && currentBatchResult.companies.length > 0" class="batch-analysis">
         <!-- 使用者流年橫幅 -->
         <div class="user-fortune-banner">
           <div class="banner-left">
-            <span class="banner-label">你的流年</span>
-            <span class="kuyou-badge" :class="getKuyouLevelClass(companyBatchResult.user.yearly_fortune.kuyou_star.level)">
-              {{ companyBatchResult.user.yearly_fortune.kuyou_star.name }}
-              {{ companyBatchResult.user.yearly_fortune.kuyou_star.level }}
+            <span class="banner-label">{{ isSelf ? '你的流年' : currentSeeker?.name + ' 的流年' }}</span>
+            <span class="kuyou-badge" :class="getKuyouLevelClass(currentBatchResult.user.yearly_fortune.kuyou_star.level)">
+              {{ currentBatchResult.user.yearly_fortune.kuyou_star.name }}
+              {{ currentBatchResult.user.yearly_fortune.kuyou_star.level }}
             </span>
           </div>
           <div class="banner-right">
-            <span class="banner-score">整體 {{ companyBatchResult.user.yearly_fortune.overall }}</span>
-            <span class="banner-score">事業 {{ companyBatchResult.user.yearly_fortune.career }}</span>
+            <span class="banner-score">整體 {{ currentBatchResult.user.yearly_fortune.overall }}</span>
+            <span class="banner-score">事業 {{ currentBatchResult.user.yearly_fortune.career }}</span>
           </div>
+        </div>
+
+        <!-- 吉凶日曆面板 -->
+        <div v-if="currentLuckyDates" class="lucky-dates-panel">
+          <div v-if="currentLuckyDates.good_dates.length > 0" class="lucky-dates-section good-dates">
+            <h5>投遞/面試吉日</h5>
+            <div class="date-chips">
+              <span
+                v-for="d in currentLuckyDates.good_dates.slice(0, 5)"
+                :key="d.date"
+                class="date-chip good"
+                :title="d.reason"
+              >
+                {{ formatShortDate(d.date) }} {{ d.weekday.replace('曜日','') }}
+                <small>{{ d.career }}</small>
+              </span>
+            </div>
+          </div>
+          <div v-if="currentLuckyDates.bad_dates.length > 0" class="lucky-dates-section bad-dates">
+            <h5>建議謹慎（需特別準備）</h5>
+            <div class="date-chips">
+              <span
+                v-for="d in currentLuckyDates.bad_dates.slice(0, 5)"
+                :key="d.date"
+                class="date-chip bad"
+                :title="d.reason"
+              >
+                {{ formatShortDate(d.date) }} {{ d.weekday.replace('曜日','') }}
+                <small>{{ d.career }}</small>
+              </span>
+            </div>
+          </div>
+          <div v-if="currentLuckyDates.dark_weeks.length > 0" class="dark-week-warning">
+            暗黒の一週間: {{ currentLuckyDates.dark_weeks.map(w =>
+              formatShortDate(w.start) + '~' + formatShortDate(w.end)).join(', ') }}
+          </div>
+        </div>
+        <div v-else-if="luckyDatesLoading" class="lucky-dates-panel loading">
+          <sl-spinner></sl-spinner>
+          <span>載入吉凶日期...</span>
         </div>
 
         <!-- 梯隊統計列 -->
         <div class="tier-summary-row">
-          <span v-if="companyBatchResult.tier_summary.tier_1 > 0" class="tier-count tier-1">
-            第一 {{ companyBatchResult.tier_summary.tier_1 }}
+          <span v-if="currentBatchResult.tier_summary.tier_1 > 0" class="tier-count tier-1">
+            第一 {{ currentBatchResult.tier_summary.tier_1 }}
           </span>
-          <span v-if="companyBatchResult.tier_summary.tier_2 > 0" class="tier-count tier-2">
-            第二 {{ companyBatchResult.tier_summary.tier_2 }}
+          <span v-if="currentBatchResult.tier_summary.tier_2 > 0" class="tier-count tier-2">
+            第二 {{ currentBatchResult.tier_summary.tier_2 }}
           </span>
-          <span v-if="companyBatchResult.tier_summary.tier_3 > 0" class="tier-count tier-3">
-            第三 {{ companyBatchResult.tier_summary.tier_3 }}
+          <span v-if="currentBatchResult.tier_summary.tier_3 > 0" class="tier-count tier-3">
+            第三 {{ currentBatchResult.tier_summary.tier_3 }}
           </span>
-          <span v-if="companyBatchResult.tier_summary.tier_4 > 0" class="tier-count tier-4">
-            第四 {{ companyBatchResult.tier_summary.tier_4 }}
+          <span v-if="currentBatchResult.tier_summary.tier_4 > 0" class="tier-count tier-4">
+            第四 {{ currentBatchResult.tier_summary.tier_4 }}
           </span>
         </div>
 
@@ -900,8 +1153,20 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                   @click="toggleCompany(item.id)"
                 >
                   <div class="partner-info">
-                    <span class="partner-name">{{ item.name }}</span>
+                    <span class="partner-name">
+                      {{ item.name }}
+                      <a
+                        v-if="item.job_url"
+                        :href="item.job_url"
+                        target="_blank"
+                        rel="noopener"
+                        class="job-link-icon"
+                        title="104 職缺"
+                        @click.stop
+                      ><i class="pi pi-external-link"></i></a>
+                    </span>
                     <span class="partner-mansion">{{ item.compatibility.person2.mansion }}（{{ item.compatibility.person2.reading }}）</span>
+                    <span v-if="item.memo" class="partner-memo">{{ item.memo }}</span>
                   </div>
                   <div class="partner-relation">
                     <span class="relation-name">{{ item.compatibility.relation.name }}</span>
@@ -1001,8 +1266,8 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
         </template>
       </div>
 
-      <!-- Fallback: 無批次資料時顯示原有的 companyCompatibilities -->
-      <div v-else-if="companyCompatibilities.length > 0 && !companyBatchLoading" class="saved-companies">
+      <!-- Fallback: 無批次資料時顯示原有的 companyCompatibilities (僅 self) -->
+      <div v-else-if="isSelf && companyCompatibilities.length > 0 && !currentBatchLoading" class="saved-companies">
         <h4 class="saved-title">已收藏公司 ({{ companyCompatibilities.length }})</h4>
         <div class="partner-list">
           <div
@@ -1240,6 +1505,104 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
 </template>
 
 <style scoped>
+/* Seeker Tabs */
+.seeker-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.seeker-tab {
+  padding: 6px 16px;
+  border-radius: var(--radius-full, 20px);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seeker-tab:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.seeker-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.seeker-tab.seeker-add {
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: var(--font-base);
+}
+
+.seeker-delete {
+  font-size: 10px;
+  opacity: 0.5;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.seeker-delete:hover {
+  opacity: 1;
+}
+
+.seeker-delete-confirm {
+  font-size: 10px;
+  color: var(--warning);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Add Seeker Dialog */
+.seeker-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.seeker-dialog {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  width: min(90vw, 360px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.seeker-dialog h4 {
+  margin: 0;
+  font-size: var(--font-lg);
+}
+
+.seeker-dialog-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-size: var(--font-sm);
+}
+
 .sub-tabs {
   display: flex;
   gap: var(--space-sm);
@@ -2133,6 +2496,75 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   --sl-input-label-color: var(--text-secondary);
 }
 
+.gcis-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.gcis-input-wrapper sl-input {
+  width: 100%;
+}
+
+.gcis-spinner {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  --indicator-color: var(--accent);
+}
+
+.gcis-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+}
+
+.gcis-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s;
+}
+
+.gcis-option:last-child {
+  border-bottom: none;
+}
+
+.gcis-option:hover {
+  background: var(--bg-elevated);
+}
+
+.gcis-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+}
+
+.gcis-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gcis-empty {
+  padding: 12px;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 .company-result {
   position: relative;
 }
@@ -2779,6 +3211,117 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   .batch-badges {
     flex-direction: row;
   }
+}
+
+/* Job Link Icon (104 連結) */
+.job-link-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.job-link-icon:hover {
+  color: var(--accent);
+}
+
+.job-link-icon .pi {
+  font-size: 12px;
+}
+
+/* Partner Memo (卡片摘要) */
+.partner-card .partner-memo {
+  display: block;
+  width: 100%;
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* Lucky Dates Panel (吉凶日曆) */
+.lucky-dates-panel {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.lucky-dates-panel.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.lucky-dates-section {
+  margin-bottom: 8px;
+}
+
+.lucky-dates-section:last-child {
+  margin-bottom: 0;
+}
+
+.lucky-dates-section h5 {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+.good-dates h5 {
+  color: var(--accent);
+}
+
+.bad-dates h5 {
+  color: var(--warning, #c53030);
+}
+
+.date-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: var(--font-sm);
+  cursor: default;
+}
+
+.date-chip.good {
+  background: #f0e6d2;
+  color: #5c4a1e;
+}
+
+.date-chip.bad {
+  background: #f5e0e0;
+  color: #8b2020;
+}
+
+.date-chip small {
+  font-size: 11px;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.dark-week-warning {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #333;
+  color: #ffd700;
+  border-radius: 4px;
+  font-size: var(--font-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {

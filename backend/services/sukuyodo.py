@@ -224,6 +224,23 @@ class SukuyodoService:
         # 每天進一宿
         return (start + lunar_day - 1) % 27
 
+    # 全域參考點：農曆2026年正月初一 = 2026-02-17 = 室宿(11)
+    # 用於日運連續宿位計算，確保每日恰好前進一宿
+    _MANSION_REF_DATE = date(2026, 2, 17)
+    _MANSION_REF_INDEX = 11  # 室宿
+
+    def _get_corrected_mansion_index(self, solar_date: date) -> int:
+        """日運用的修正後宿位（全域連續遞進，每日+1）
+
+        以農曆2026年正月初一=室宿(11)為參考點，
+        根據日數差計算任意日期的宿位。每日恰好前進一宿，
+        不受月邊界 gap 或年邊界重置影響。
+
+        本命宿仍使用 get_mansion_index（靜態表）。
+        """
+        days_diff = (solar_date - self._MANSION_REF_DATE).days
+        return (self._MANSION_REF_INDEX + days_diff) % 27
+
     def get_mansion(self, solar_date: date) -> dict:
         """
         根據西曆生日取得本命宿資料
@@ -598,7 +615,7 @@ class SukuyodoService:
                 "distances": [3, 6, 12, 15, 21, 24],
                 "score": 50,
                 "description": "強烈吸引力但權力不對等，需謹慎經營",
-                "detailed": "安壊是宿曜道中最有戲劇性的關係。安方會被壊方強烈吸引，壊方則不自覺地對安方施加壓力。這種不對等的能量讓關係充滿張力和刺激感。如果雙方都能意識到這種動態並刻意平衡，反而能碰撞出驚人的火花。但如果放任不管，壊方可能不斷越界，安方持續退讓，最終走向破裂。關鍵是建立明確的界線和坦誠的溝通機制。"
+                "detailed": "安壊是宿曜道中最有戲劇性的關係。安方會被壊方強烈吸引，壊方則不自覺地對安方施加壓力。這種不對等的能量讓關係充滿張力和刺激感。如果雙方都能意識到這種動態並刻意平衡，反而能碰撞出驚人的火花。這段關係需要比其他關係更用心地維護——建立明確的界線、養成坦誠溝通的習慣、在張力出現時主動踩煞車。用對方法，安壊關係能成為推動彼此成長的強大力量。"
             },
             "kisei": {
                 "relation": "危成",
@@ -1577,6 +1594,11 @@ class SukuyodoService:
             "相剋能量的年份不代表運氣差，而是需要用不同的策略。直線前進受阻時，換個角度繞路反而更快。今年適合培養耐性和彈性，遇到阻礙先停下來觀察全局，找到對的切入點再行動。急躁是今年最大的敵人，穩住節奏才能化險為夷。",
             "這是一個需要「磨」的年份。工作中的摩擦、人際上的衝突、計畫的延遲，都是在磨掉你身上不需要的稜角。撐過去之後你會發現自己變得更成熟、更有韌性。控制好情緒，不要在壓力下做重大決定，等風頭過了再定奪。"
         ],
+        "kyo": [
+            "九曜循環走到低谷，今年的外在環境會比較嚴苛。這是九年一次的能量低潮，不是針對你，而是循環走到了這裡。最務實的策略是縮小戰線：把手上的事情分成「必須做」和「可以等」，只留必須做的，其他全部暫緩。不要在這一年啟動新計畫、跳槽、或做任何需要大量資源投入的事。守住現有的，等低谷過去再說。遇到重大決定先擱七天，讓自己有足夠的時間從不同角度看事情。",
+            "今年會比較辛苦，這是事實，不需要粉飾。但辛苦不等於毀滅，九曜的循環每九年一輪，低谷之後就是回升。你現在要做的只有一件事：安全度過。減少不必要的社交應酬、推掉高風險的邀約、避免借貸和大額投資。人際方面，話到嘴邊停三秒再說，今年特別容易因為一句氣話毀掉多年經營的關係。身邊有讓你安心的人，多跟他們待在一起。",
+            "低潮年有一個被忽略的好處：它會幫你看清什麼才是真正重要的。順風順水的時候你分不清什麼是實力、什麼是運氣；逆境來了，還留在身邊的人、還能穩住的事情，那才是你的底牌。今年不追求成長，追求穩定。把生活作息固定下來、把身體照顧好、把最核心的幾段關係維護住。年底你回頭看會發現：你沒有少什麼，反而知道自己真正擁有什麼。"
+        ],
         "neutral": [
             "今年的干支能量與你的本命元素沒有明顯的衝突或加持，意味著你有更大的自主空間。命運的影響力退到背景裡，你的主動作為才是決定年度成績的關鍵。想衝刺就衝刺、想休息就休息，沒有特別好或特別壞的外力推著你走。自律的人在這種年份最容易拉開差距。",
             "中性能量的年份就像一塊空白畫布，最終畫出什麼完全取決於你自己。不會有太多意外驚喜，但也不會有無法預見的災難。這是最適合制定長期計畫並穩定推進的時期，因為外在變數少，你可以專心把手上的事做到最好。",
@@ -1606,6 +1628,11 @@ class SukuyodoService:
             "張力也是轉化的契機。今年你會被迫面對一些你一直在逃避的問題——可能是工作方向、人際關係、或者自我認知。過程不舒服，但解決之後你會脫一層皮、變一個人。把這一年當成密集訓練營：你不會喜歡過程，但會感謝結果。保持彈性、控制情緒、遇到卡關就換個方式試。最糟的做法是停在原地生悶氣。",
             "今年的關鍵策略是「繞路前進」。直線走不通的時候，換個角度切入反而更快。你會發現原本的計畫A行不通，但計畫B和C可能帶來更好的結果。放下對既定方案的執著，用變通取代固執。這一年你和某些人的關係可能會變得緊張，不是誰對誰錯，而是頻率暫時不同步。給彼此多一點空間，等風頭過了自然會恢復。"
         ],
+        "kyo": [
+            "今年是九曜循環中的低谷段，外在環境的支持力降到最低。你會覺得做什麼都比平時費勁，本來順手的事情冒出一堆小狀況，人際關係也可能莫名其妙變得緊繃。這些不是你的問題，是年運的節奏走到了這裡。最聰明的做法是承認現實，然後調整打法：把目標從「往前衝」改成「不後退」。守住工作、守住健康、守住重要的人，其他都可以放一放。這一年你不需要證明什麼，只需要穩穩地走過去。九曜循環不會停在這裡，低谷的另一邊就是回升。",
+            "接下來這一年，事情的發展可能不會照你的劇本走。你安排好的計畫會被打斷、你信任的人可能讓你失望、你努力的方向未必有即時回報。聽起來很糟，但低潮年有一個特性：它不會永遠持續下去。你現在的任務不是逆轉局面，而是保存實力。把精力集中在三件事上——睡好、吃好、和讓你安心的人保持聯繫。大的決定能拖就拖，等狀態回來再做。你以前撐過的難關比這個多，這次也一樣。",
+            "九曜低谷年的特徵是「什麼都慢半拍」。申請的東西晚批、約好的事情改期、預期的收入延遲入帳。你可能因此焦躁，覺得自己被困住了。但「慢」不是「停」。你可以趁這段強制減速的時間做一些平常沒空做的事：整理那堆拖了半年的文件、把斷聯的老朋友約出來吃頓飯、認真想一想接下來三年你到底想過什麼樣的日子。這一年不會給你舞台，但會給你思考的空間。用好這段時間，等下一波上升期到來時你會比別人準備得更充分。"
+        ],
         "neutral": [
             "今年的外在環境不會主動推你，也不會拉你後腿。你有最大的自主權來決定這一年要過成什麼樣子。對自律的人來說這是最好的年份——你做什麼就得什麼，付出多少就回收多少，公平透明。但缺乏自律的人會覺得這一年「好像什麼也沒發生」。差別在於你有沒有主動設定目標並且持續推進。年初花兩週時間認真規劃全年，然後用季度為單位檢核進度。這一年沒有驚喜也沒有意外，最終結果完全是你行動的總和。",
             "中性能量年份像一張白紙——你可以畫出任何你想要的圖案。沒有順風不代表逆境，只是環境退到背景裡，把舞台完全留給你。適合做那些需要長期穩定投入的事情：學語言、寫書、建立被動收入、經營深度關係。急躁是這一年最大的浪費，因為沒有外力干擾的時期最適合專注，而你把它浪費在焦慮上就太可惜了。",
@@ -1632,6 +1659,10 @@ class SukuyodoService:
                 "事業上今年會遇到一些意外的挑戰。計畫被打亂、合作對象臨時變卦、市場風向突然轉彎。這些變數不一定是壞事，因為有些更好的機會藏在變化裡。保持彈性，不要死抱著原來的計畫不放。讓自己有空間嘗試計畫B和C。",
                 "職場人際需要額外經營。你和同事或主管之間可能出現理解上的落差，多確認、多溝通能避免大部分問題。不要用情緒去處理工作上的衝突，冷靜幾天再回應，結果往往比當下反應好得多。"
             ],
+            "kyo": [
+                "今年的職場不適合主動出擊。不要在這一年跳槽、要求大幅加薪、或者跟主管正面衝突。先穩住現有位置，把手上的工作做到不出錯就好。如果被裁員或被迫轉換，不要急著做決定，給自己至少兩週的冷靜期再行動。低潮年做的職涯決定很容易後悔。",
+                "工作上遇到不公平的事情，今年不是正面交鋒的時機，但可以把它當成觀察和學習的素材。記錄下來，想清楚你真正在意的是什麼、你希望怎麼被對待。同時，趁這段時間補強自己的技能、整理作品集、維護關鍵人脈。低谷年做的準備工作，會在下一波機會來臨時直接變現。"
+            ],
             "neutral": [
                 "事業表現取決於你自己的投入程度。今年不會有天上掉下來的好機會，但也不會有無法預見的絆腳石。制定清晰的季度目標，踏實推進即可。最適合用來累積技能、建立長期競爭力、深化專業領域的知識。",
                 "今年的職場環境穩定，沒有太多外力干擾。利用這段平靜期做一些需要專注的事情：考證照、寫專業文章、整理作品集。這些短期看不到回報的投入，會在未來的某個時刻突然派上用場。"
@@ -1653,6 +1684,10 @@ class SukuyodoService:
             "conflicting": [
                 "感情方面今年有些波折。可能遇到價值觀衝突、生活節奏不合拍、或者對未來的期待不同。這些問題藏在水面下很久了，今年它們浮上來反而是好事。正面處理比假裝沒看到好。不管結果如何，誠實面對是唯一的出路。",
                 "單身的人今年的桃花帶有一點試煉的意味。你遇到的人可能讓你心動但又讓你猶豫，那種矛盾感其實是在幫你釐清你真正需要的是什麼類型。不急著確定關係，多觀察、多了解，等張力過去之後再做決定。"
+            ],
+            "kyo": [
+                "感情上今年最好的策略是「不折騰」。盡量不要在這一年做感情裡的重大決定——低潮期的情緒容易影響你看待關係的方式，等心境穩定之後再回頭評估會更客觀。有伴的人就好好相處，吵架的時候先離開現場，冷靜之後再談。單身的人不用急，把注意力放在照顧自己上面，狀態好了自然會吸引對的人。",
+                "今年感情裡最需要的是一個讓你安心的存在。不一定是戀人，可以是家人、摯友、任何讓你在身邊就覺得世界沒那麼糟的人。主動跟這些人保持聯繫，累的時候打個電話、週末約出來吃頓飯。不要自己扛，也不要覺得麻煩別人丟臉。有伴的人今年把另一半當隊友而不是觀眾，一起面對比各自承擔有效得多。"
             ],
             "neutral": [
                 "感情上今年不溫不火，適合穩定經營。不會有戲劇化的轉折，但會有日常相處裡的小確幸。有伴的人適合把注意力放回基本功——好好吃飯、好好聊天、好好休息。單身者不用焦慮，但也別把自己封閉起來，保持正常的社交頻率即可。",
@@ -1676,6 +1711,10 @@ class SukuyodoService:
                 "健康上今年要多留心壓力對身體的影響。張力年份帶來的焦慮可能導致失眠、頭痛、肌肉緊繃、或者消化不良。找到適合你的紓壓方式是今年的必修課——不管是運動、冥想、還是單純找人聊天。不要讓壓力在體內累積到爆炸才處理。",
                 "今年容易因為趕時間而忽略身體警訊。養成每天用五分鐘掃描身體狀態的習慣：哪裡痠、哪裡緊、睡得夠不夠、吃得好不好。小問題及時處理，就不會演變成大問題。安排上半年做一次健檢，及早發現及早處理。"
             ],
+            "kyo": [
+                "健康是今年需要比平時更主動關注的項目。低潮年的身體恢復速度會比較慢，所以預防比治療更重要。每天睡滿七小時、三餐正常吃、每週至少走路三十分鐘——這些基本功就是你最好的護身符。如果出現不舒服的症狀，早點去看醫生，不要拖。今年安排一次完整健檢，有問題及早處理，沒問題就安心。把身體照顧好，其他事情才有底氣去面對。",
+                "今年的壓力會直接反映在身體上。失眠、偏頭痛、腸胃不適、莫名的疲倦感，這些都是身體在幫你喊停。不要硬撐，累了就休息、扛不住就求助。減少咖啡因和酒精的攝取，它們短期提神但長期消耗你的修復能力。找到一個能讓你放鬆的固定儀式：泡澡、散步、聽音樂、什麼都好，每天給自己半小時完全不用想事情的時間。身體撐住了，其他的才有談的餘地。"
+            ],
             "neutral": [
                 "健康狀態平穩，今年適合做體質管理。沒有特別需要擔心的大問題，但也不要因此就放縱生活作息。把健康管理視為一種長期投資，今年投入的每一分努力都會在未來幾年得到回報。建立固定的運動時間、改善飲食結構、保持充足的睡眠。",
                 "今年的身體不會給你太多警告，所以你需要主動去關心它。定期量體重、記錄睡眠品質、觀察皮膚和精神狀態的變化。這些日常的微調比一年做一次健檢更能即時反映你的健康狀況。"
@@ -1697,6 +1736,10 @@ class SukuyodoService:
             "conflicting": [
                 "財務上可能有一些意外的波動。你以為穩賺的投資可能出現回檔、預期的收入可能延遲入帳、突然冒出一筆計畫外的開支。應對的方式是：不要把所有雞蛋放在一個籃子裡，保持財務的靈活性。手邊永遠留一筆三到六個月的生活費，讓自己有餘裕應對變化。",
                 "今年在花錢之前多想三秒。衝動消費和衝動投資是張力年份最容易犯的錯。看到好東西先放進購物車等兩天、聽到好機會先記下來研究一週。過了冷靜期還覺得值得的，再花錢也不遲。"
+            ],
+            "kyo": [
+                "財務上今年的核心策略是「穩健」。盡量不借錢、不做沒有把握的投資、遇到重大財務決定先多方確認再行動。低潮年的環境干擾比較多，容易讓人做出衝動的金錢決定，多給自己一點思考時間不會吃虧。手邊的現金留越多越好，至少準備六個月的生活費當安全墊。如果已經有投資部位，不要加碼也不要恐慌賣出，維持現狀就好。今年的目標不是賺錢，是穩穩守住。",
+                "今年可能會遇到一些意料之外的開支：車子壞了、家電要換、身體需要治療、朋友開口借錢。提前把預備金準備好，遇到的時候才不慌。能不花的錢就不花，能晚付的帳就晚付。如果有人跟你推銷保險、基金、或任何理財商品，一律說「我再想想」然後放到明年再決定。低谷年守住荷包比什麼都重要。"
             ],
             "neutral": [
                 "財務狀態平穩，沒有大起大落。這種環境最適合做長期理財規劃——定期定額投資、重新配置資產比例、或者開始研究一個你一直想了解的投資工具。不要期待今年有爆發性的財務增長，但持續穩定的累積到年底也是一筆可觀的數目。",
@@ -1837,9 +1880,9 @@ class SukuyodoService:
         user_index = mansion["index"]
 
         # === 核心修正：計算「當日宿」===
-        # 根據目標日期的農曆計算當天的宿位
+        # 使用修正後宿位，避免大月邊界重複
         lunar_y, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
-        day_mansion_index = self.get_mansion_index(lunar_m, lunar_d)
+        day_mansion_index = self._get_corrected_mansion_index(target_date)
         day_mansion = self.mansions_data[day_mansion_index]
 
         # === 三九秘法：計算本命宿與當日宿的關係 ===
@@ -2136,13 +2179,18 @@ class SukuyodoService:
             if is_dark:
                 dark_week_count += 1
 
+            sanki = daily_fortune.get("sanki", {})
             all_daily.append({
                 "date": day_date.isoformat(),
                 "weekday": daily_fortune["weekday"]["name"],
                 "score": daily_fortune["fortune"]["overall"],
                 "special_day": special_day.get("name") if special_day else None,
                 "ryouhan_active": is_ryouhan,
-                "is_dark_week": is_dark
+                "is_dark_week": is_dark,
+                "sanki_period_index": sanki.get("period_index", 1),
+                "sanki_period": sanki.get("period", "躍動の週"),
+                "sanki_day_in_period": sanki.get("day_in_period", 1),
+                "sanki_day_type": sanki.get("day_type", ""),
             })
 
         # 月整體分數 = 每日分數平均（與週分數算法一致）
@@ -2169,55 +2217,69 @@ class SukuyodoService:
             month_elem_bonus = 5 if month_mansion_elem in cat_data["favorable_elements"] else 0
             return max(30, min(100, base_score + cat_bonus + month_elem_bonus))
 
-        # 建構每週資料（從 all_daily 分組，週分數 = 每日平均）
+        # 按三期サイクル分組（取代固定 7 天分週）
+        periods: list[dict] = []
+        current_group: dict | None = None
+
+        for d in all_daily:
+            period_idx = d["sanki_period_index"]
+            if current_group is None or current_group["period_index"] != period_idx:
+                if current_group is not None:
+                    periods.append(current_group)
+                current_group = {
+                    "period_index": period_idx,
+                    "period_name": d["sanki_period"],
+                    "days": [d]
+                }
+            else:
+                current_group["days"].append(d)
+
+        if current_group is not None:
+            periods.append(current_group)
+
+        # 組裝 weekly（欄位名保留 weekly 以減少前端改動量）
         weekly = []
-        week_num = 0
-        day_offset = 0
-        while day_offset < days_in_month:
-            week_num += 1
-            week_end_offset = min(day_offset + 6, days_in_month - 1)
-            week_days = all_daily[day_offset:week_end_offset + 1]
+        for seq, group in enumerate(periods, 1):
+            days = group["days"]
+            score = round(sum(d["score"] for d in days) / len(days))
+            score = max(40, min(100, score))
 
-            # 週分數 = 該週每日分數平均
-            week_score = round(sum(d["score"] for d in week_days) / len(week_days))
-            week_score = max(40, min(100, week_score))
-
-            # 週 focus：根據週首日七曜元素的類別親和決定
-            week_start_date = first_day + timedelta(days=day_offset)
-            week_end_date = first_day + timedelta(days=week_end_offset)
-            week_jp_weekday = (week_start_date.weekday() + 1) % 7
-            week_element = fortune_data["weekday_elements"].get(str(week_jp_weekday), {}).get("element", "土")
-
+            # focus 用該區段首日七曜元素決定
+            start_date = date.fromisoformat(days[0]["date"])
+            jp_weekday = (start_date.weekday() + 1) % 7
+            week_element = fortune_data["weekday_elements"].get(str(jp_weekday), {}).get("element", "土")
             best_focus = "career"
             for cat in ["career", "love", "health", "wealth"]:
                 if week_element in fortune_data["fortune_categories"][cat]["favorable_elements"]:
                     best_focus = cat
                     break
 
-            # 週警告彙整
-            week_warnings = []
-            week_ryouhan = sum(1 for d in week_days if d["ryouhan_active"])
-            week_dark = sum(1 for d in week_days if d["is_dark_week"])
-            week_specials = [d for d in week_days if d["special_day"]]
-
-            if week_ryouhan > 0:
-                week_warnings.append(f"凌犯期間 {week_ryouhan} 日")
-            if week_dark > 0:
-                week_warnings.append(f"暗黒の一週間 {week_dark} 日")
-            for sp in week_specials:
-                week_warnings.append(f"{sp['date'][-5:]} {sp['special_day']}")
+            # 警告彙整
+            warnings = []
+            ryouhan_days = sum(1 for d in days if d["ryouhan_active"])
+            dark_days = sum(1 for d in days if d["is_dark_week"])
+            specials = [d for d in days if d["special_day"]]
+            if ryouhan_days > 0:
+                warnings.append(f"凌犯期間 {ryouhan_days} 日")
+            if dark_days > 0:
+                warnings.append(f"暗黒の一週間 {dark_days} 日")
+            for sp in specials:
+                warnings.append(f"{sp['date'][-5:]} {sp['special_day']}")
 
             weekly.append({
-                "week": week_num,
-                "week_start": week_start_date.isoformat(),
-                "week_end": week_end_date.isoformat(),
-                "score": week_score,
+                "week": seq,
+                "period_index": group["period_index"],
+                "period_name": group["period_name"],
+                "period_reading": self.SANKI_CYCLE[group["period_index"] - 1]["reading"],
+                "week_start": days[0]["date"],
+                "week_end": days[-1]["date"],
+                "days_count": len(days),
+                "score": score,
                 "focus": fortune_data["fortune_categories"][best_focus]["name"],
-                "daily_overview": week_days,
-                "warnings": week_warnings
+                "has_dark_week": dark_days > 0,
+                "daily_overview": days,
+                "warnings": warnings,
             })
-
-            day_offset += 7
 
         # 月警告彙整
         month_warnings = []
@@ -2510,14 +2572,14 @@ class SukuyodoService:
             "level": "大凶", "fortune_name": "休運",
             "element": "火", "base_score": 42,
             "buddha": "虛空藏菩薩",
-            "description": "需要格外謹慎的一年。人際衝突頻繁、事業上容易遇到挫折、健康也需要留心。家庭關係和工作關係都可能因為一句話、一個誤會而產生裂痕。控制情緒是今年最重要的課題。遇到讓你想發火的事情，先離開現場冷靜十分鐘再回應。"
+            "description": "需要格外謹慎的一年。人際和事業上容易遇到挑戰，家庭和工作中的關係也可能因為溝通不順而出現考驗。這些考驗不是來打倒你的，是在提醒你哪些關係需要更用心經營。控制情緒是今年最重要的課題——遇到讓你想發火的事情，先離開現場冷靜十分鐘再回應。撐過這一年，你的耐性和應變力會提升一個層次。"
         },
         {
             "name": "計都星", "reading": "けいとせい",
             "level": "大凶", "fortune_name": "滞運",
             "element": None, "base_score": 45,
             "buddha": "釋迦如來",
-            "description": "努力得不到回報、計畫被迫中斷的一年。春季三個月特別要注意，到秋天才會稍微好轉。這不是你的問題，是時運的週期。你能做的是降低期望值、減少冒險、把精力放在守住現有的成果上。忍耐是唯一的策略，忍過去之後你會更強。"
+            "description": "事情的進展比預期慢、付出和回報不成正比的一年。春季三個月特別需要耐心，到秋天會逐漸好轉。這不是你的能力問題，是時運的節奏走到了這裡。你能做的是調整期望、減少冒險、把精力集中在守住現有的成果上。同時，趁這段減速期整理思緒、盤點資源，為下一波回升做好準備。低谷年是最好的反思期。"
         },
         {
             "name": "月曜星", "reading": "げつようせい",
@@ -3191,9 +3253,7 @@ class SukuyodoService:
                     check_date = date(year, m, d)
                     wd = check_date.weekday()
                     jp_wd = (wd + 1) % 7
-                    _, lm, ld, _ = self.solar_to_lunar(check_date)
-                    start_idx = self.MONTH_START_MANSION.get(lm, 0)
-                    mansion_idx = (start_idx + ld - 1) % 27
+                    mansion_idx = self._get_corrected_mansion_index(check_date)
                     sd_type = self.SPECIAL_DAY_MAP.get((jp_wd, mansion_idx))
                     if sd_type in sd_counts:
                         sd_counts[sd_type] += 1
@@ -3250,20 +3310,38 @@ class SukuyodoService:
             star_adj = star_bonus // 4 if star_element else 0  # 九曜元素微調
             return max(35, min(100, base_score + cat_bonus + year_boost + star_adj))
 
-        # 年度建議（根據九曜星元素與本命元素的關係）
-        advice_key = star_relation if star_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
+        # 描述用的元素關係 key（九曜吉凶等級優先於元素關係）
+        # 大凶：一律使用專屬 kyo 描述（務實安撫導向，非元素摩擦）
+        # 末吉：正面元素降為 weakening
+        # 大吉：負面/中性元素強制升為 generating
+        # 半吉：衝突元素緩和為 weakening
+        desc_relation = star_relation
+        if star["level"] == "大凶":
+            desc_relation = "kyo"
+        elif star["level"] == "末吉":
+            if star_relation in ("same", "generating"):
+                desc_relation = "weakening"
+        elif star["level"] == "大吉":
+            if star_relation in ("neutral", "conflicting", "weakening"):
+                desc_relation = "generating"
+        elif star["level"] == "半吉":
+            if star_relation == "conflicting":
+                desc_relation = "weakening"
+
+        # 年度建議
+        advice_key = desc_relation if desc_relation in self.YEARLY_FORTUNE_ADVICE else "neutral"
         random.seed(f"{birth_date.isoformat()}{year}advice")
         advice = random.choice(self.YEARLY_FORTUNE_ADVICE[advice_key])
 
         # 年度主題：使用九曜星的 fortune_name 作為標題
-        theme_key = star_relation if star_relation in self.YEARLY_THEME_DESCRIPTIONS else "neutral"
+        theme_key = desc_relation if desc_relation in self.YEARLY_THEME_DESCRIPTIONS else "neutral"
         random.seed(f"{birth_date.isoformat()}{year}theme")
         theme_description = random.choice(self.YEARLY_THEME_DESCRIPTIONS[theme_key])
 
         # 各項分述
         category_descriptions = {}
         for cat in ["career", "love", "health", "wealth"]:
-            cat_key = star_relation if star_relation in self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}) else "neutral"
+            cat_key = desc_relation if desc_relation in self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}) else "neutral"
             random.seed(f"{birth_date.isoformat()}{year}catdesc_{cat}")
             cat_descs = self.YEARLY_CATEGORY_DESCRIPTIONS.get(cat, {}).get(cat_key, [""])
             category_descriptions[cat] = random.choice(cat_descs)
@@ -3905,9 +3983,8 @@ class SukuyodoService:
             day_element = fortune_data["weekday_elements"][str(jp_weekday)]["element"]
             day_name = fortune_data["weekday_elements"][str(jp_weekday)]["name"]
 
-            # 計算當日宿
-            lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
-            day_mansion_index = self.get_mansion_index(lunar_month, lunar_day)
+            # 計算當日宿（修正後宿位）
+            day_mansion_index = self._get_corrected_mansion_index(check_date)
 
             # 計算與本命宿的關係
             relation = self.get_relation_type(user_index, day_mansion_index)
@@ -4393,9 +4470,8 @@ class SukuyodoService:
                 day_name = day_info["name"]
                 day_element = day_info["element"]
 
-                # 計算當日宿
-                lunar_year, lunar_month, lunar_day, _ = self.solar_to_lunar(check_date)
-                day_mansion_index = self.get_mansion_index(lunar_month, lunar_day)
+                # 計算當日宿（修正後宿位）
+                day_mansion_index = self._get_corrected_mansion_index(check_date)
 
                 # 計算雙方與當日宿的關係
                 relation1 = self.get_relation_type(mansion1["index"], day_mansion_index)
@@ -4737,14 +4813,11 @@ class SukuyodoService:
         for day in range(1, days_in_month + 1):
             target_date = date(year, month, day)
 
-            # 農曆轉換
+            # 當日宿（修正後宿位）
             try:
-                _, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
+                day_mansion_index = self._get_corrected_mansion_index(target_date)
             except Exception:
                 continue
-
-            # 當日宿
-            day_mansion_index = self.get_mansion_index(lunar_m, lunar_d)
             day_mansion = self.mansions_data[day_mansion_index]
 
             # 七曜
@@ -4839,14 +4912,11 @@ class SukuyodoService:
         for day_num in range(1, days_in_month + 1):
             target_date = date(year, month, day_num)
 
-            # 農曆轉換
+            # 當日宿（修正後宿位）
             try:
-                _, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
+                day_mansion_index = self._get_corrected_mansion_index(target_date)
             except Exception:
                 continue
-
-            # 當日宿
-            day_mansion_index = self.get_mansion_index(lunar_m, lunar_d)
             day_mansion = self.mansions_data[day_mansion_index]
 
             # 七曜

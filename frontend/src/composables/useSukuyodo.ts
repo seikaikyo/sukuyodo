@@ -330,15 +330,23 @@ export interface MonthlyFortune {
   fortune: FortuneScores
   weekly: {
     week: number
+    period_index: number
+    period_name: string
+    period_reading: string
     week_start: string
     week_end: string
+    days_count: number
     score: number
     focus: string
+    has_dark_week: boolean
     warnings?: string[]
     daily_overview: {
       date: string
       weekday: string
       score: number
+      sanki_period_index?: number
+      sanki_day_in_period?: number
+      sanki_day_type?: string
       special_day?: string | null
       ryouhan_active?: boolean
       is_dark_week?: boolean
@@ -896,6 +904,39 @@ export interface CompanyBatchResult {
 }
 
 // ============================================================================
+// Lucky Dates (Career) Types
+// ============================================================================
+
+export interface CareerLuckyDate {
+  date: string
+  weekday: string
+  career: number
+  level: string
+  day_mansion: string
+  relation: string
+  flags: string[]
+  reason: string
+}
+
+export interface LuckyDatesResult {
+  good_dates: CareerLuckyDate[]
+  bad_dates: CareerLuckyDate[]
+  dark_weeks: { start: string; end: string }[]
+}
+
+// ============================================================================
+// GCIS Company Search Types
+// ============================================================================
+
+export interface GcisCompany {
+  name: string
+  business_no: string
+  founding_date: string
+  responsible: string
+  capital: string
+}
+
+// ============================================================================
 // Composable
 // ============================================================================
 
@@ -978,6 +1019,19 @@ export function useSukuyodo() {
   // Company Batch Analysis
   const companyBatchResult = ref<CompanyBatchResult | null>(null)
   const companyBatchLoading = ref(false)
+
+  // Per-seeker batch analysis
+  const seekerBatchResults = ref<Record<string, CompanyBatchResult | null>>({})
+  const seekerBatchLoading = ref<Record<string, boolean>>({})
+
+  // GCIS Company Search
+  const gcisResults = ref<GcisCompany[]>([])
+  const gcisLoading = ref(false)
+
+  // Career Lucky Dates (for company card enrichment)
+  const luckyDatesResult = ref<LuckyDatesResult | null>(null)
+  const luckyDatesLoading = ref(false)
+  const seekerLuckyDates = ref<Record<string, LuckyDatesResult | null>>({})
 
   // Lucky Days
   const luckyDayCategories = ref<LuckyDayCategoryMeta[]>([])
@@ -1149,10 +1203,16 @@ export function useSukuyodo() {
     }
   }
 
-  // 計算當月第幾週（用於標示「本週」）
+  // 找到今天所在的三期區段序號（用於標示「本期」）
   const currentWeekNumber = computed(() => {
-    const today = new Date()
-    return Math.ceil(today.getDate() / 7)
+    if (!monthlyFortune.value?.weekly) return 1
+    const todayStr = new Date().toISOString().slice(0, 10)
+    for (const w of monthlyFortune.value.weekly) {
+      if (todayStr >= w.week_start && todayStr <= w.week_end) {
+        return w.week
+      }
+    }
+    return 1
   })
 
   // 切換月運勢中的週次展開（資料已內嵌，無需額外 fetch）
@@ -1648,6 +1708,31 @@ export function useSukuyodo() {
     }
   }
 
+  async function searchGcis(keyword: string) {
+    if (keyword.trim().length < 2) {
+      gcisResults.value = []
+      return
+    }
+    gcisLoading.value = true
+    try {
+      const res = await apiFetch(getApiUrl('/gcis/search'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: keyword.trim() }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        gcisResults.value = data.data || []
+      } else {
+        gcisResults.value = []
+      }
+    } catch {
+      gcisResults.value = []
+    } finally {
+      gcisLoading.value = false
+    }
+  }
+
   async function fetchCompanyBatchAnalysis() {
     const queryDate = birthDate.value || myBirthDate.value
     if (!queryDate) return
@@ -1687,6 +1772,97 @@ export function useSukuyodo() {
       console.error('Failed to fetch company batch analysis')
     } finally {
       companyBatchLoading.value = false
+    }
+  }
+
+  async function fetchBatchForBirthDate(
+    queryDate: string,
+    companies: { id: string; name: string; foundingDate: string; memo?: string; jobUrl?: string }[]
+  ): Promise<CompanyBatchResult | null> {
+    if (companies.length === 0) return null
+    const year = new Date().getFullYear()
+    const res = await apiFetch(getApiUrl('/company-batch-analysis'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        birth_date: queryDate,
+        year,
+        companies: companies.map(c => ({
+          id: c.id,
+          name: c.name,
+          founding_date: c.foundingDate,
+          memo: c.memo || '',
+          job_url: c.jobUrl || '',
+        })),
+      }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.success) return data.data
+    }
+    return null
+  }
+
+  async function fetchSeekerBatchAnalysis(seekerId: string, seekerBirthDate: string, seekerCompanies: { id: string; name: string; foundingDate: string; memo?: string; jobUrl?: string }[]) {
+    if (!seekerBirthDate || seekerCompanies.length === 0) {
+      seekerBatchResults.value[seekerId] = null
+      return
+    }
+    seekerBatchLoading.value[seekerId] = true
+    seekerBatchResults.value[seekerId] = null
+    try {
+      seekerBatchResults.value[seekerId] = await fetchBatchForBirthDate(seekerBirthDate, seekerCompanies)
+    } catch {
+      console.error('Failed to fetch seeker batch analysis')
+    } finally {
+      seekerBatchLoading.value[seekerId] = false
+    }
+  }
+
+  async function fetchLuckyDates(queryBirthDate: string, days?: number) {
+    if (!queryBirthDate) return
+    luckyDatesLoading.value = true
+    try {
+      const res = await apiFetch(getApiUrl('/fortune/lucky-dates'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birth_date: queryBirthDate,
+          days: days || 30,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          luckyDatesResult.value = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch lucky dates')
+    } finally {
+      luckyDatesLoading.value = false
+    }
+  }
+
+  async function fetchSeekerLuckyDates(seekerId: string, seekerBirthDate: string, days?: number) {
+    if (!seekerBirthDate) return
+    try {
+      const res = await apiFetch(getApiUrl('/fortune/lucky-dates'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birth_date: seekerBirthDate,
+          days: days || 30,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          seekerLuckyDates.value[seekerId] = data.data
+        }
+      }
+    } catch {
+      console.error('Failed to fetch seeker lucky dates')
     }
   }
 
@@ -1771,6 +1947,10 @@ export function useSukuyodo() {
       }
       if (!companyBatchResult.value) {
         fetchCompanyBatchAnalysis()
+      }
+      const bd = birthDate.value || myBirthDate.value
+      if (bd && !luckyDatesResult.value) {
+        fetchLuckyDates(bd)
       }
     }
   })
@@ -1862,9 +2042,24 @@ export function useSukuyodo() {
     companySearchLoading,
     companySearchError,
 
+    // GCIS Company Search
+    gcisResults,
+    gcisLoading,
+    searchGcis,
+
     // Company Batch Analysis
     companyBatchResult,
     companyBatchLoading,
+    seekerBatchResults,
+    seekerBatchLoading,
+    fetchSeekerBatchAnalysis,
+
+    // Career Lucky Dates
+    luckyDatesResult,
+    luckyDatesLoading,
+    seekerLuckyDates,
+    fetchLuckyDates,
+    fetchSeekerLuckyDates,
 
     // Lucky Days
     luckyDayCategories,

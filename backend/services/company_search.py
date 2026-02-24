@@ -1,7 +1,7 @@
 """公司自動搜尋服務 - 爬取 104 + GCIS 官方 API，計算宿曜相性"""
 import logging
 import re
-from datetime import date
+from datetime import date, timedelta
 from urllib.parse import quote
 
 import httpx
@@ -127,6 +127,40 @@ class CompanySearchService:
 
         # 備援：findcompany.com.tw
         return await self._lookup_findcompany(company_name)
+
+    async def search_gcis(self, keyword: str) -> list[dict]:
+        """GCIS 公司名稱搜尋，回傳公司列表含設立日期"""
+        search_name = keyword
+        for suffix in ["股份有限公司", "有限公司"]:
+            search_name = search_name.replace(suffix, "")
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                resp = await client.get(_GCIS_API_URL, params={
+                    "$format": "json",
+                    "$filter": f"Company_Name like {search_name} and Company_Status eq 01",
+                    "$top": "10",
+                })
+                if resp.status_code != 200 or not resp.text.startswith("["):
+                    return []
+                data = resp.json()
+            except Exception as e:
+                logger.warning("GCIS 搜尋 %s 失敗: %s", keyword, e)
+                return []
+
+        results = []
+        for company in data:
+            setup_date = self._roc_to_western(company.get("Company_Setup_Date", ""))
+            if not setup_date:
+                continue
+            results.append({
+                "name": company.get("Company_Name", ""),
+                "business_no": company.get("Business_Accounting_NO", ""),
+                "founding_date": setup_date,
+                "responsible": company.get("Responsible_Name", ""),
+                "capital": company.get("Capital_Stock_Amount", "0"),
+            })
+        return results
 
     async def _lookup_gcis(self, company_name: str) -> str | None:
         """從 GCIS 官方 API 查詢設立日期"""
@@ -405,6 +439,114 @@ class CompanySearchService:
             },
             "companies": results,
             "tier_summary": tier_summary,
+        }
+
+    def calculate_lucky_dates(
+        self,
+        birth_date: date,
+        start_date: date | None = None,
+        days: int = 30,
+    ) -> dict:
+        """
+        計算吉凶日期清單
+
+        根據個人每日運勢的 career 分數，篩選出吉日和凶日。
+        good_dates: career >= 80 且無暗黒/凌犯
+        bad_dates: career <= 48 或有安壊/暗黒/凌犯
+
+        Args:
+            birth_date: 使用者出生日期
+            start_date: 起始日期（預設 today）
+            days: 查詢天數
+
+        Returns:
+            { good_dates, bad_dates, dark_weeks }
+        """
+        if start_date is None:
+            start_date = date.today()
+
+        weekday_names = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"]
+        good_dates = []
+        bad_dates = []
+        dark_ranges: list[tuple[date, date]] = []
+        current_dark_start: date | None = None
+
+        for i in range(days):
+            target = start_date + timedelta(days=i)
+            try:
+                fortune = sukuyodo_service.calculate_daily_fortune(birth_date, target)
+            except Exception:
+                continue
+
+            scores = fortune.get("fortune", {})
+            career = scores.get("career", 50)
+            level = scores.get("level_name", "")
+            day_mansion = fortune.get("day_mansion", {})
+            mansion_rel = fortune.get("mansion_relation", {})
+            sanki = fortune.get("sanki", {})
+            ryouhan = fortune.get("ryouhan", {})
+            special = fortune.get("special_day")
+
+            is_dark = sanki.get("is_dark_week", False) if sanki else False
+            is_ryouhan = ryouhan.get("active", False) if ryouhan else False
+            rel_type = mansion_rel.get("type", "") if mansion_rel else ""
+
+            # 暗黒の一週間追蹤
+            if is_dark:
+                if current_dark_start is None:
+                    current_dark_start = target
+            else:
+                if current_dark_start is not None:
+                    dark_ranges.append((current_dark_start, target - timedelta(days=1)))
+                    current_dark_start = None
+
+            # 組裝 flags 和 reason
+            flags = []
+            reasons = []
+            if special:
+                flags.append(special.get("name", ""))
+            if rel_type == "mei":
+                flags.append("命宿日")
+            if is_dark:
+                flags.append("暗黒の一週間")
+            if is_ryouhan:
+                flags.append("凌犯期間")
+            if rel_type == "ankai":
+                flags.append("安壊")
+
+            weekday = weekday_names[target.weekday()]
+
+            entry = {
+                "date": target.isoformat(),
+                "weekday": weekday,
+                "career": career,
+                "level": level,
+                "day_mansion": day_mansion.get("name_jp", ""),
+                "relation": mansion_rel.get("name", "") if mansion_rel else "",
+                "flags": flags,
+                "reason": " + ".join(flags) if flags else level,
+            }
+
+            # 吉日: career >= 80 且無負面因素
+            if career >= 80 and not is_dark and not is_ryouhan and rel_type != "ankai":
+                good_dates.append(entry)
+            # 凶日: career <= 48 或有安壊/暗黒/凌犯
+            elif career <= 48 or is_dark or is_ryouhan or rel_type == "ankai":
+                bad_dates.append(entry)
+
+        # 結尾暗黒期間
+        if current_dark_start is not None:
+            dark_ranges.append((current_dark_start, start_date + timedelta(days=days - 1)))
+
+        dark_weeks = [
+            {"start": s.isoformat(), "end": e.isoformat()}
+            for s, e in dark_ranges
+        ]
+
+        return {
+            "good_dates": good_dates,
+            "bad_dates": bad_dates,
+            "dark_weeks": dark_weeks,
         }
 
     def _calculate_tier(

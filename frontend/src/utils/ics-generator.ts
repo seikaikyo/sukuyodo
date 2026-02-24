@@ -152,19 +152,19 @@ function getDayTip(
     return '甘露日：今天是難得的大吉日，適合開始新計畫、簽約、重要面談'
   }
   if (specialType === 'kanro' && reversed) {
-    return '甘露日但在凌犯期間，吉凶逆轉，別被好日子的名字騙了，低調為主'
+    return '甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時'
   }
   if (specialType === 'kongou' && !reversed) {
     return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、下決心'
   }
   if (specialType === 'kongou' && reversed) {
-    return '金剛峯日但凌犯逆轉，強勢反而容易碰壁，先觀望再行動'
+    return '金剛峯日但凌犯逆轉，強勢能量易生阻力。建議先評估局勢，蓄勢待發'
   }
   if (specialType === 'rasetsu' && !reversed) {
     return '羅刹日：百事不宜，能延就延，今天不適合做重要決定'
   }
   if (specialType === 'rasetsu' && reversed) {
-    return '羅刹日但凌犯逆轉，原本的凶日反而沒那麼糟，正常過就好'
+    return '羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂'
   }
 
   // 凌犯 + 六害宿（最需警戒）
