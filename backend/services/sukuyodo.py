@@ -3880,6 +3880,9 @@ class SukuyodoService:
                     "favor_weekdays": [2, 4],
                     "avoid_weekdays": [1],
                     "avoid_birth_mansion": True,
+                    "avoid_ryouhan": True,
+                    "avoid_dark_week": True,
+                    "avoid_rasetsu": True,
                     "favor_mansions": [11, 8, 21],
                     "favor_score": 70
                 }
@@ -3993,6 +3996,49 @@ class SukuyodoService:
             # 判斷是否吉日
             is_lucky = False
             lucky_reason = ""
+
+            # 取得凌犯、三期、特殊日資訊（用於吉日過濾）
+            ryouhan_info = daily_fortune.get("ryouhan")
+            sanki_info = daily_fortune.get("sanki", {})
+            special_day_info = daily_fortune.get("special_day")
+
+            # 檢查凌犯期間（吉凶逆轉，不宜重要行動）
+            if action_config.get("avoid_ryouhan", False) and ryouhan_info:
+                if len(avoid_days) < 5:
+                    avoid_days.append({
+                        "date": check_date.isoformat(),
+                        "weekday": day_name,
+                        "score": score,
+                        "level": day_level,
+                        "reason": "凌犯期間，吉凶逆轉不穩定，不宜重要行動"
+                    })
+                continue
+
+            # 檢查暗黒の一週間（破壊の週 distance 9-15）
+            if action_config.get("avoid_dark_week", False) and sanki_info.get("is_dark_week", False):
+                if len(avoid_days) < 5:
+                    avoid_days.append({
+                        "date": check_date.isoformat(),
+                        "weekday": day_name,
+                        "score": score,
+                        "level": day_level,
+                        "reason": "暗黒の一週間（破壊の週），能量低迷期，建議避開"
+                    })
+                continue
+
+            # 檢查羅刹日（凶日，正常情況下不宜重要行動）
+            if action_config.get("avoid_rasetsu", False) and special_day_info and special_day_info.get("type") == "rasetsu":
+                # 凌犯中羅刹日逆轉為吉，不需避開（已被凌犯檢查攔截）
+                if not ryouhan_info:
+                    if len(avoid_days) < 5:
+                        avoid_days.append({
+                            "date": check_date.isoformat(),
+                            "weekday": day_name,
+                            "score": score,
+                            "level": day_level,
+                            "reason": "羅刹日，災厄之日，務必避開"
+                        })
+                    continue
 
             # 檢查避開的關係
             if relation_type in avoid_relations:
