@@ -83,6 +83,7 @@ const {
   gcisResults,
   gcisLoading,
   searchGcis,
+  lookup104CompanyUrl,
 
   // Company Batch Analysis
   companyBatchResult,
@@ -206,7 +207,11 @@ function deletePartner(id: string) {
   confirmDeleteId.value = null
 }
 
-function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
+async function handleSaveCompany(data: { name: string; foundingDate: string; memo?: string; jobUrl?: string }) {
+  if (!data.jobUrl) {
+    const url = await lookup104CompanyUrl(data.name)
+    if (url) data.jobUrl = url
+  }
   addCompany(data)
   fetchCompanyCompatibilities()
   fetchCompanyBatchAnalysis()

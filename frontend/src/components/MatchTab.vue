@@ -1154,16 +1154,16 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                 >
                   <div class="partner-info">
                     <span class="partner-name">
-                      {{ item.name }}
                       <a
                         v-if="item.job_url"
                         :href="item.job_url"
                         target="_blank"
                         rel="noopener"
-                        class="job-link-icon"
-                        title="104 職缺"
+                        class="company-name-link"
+                        title="開啟 104 職缺"
                         @click.stop
-                      ><i class="pi pi-external-link"></i></a>
+                      >{{ item.name }}</a>
+                      <template v-else>{{ item.name }}</template>
                     </span>
                     <span class="partner-mansion">{{ item.compatibility.person2.mansion }}（{{ item.compatibility.person2.reading }}）</span>
                     <span v-if="item.memo" class="partner-memo">{{ item.memo }}</span>
@@ -1179,8 +1179,17 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                       </span>
                     </div>
                   </div>
-                  <div class="partner-score">
+                  <div class="partner-score-area">
                     <span class="score-num">{{ item.compatibility.score }}</span>
+                    <a
+                      v-if="item.job_url"
+                      :href="item.job_url"
+                      target="_blank"
+                      rel="noopener"
+                      class="btn-104"
+                      title="104 職缺"
+                      @click.stop
+                    >104</a>
                   </div>
                 </button>
 
@@ -1282,7 +1291,18 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
               @click="toggleCompany(cc.companyId)"
             >
               <div class="partner-info">
-                <span class="partner-name">{{ cc.companyName }}</span>
+                <span class="partner-name">
+                  <a
+                    v-if="cc.jobUrl"
+                    :href="cc.jobUrl"
+                    target="_blank"
+                    rel="noopener"
+                    class="company-name-link"
+                    title="開啟 104 職缺"
+                    @click.stop
+                  >{{ cc.companyName }}</a>
+                  <template v-else>{{ cc.companyName }}</template>
+                </span>
                 <span class="partner-mansion">{{ cc.mansion.name_jp }}（{{ cc.mansion.reading }}）</span>
               </div>
               <div class="partner-relation">
@@ -1294,8 +1314,17 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                   >{{ getCompanyVerdict(cc.relation).text }}</span>
                 </div>
               </div>
-              <div class="partner-score">
+              <div class="partner-score-area">
                 <span class="score-num">{{ cc.score }}</span>
+                <a
+                  v-if="cc.jobUrl"
+                  :href="cc.jobUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="btn-104"
+                  title="104 職缺"
+                  @click.stop
+                >104</a>
               </div>
             </button>
 
@@ -2334,10 +2363,46 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   white-space: nowrap;
 }
 
-.partner-score .score-num {
+.partner-score .score-num,
+.partner-score-area .score-num {
   font-size: var(--font-xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.partner-score-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-104 {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bg-surface);
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.btn-104:hover {
+  opacity: 0.85;
+}
+
+.company-name-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+}
+
+.company-name-link:hover {
+  color: var(--accent);
 }
 
 .partner-detail {

@@ -1733,6 +1733,23 @@ export function useSukuyodo() {
     }
   }
 
+  async function lookup104CompanyUrl(companyName: string): Promise<string | null> {
+    try {
+      const res = await apiFetch(getApiUrl('/104/company-url'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: companyName }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        return data.data?.job_url || null
+      }
+    } catch {
+      // 查詢失敗不阻斷收藏
+    }
+    return null
+  }
+
   async function fetchCompanyBatchAnalysis() {
     const queryDate = birthDate.value || myBirthDate.value
     if (!queryDate) return
@@ -2046,6 +2063,7 @@ export function useSukuyodo() {
     gcisResults,
     gcisLoading,
     searchGcis,
+    lookup104CompanyUrl,
 
     // Company Batch Analysis
     companyBatchResult,

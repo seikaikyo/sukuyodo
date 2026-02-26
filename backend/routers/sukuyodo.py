@@ -62,6 +62,11 @@ class GcisSearchRequest(BaseModel):
     keyword: str
 
 
+class CompanyUrlLookupRequest(BaseModel):
+    """104 公司頁面連結查詢請求"""
+    company_name: str
+
+
 class LuckyDatesRequest(BaseModel):
     """吉凶日期查詢請求"""
     birth_date: str         # YYYY-MM-DD
@@ -966,6 +971,26 @@ async def gcis_search(req: GcisSearchRequest):
     return {
         "success": True,
         "data": results,
+    }
+
+
+@router.post("/104/company-url")
+async def lookup_104_company_url(req: CompanyUrlLookupRequest):
+    """
+    查詢 104 公司頁面連結
+
+    用公司名稱搜尋 104，回傳公司頁面 URL。
+    找不到時回傳 null，不影響收藏流程。
+    """
+    if len(req.company_name.strip()) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="公司名稱至少 2 個字"
+        )
+    url = await company_search_service.lookup_104_company_url(req.company_name.strip())
+    return {
+        "success": True,
+        "data": {"job_url": url},
     }
 
 
