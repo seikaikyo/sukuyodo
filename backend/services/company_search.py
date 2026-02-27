@@ -147,34 +147,46 @@ class CompanySearchService:
         if not search_name:
             return None
 
+        result = await self._search_104_for_company_url(search_name)
+        if result:
+            return result
+
+        # 104 偵測到純公司名時不回傳職缺（companyKeyword=true）
+        # 附加通用關鍵字繞過此限制
+        return await self._search_104_for_company_url(f"{search_name} 工程師", search_name)
+
+    async def _search_104_for_company_url(
+        self,
+        keyword: str,
+        match_name: str | None = None,
+    ) -> str | None:
+        """用 keyword 查 104，從結果中比對 match_name 取 link.cust"""
+        if match_name is None:
+            match_name = keyword
+
         async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
-            params = {
-                "keyword": search_name,
-                "page": "1",
-            }
+            params = {"keyword": keyword, "page": "1"}
             headers = {
                 **_104_HEADERS,
-                "Referer": f"https://www.104.com.tw/jobs/search/?keyword={quote(search_name)}",
+                "Referer": f"https://www.104.com.tw/jobs/search/?keyword={quote(keyword)}",
             }
             try:
                 resp = await client.get(_104_SEARCH_URL, params=params, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
             except Exception as e:
-                logger.warning("104 公司頁面查詢 %s 失敗: %s", company_name, e)
+                logger.warning("104 查詢 %s 失敗: %s", keyword, e)
                 return None
 
         job_list = data.get("data", [])
         if not job_list:
             return None
 
-        # 找 custName 包含搜尋關鍵字的第一筆
         for job in job_list:
             cust_name = job.get("custName", "").strip()
-            if search_name in cust_name:
+            if match_name in cust_name:
                 cust_url = job.get("link", {}).get("cust", "")
                 if cust_url:
-                    # 104 回傳的 URL 可能不含 protocol
                     if cust_url.startswith("//"):
                         cust_url = f"https:{cust_url}"
                     return cust_url
