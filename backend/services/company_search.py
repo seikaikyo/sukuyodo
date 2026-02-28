@@ -1,5 +1,6 @@
-"""公司自動搜尋服務 - 爬取 104 + GCIS 官方 API，計算宿曜相性"""
+"""公司自動搜尋服務 - 爬取 104 + GCIS 官方 API + 海外公司登記 API，計算宿曜相性"""
 import logging
+import os
 import re
 from datetime import date, timedelta
 from urllib.parse import quote
@@ -39,6 +40,9 @@ AREA_CODES = {
 
 class CompanySearchService:
     """公司搜尋與相性計算服務"""
+
+    def __init__(self):
+        self._founding_date_cache: dict[str, str | None] = {}
 
     async def search_104(
         self,
@@ -110,23 +114,34 @@ class CompanySearchService:
     async def lookup_founding_date(
         self,
         company_name: str,
+        country: str = "tw",
     ) -> str | None:
         """
-        查詢公司設立日期（GCIS 官方 API 優先，findcompany 備援）
+        查詢公司設立日期（依國家選擇資料源）
 
         Args:
             company_name: 公司名稱（全名或關鍵字）
+            country: 國家碼 (tw/jp/us)
 
         Returns:
             設立日期字串 (YYYY-MM-DD) 或 None
         """
-        # 主要：GCIS 經濟部商工登記開放資料 API
-        result = await self._lookup_gcis(company_name)
-        if result:
-            return result
+        cache_key = f"{country}:{company_name}"
+        if cache_key in self._founding_date_cache:
+            return self._founding_date_cache[cache_key]
 
-        # 備援：findcompany.com.tw
-        return await self._lookup_findcompany(company_name)
+        result = None
+        if country == "tw":
+            result = await self._lookup_gcis(company_name)
+            if not result:
+                result = await self._lookup_findcompany(company_name)
+        elif country == "jp":
+            result = await self._lookup_gbizinfo(company_name)
+        elif country == "us":
+            result = await self._lookup_opencorporates(company_name)
+
+        self._founding_date_cache[cache_key] = result
+        return result
 
     async def lookup_104_company_url(self, company_name: str) -> str | None:
         """
@@ -292,6 +307,169 @@ class CompanySearchService:
                 return None
 
         return self._parse_findcompany_date(html)
+
+    async def _lookup_gbizinfo(self, company_name: str) -> str | None:
+        """gBizINFO (經濟産業省) 查詢日本公司設立日"""
+        token = os.environ.get("GBIZINFO_API_TOKEN")
+        if not token:
+            logger.warning("GBIZINFO_API_TOKEN 未設定，無法查詢日本公司")
+            return None
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                resp = await client.get(
+                    "https://info.gbiz.go.jp/hojin/v1/hojin",
+                    params={"name": company_name},
+                    headers={"X-hojinInfo-api-token": token},
+                )
+                if resp.status_code != 200:
+                    logger.warning("gBizINFO 查詢 %s 失敗: HTTP %d", company_name, resp.status_code)
+                    return None
+                data = resp.json()
+            except Exception as e:
+                logger.warning("gBizINFO 查詢 %s 失敗: %s", company_name, e)
+                return None
+
+        items = data.get("hojin-infos", [])
+        if not items:
+            return None
+
+        # 找最符合的結果（名稱包含搜尋字）
+        best = None
+        for item in items:
+            name = item.get("name", "")
+            if company_name in name:
+                best = item
+                break
+        if not best:
+            best = items[0]
+
+        # date_of_establishment 格式可能是 YYYY-MM-DD 或 YYYY/MM/DD
+        estab = best.get("date_of_establishment", "")
+        if estab:
+            estab = estab.replace("/", "-")
+            try:
+                date.fromisoformat(estab)
+                return estab
+            except ValueError:
+                pass
+
+        # fallback: founding_year 只有年份
+        year = best.get("founding_year")
+        if year:
+            return f"{year}-01-01"
+
+        return None
+
+    async def _lookup_opencorporates(self, company_name: str) -> str | None:
+        """OpenCorporates 查詢美國公司 incorporation date (免費 200/月)"""
+        api_key = os.environ.get("OPENCORPORATES_API_KEY")
+        if not api_key:
+            logger.warning("OPENCORPORATES_API_KEY 未設定，無法查詢美國公司")
+            return None
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            try:
+                resp = await client.get(
+                    "https://api.opencorporates.com/v0.4.8/companies/search",
+                    params={
+                        "q": company_name,
+                        "jurisdiction_code": "us",
+                        "api_token": api_key,
+                    },
+                )
+                if resp.status_code != 200:
+                    logger.warning("OpenCorporates 查詢 %s 失敗: HTTP %d", company_name, resp.status_code)
+                    return None
+                data = resp.json()
+            except Exception as e:
+                logger.warning("OpenCorporates 查詢 %s 失敗: %s", company_name, e)
+                return None
+
+        companies = data.get("results", {}).get("companies", [])
+        if not companies:
+            return None
+
+        # 找最符合的結果
+        best = None
+        name_lower = company_name.lower()
+        for entry in companies:
+            c = entry.get("company", {})
+            c_name = c.get("name", "").lower()
+            if name_lower in c_name:
+                best = c
+                break
+        if not best:
+            best = companies[0].get("company", {})
+
+        inc_date = best.get("incorporation_date")
+        if inc_date:
+            try:
+                date.fromisoformat(inc_date)
+                return inc_date
+            except ValueError:
+                pass
+
+        return None
+
+    async def search_global(
+        self,
+        company_name: str,
+        country: str,
+        birth_date: date,
+    ) -> dict | None:
+        """
+        全球公司查詢：查設立日 → 算相性
+
+        Args:
+            company_name: 公司名稱
+            country: 國家碼 (tw/jp/us)
+            birth_date: 使用者生日
+
+        Returns:
+            公司資訊 + 相性結果，或 None
+        """
+        founding_date_str = await self.lookup_founding_date(company_name, country)
+        if not founding_date_str:
+            return None
+
+        try:
+            founding_date = date.fromisoformat(founding_date_str)
+        except ValueError:
+            return None
+
+        try:
+            compat = sukuyodo_service.calculate_compatibility(birth_date, founding_date)
+        except Exception as e:
+            logger.warning("相性計算失敗 %s: %s", company_name, e)
+            return None
+
+        score = compat.get("score", 0)
+        relation = compat.get("relation", {})
+        relation_type = relation.get("type", "")
+        direction = relation.get("direction", "")
+
+        country_labels = {"tw": "台灣", "jp": "日本", "us": "美國"}
+
+        return {
+            "name": company_name,
+            "founding_date": founding_date_str,
+            "country": country,
+            "country_name": country_labels.get(country, country),
+            "source": {"tw": "gcis", "jp": "gbizinfo", "us": "opencorporates"}.get(country, ""),
+            "score": score,
+            "relation_name": relation.get("name", ""),
+            "relation_type": relation_type,
+            "direction": direction,
+            "distance_type": relation.get("distance_type", ""),
+            "distance_type_name": relation.get("distance_type_name", ""),
+            "element_bonus": compat.get("element_bonus", 0),
+            "verdict": self._get_verdict(relation_type, direction, score),
+            "person1_mansion": compat.get("person1", {}).get("mansion", ""),
+            "person1_element": compat.get("person1", {}).get("element", ""),
+            "person2_mansion": compat.get("person2", {}).get("mansion", ""),
+            "person2_element": compat.get("person2", {}).get("element", ""),
+        }
 
     def _parse_findcompany_date(self, html: str) -> str | None:
         """從 findcompany.com.tw HTML 解析設立日期"""

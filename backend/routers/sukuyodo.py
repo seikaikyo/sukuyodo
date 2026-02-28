@@ -57,6 +57,13 @@ class CompanyBatchRequest(BaseModel):
     companies: list[CompanyBatchItem]
 
 
+class GlobalCompanySearchRequest(BaseModel):
+    """全球公司搜尋請求"""
+    company_name: str       # 公司名稱
+    country: str = "tw"     # 國家碼 (tw/jp/us)
+    birth_date: str         # 使用者生日 YYYY-MM-DD
+
+
 class GcisSearchRequest(BaseModel):
     """GCIS 經濟部商工登記搜尋請求"""
     keyword: str
@@ -991,6 +998,71 @@ async def lookup_104_company_url(req: CompanyUrlLookupRequest):
     return {
         "success": True,
         "data": {"job_url": url},
+    }
+
+
+@router.post("/company-search/global")
+async def search_global_company(request: GlobalCompanySearchRequest):
+    """
+    全球公司搜尋（台灣/日本/美國）
+
+    查詢公司設立日期 → 計算宿曜相性。
+    資料源：台灣 GCIS、日本 gBizINFO、美國 OpenCorporates。
+
+    Args:
+        request: 公司名稱、國家碼、使用者生日
+    """
+    try:
+        birth = date.fromisoformat(request.birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth > today:
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    if request.country not in ("tw", "jp", "us"):
+        raise HTTPException(
+            status_code=400,
+            detail="country 須為 tw/jp/us"
+        )
+
+    if len(request.company_name.strip()) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="公司名稱至少 2 個字"
+        )
+
+    result = await company_search_service.search_global(
+        company_name=request.company_name.strip(),
+        country=request.country,
+        birth_date=birth,
+    )
+
+    if not result:
+        api_key_hints = {
+            "jp": "GBIZINFO_API_TOKEN",
+            "us": "OPENCORPORATES_API_KEY",
+        }
+        hint = api_key_hints.get(request.country)
+        error_msg = f"找不到 {request.company_name} 的設立日期"
+        if hint:
+            error_msg += f"（請確認 {hint} 環境變數已設定）"
+
+        return {
+            "success": False,
+            "error": error_msg,
+        }
+
+    return {
+        "success": True,
+        "data": result,
     }
 
 
