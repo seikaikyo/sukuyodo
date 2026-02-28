@@ -35,3 +35,6 @@ report_*.html
 report-*.html
 *保全*.html
 *運勢報告*.html
+
+# Personal notes
+docs/ai-red-team-zh-attack-surface.md
