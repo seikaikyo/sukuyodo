@@ -58,7 +58,7 @@ function getPracticeLevelClass(level: string) {
 }
 
 // 修行者觀 / 世俗觀 切換（永遠預設世俗觀，使用者手動切換）
-const { isPractitioner: profileIsPractitioner } = useProfile()
+useProfile()
 const decadePerspective = ref<'secular' | 'practitioner'>('secular')
 const isPractitioner = computed(() => decadePerspective.value === 'practitioner')
 
