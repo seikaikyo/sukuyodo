@@ -270,17 +270,17 @@ const roleLabels: Record<string, string> = {
 
 // 方向白話解釋
 const directionDesc: Record<string, string> = {
-  '栄': '帶來好運和正能量的一方',
-  '親': '親近感強、主動靠近的一方',
-  '友': '主動給予、照顧的一方',
-  '成': '被借力、提供價值的一方',
-  '命': '本命共鳴',
-  '衰': '被照顧、被影響的一方',
-  '危': '帶來變化和風險的一方',
-  '壊': '破壞既有模式的一方',
-  '安': '被穩定、接受安撫的一方',
-  '胎': '孕育可能性的一方',
-  '業': '因果牽連深的一方'
+  '栄': '受到正面提升和好運',
+  '親': '自然感到親近、被吸引',
+  '友': '主動付出和照顧',
+  '成': '借力成事、互相精進',
+  '命': '本命共鳴、互相牽制',
+  '衰': '被照顧，但容易感到消耗',
+  '危': '面對變動和不確定性',
+  '壊': '既有模式被打破',
+  '安': '得到安定和穩固感',
+  '胎': '感受到未來延續的可能',
+  '業': '感受到深厚的因果牽連'
 }
 
 // 方向配對：direction → 反方向
@@ -682,12 +682,12 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           <div class="direction-row">
             <span class="direction-label">{{ compatibility.person1.mansion }}→{{ compatibility.person2.mansion }}</span>
             <span class="direction-value">{{ compatibility.relation.direction }}</span>
-            <span class="direction-desc">{{ directionDesc[compatibility.relation.direction] || '' }}</span>
+            <span class="direction-desc">{{ compatibility.person1.mansion }}{{ directionDesc[compatibility.relation.direction] || '' }}</span>
           </div>
           <div class="direction-row">
             <span class="direction-label">{{ compatibility.person2.mansion }}→{{ compatibility.person1.mansion }}</span>
             <span class="direction-value">{{ getInverseDirection(compatibility.relation.direction) }}</span>
-            <span class="direction-desc">{{ directionDesc[getInverseDirection(compatibility.relation.direction)] || '' }}</span>
+            <span class="direction-desc">{{ compatibility.person2.mansion }}{{ directionDesc[getInverseDirection(compatibility.relation.direction)] || '' }}</span>
           </div>
         </div>
 
@@ -1042,12 +1042,12 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           <div class="direction-row">
             <span class="direction-label">{{ companyCompat.person1.mansion }}→{{ companyCompat.person2.mansion }}</span>
             <span class="direction-value">{{ companyCompat.relation.direction }}</span>
-            <span class="direction-desc">{{ directionDesc[companyCompat.relation.direction] || '' }}</span>
+            <span class="direction-desc">{{ companyCompat.person1.mansion }}{{ directionDesc[companyCompat.relation.direction] || '' }}</span>
           </div>
           <div class="direction-row">
             <span class="direction-label">{{ companyCompat.person2.mansion }}→{{ companyCompat.person1.mansion }}</span>
             <span class="direction-value">{{ getInverseDirection(companyCompat.relation.direction) }}</span>
-            <span class="direction-desc">{{ directionDesc[getInverseDirection(companyCompat.relation.direction)] || '' }}</span>
+            <span class="direction-desc">{{ companyCompat.person2.mansion }}{{ directionDesc[getInverseDirection(companyCompat.relation.direction)] || '' }}</span>
           </div>
         </div>
 
