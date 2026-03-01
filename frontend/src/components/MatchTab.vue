@@ -691,6 +691,38 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           </div>
         </div>
 
+        <!-- 原典三九秘法 -->
+        <div v-if="compatibility.classical_analysis" class="classical-analysis-box">
+          <div class="classical-header">
+            <h5>原典三九秘法</h5>
+            <span class="classical-source">{{ compatibility.classical_analysis.source }}</span>
+          </div>
+          <div class="classical-directions">
+            <div class="classical-direction">
+              <div class="classical-direction-title">
+                <span>你→對方</span>
+                <span class="classical-position-badge">{{ compatibility.classical_analysis.person1_to_person2.position.full_name }}</span>
+              </div>
+              <blockquote class="classical-sutra">
+                {{ compatibility.classical_analysis.person1_to_person2.sutra.text }}
+                <cite>{{ compatibility.classical_analysis.person1_to_person2.sutra.ref }}</cite>
+              </blockquote>
+              <p class="classical-interpretation">{{ compatibility.classical_analysis.person1_to_person2.interpretation }}</p>
+            </div>
+            <div class="classical-direction">
+              <div class="classical-direction-title">
+                <span>對方→你</span>
+                <span class="classical-position-badge">{{ compatibility.classical_analysis.person2_to_person1.position.full_name }}</span>
+              </div>
+              <blockquote class="classical-sutra">
+                {{ compatibility.classical_analysis.person2_to_person1.sutra.text }}
+                <cite>{{ compatibility.classical_analysis.person2_to_person1.sutra.ref }}</cite>
+              </blockquote>
+              <p class="classical-interpretation">{{ compatibility.classical_analysis.person2_to_person1.interpretation }}</p>
+            </div>
+          </div>
+        </div>
+
         <!-- 元素關係 -->
         <div v-if="compatibility.calculation" class="element-relation-box">
           <span class="element-tag" :style="{ background: elementColors[compatibility.person1.element] }">{{ compatibility.person1.element }}</span>
@@ -1016,6 +1048,38 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
             <span class="direction-label">公司→你</span>
             <span class="direction-value">{{ getInverseDirection(companyCompat.relation.direction) }}</span>
             <span class="direction-desc">{{ directionDesc[getInverseDirection(companyCompat.relation.direction)] || '' }}</span>
+          </div>
+        </div>
+
+        <!-- 原典三九秘法 -->
+        <div v-if="companyCompat.classical_analysis" class="classical-analysis-box">
+          <div class="classical-header">
+            <h5>原典三九秘法</h5>
+            <span class="classical-source">{{ companyCompat.classical_analysis.source }}</span>
+          </div>
+          <div class="classical-directions">
+            <div class="classical-direction">
+              <div class="classical-direction-title">
+                <span>你→公司</span>
+                <span class="classical-position-badge">{{ companyCompat.classical_analysis.person1_to_person2.position.full_name }}</span>
+              </div>
+              <blockquote class="classical-sutra">
+                {{ companyCompat.classical_analysis.person1_to_person2.sutra.text }}
+                <cite>{{ companyCompat.classical_analysis.person1_to_person2.sutra.ref }}</cite>
+              </blockquote>
+              <p class="classical-interpretation">{{ companyCompat.classical_analysis.person1_to_person2.interpretation }}</p>
+            </div>
+            <div class="classical-direction">
+              <div class="classical-direction-title">
+                <span>公司→你</span>
+                <span class="classical-position-badge">{{ companyCompat.classical_analysis.person2_to_person1.position.full_name }}</span>
+              </div>
+              <blockquote class="classical-sutra">
+                {{ companyCompat.classical_analysis.person2_to_person1.sutra.text }}
+                <cite>{{ companyCompat.classical_analysis.person2_to_person1.sutra.ref }}</cite>
+              </blockquote>
+              <p class="classical-interpretation">{{ companyCompat.classical_analysis.person2_to_person1.interpretation }}</p>
+            </div>
           </div>
         </div>
 
@@ -2061,6 +2125,102 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   word-break: break-word;
+}
+
+/* Classical Analysis */
+.classical-analysis-box {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.classical-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.classical-header h5 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-lg);
+  color: var(--stellar-gold);
+}
+
+.classical-source {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+.classical-directions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.classical-direction {
+  padding: var(--space-sm) 0;
+}
+
+.classical-direction + .classical-direction {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-md);
+}
+
+.classical-direction-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.classical-position-badge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  background: var(--stellar-gold);
+  color: var(--text-on-accent);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.classical-sutra {
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 3px solid var(--stellar-gold);
+  background: var(--scroll-cream);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-display);
+  font-size: var(--font-sm);
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.classical-sutra cite {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  font-style: normal;
+}
+
+.classical-interpretation {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--font-sm);
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 767px) {
+  .classical-header {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
 }
 
 /* Element Relation */

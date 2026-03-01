@@ -64,6 +64,80 @@ class SukuyodoService:
         }
     }
 
+    # === 原典三九秘法：位名對照 ===
+    # distance 0-8 = 一九（命行）, 9-17 = 二九（業行）, 18-26 = 三九（胎行）
+    # 各九的起始位不同（命/業/胎），後續 8 位（栄→衰→安→危→成→壊→友→親）共通
+    SANKU_POSITION_NAMES = [
+        "命", "栄", "衰", "安", "危", "成", "壊", "友", "親",  # 一九
+        "業", "栄", "衰", "安", "危", "成", "壊", "友", "親",  # 二九
+        "胎", "栄", "衰", "安", "危", "成", "壊", "友", "親",  # 三九
+    ]
+
+    SANKU_GROUP_NAMES = {
+        1: {"name": "一九（命行）", "reading": "いっく（めいぎょう）", "head": "命"},
+        2: {"name": "二九（業行）", "reading": "にく（ごうぎょう）", "head": "業"},
+        3: {"name": "三九（胎行）", "reading": "さんく（たいぎょう）", "head": "胎"},
+    }
+
+    # 原典經文對照（T21n1299 卷下 各日吉凶詳述 p.397c-398a）
+    CLASSICAL_POSITION_TEXTS = {
+        "命": {
+            "sutra": "命宿日、胎宿日，不宜舉動百事。",
+            "ref": "T21, p.397c",
+            "interpretation": "命宿是本命位置，對方落在此處代表你們如鏡相照，根源相同。經文說命日不宜妄動，暗示這段關係中雙方容易彼此牽制，需以觀照取代衝動。",
+        },
+        "業": {
+            "sutra": "值業宿日，所作善惡亦不成就，甚衰。",
+            "ref": "T21, p.397c",
+            "interpretation": "業宿代表過去累積的因果。對方落在此位，彼此有深厚的業力牽連。經文直言業日做事難成，提醒這段關係中不宜急躁推進，順其自然比強求更好。",
+        },
+        "胎": {
+            "sutra": "命宿日、胎宿日，不宜舉動百事。",
+            "ref": "T21, p.397c",
+            "interpretation": "胎宿代表未來的可能性，帶有來世延續的因緣。與命宿同樣不宜妄動，但胎含孕育之意，靜待時機成熟方可行動。",
+        },
+        "栄": {
+            "sutra": "若榮宿日，即宜入官拜職、對見大人、上書表進獻君王、興營買賣、裁著新衣、沐浴及諸吉事並大吉。",
+            "ref": "T21, p.397c",
+            "interpretation": "栄宿是繁榮興旺之位。對方落在你的栄位，代表此人帶給你好運和提升的能量。經文列舉入官拜職、買賣等諸多吉事，是最適合積極行動的位置。",
+        },
+        "衰": {
+            "sutra": "若衰日，唯宜解除諸惡、療病。",
+            "ref": "T21, p.398a",
+            "interpretation": "衰宿主消退。對方落在你的衰位，與此人相處容易消耗能量。經文指出衰日只適合去除惡事和治療疾病，「唯宜」二字限定了這個位置能做的事非常有限。",
+        },
+        "安": {
+            "sutra": "若安宿日，移徙吉，遠行人入宅、造作園宅、安坐臥床帳、作壇場並吉。",
+            "ref": "T21, p.397c-398a",
+            "interpretation": "安宿主穩定和安居。對方落在你的安位，代表此人帶給你安定感。經文提到遷居、造宅等安頓之事皆吉，這段關係有穩固根基的作用。",
+        },
+        "危": {
+            "sutra": "若危壞日，並不宜遠行出、入移徙、買賣、婚姻、裁衣、剃頭、沐浴並凶。",
+            "ref": "T21, p.398a",
+            "interpretation": "危宿主變動和風險。對方落在你的危位，代表此人會帶來挑戰和不確定性。經文警告諸事不宜，提醒與危位之人互動時需特別謹慎，避免在此關係中做重大決定。",
+        },
+        "成": {
+            "sutra": "若成宿日，宜修道學問、合和長年藥法，作諸成就法並吉。",
+            "ref": "T21, p.398a",
+            "interpretation": "成宿主成就和學習。對方落在你的成位，代表此人是你借力成事的對象。經文提到修道學問、合藥成就，這段關係適合在專業領域互相切磋、共同精進。",
+        },
+        "壊": {
+            "sutra": "若壞日，宜作鎮壓、降伏怨讎及討伐阻壞奸惡之謀，餘並不堪。",
+            "ref": "T21, p.398a",
+            "interpretation": "壊宿主破壞和降伏。對方落在你的壊位，代表此人會打破你的既有模式。經文指出壊日只適合鎮壓降伏，「餘並不堪」四字表明這個位置的能量是一擊式的，做完就沒有了。",
+        },
+        "友": {
+            "sutra": "若友宿日、親宿日，宜結交、定婚姻，歡宴聚會並吉。",
+            "ref": "T21, p.398a",
+            "interpretation": "友宿主交誼和給予。對方落在你的友位，你是這段關係中主動付出的一方。經文明確指出友日適合結交和婚姻，是社交吉位。",
+        },
+        "親": {
+            "sutra": "若友宿日、親宿日，宜結交、定婚姻，歡宴聚會並吉。",
+            "ref": "T21, p.398a",
+            "interpretation": "親宿主親近和吸引。對方落在你的親位，代表此人自然被你吸引。與友宿共用經文，同為社交吉位，差別在於親是接受方、友是給予方。",
+        },
+    }
+
     def __init__(self):
         self._mansions_data = None
         self._relations_data = None
@@ -439,7 +513,59 @@ class SukuyodoService:
             },
             "score": final_score,
             "element_bonus": element_bonus,
-            "summary": self._generate_summary(mansion1, mansion2, relation, final_score)
+            "summary": self._generate_summary(mansion1, mansion2, relation, final_score),
+            "classical_analysis": self.get_classical_analysis(mansion1["index"], mansion2["index"])
+        }
+
+    def get_classical_analysis(self, index1: int, index2: int) -> dict:
+        """取得原典三九秘法分析
+
+        根據 T21n1299《宿曜經》卷下的三九秘法，計算雙方在對方三九法中的位置，
+        引用對應經文並提供白話解讀。
+
+        Args:
+            index1: person1 的宿曜 index (0-26)
+            index2: person2 的宿曜 index (0-26)
+
+        Returns:
+            雙向原典分析結果
+        """
+        def _build_direction_view(source_idx: int, target_idx: int) -> dict:
+            distance = (target_idx - source_idx) % 27
+            position_name = self.SANKU_POSITION_NAMES[distance]
+            group_number = (distance // 9) + 1
+            group_info = self.SANKU_GROUP_NAMES[group_number]
+            position_text = self.CLASSICAL_POSITION_TEXTS[position_name]
+
+            source_mansion = self.mansions_data[source_idx]
+            target_mansion = self.mansions_data[target_idx]
+
+            return {
+                "source_mansion": source_mansion["name_jp"],
+                "target_mansion": target_mansion["name_jp"],
+                "distance": distance,
+                "group": {
+                    "number": group_number,
+                    "name": group_info["name"],
+                    "reading": group_info["reading"],
+                    "head": group_info["head"],
+                },
+                "position": {
+                    "name": position_name,
+                    "index_in_group": distance % 9,
+                    "full_name": f"{group_info['name']}之{position_name}",
+                },
+                "sutra": {
+                    "text": position_text["sutra"],
+                    "ref": position_text["ref"],
+                },
+                "interpretation": position_text["interpretation"],
+            }
+
+        return {
+            "source": "T21n1299 宿曜經 卷下",
+            "person1_to_person2": _build_direction_view(index1, index2),
+            "person2_to_person1": _build_direction_view(index2, index1),
         }
 
     def _get_element_relation(self, elem1: str, elem2: str) -> str:

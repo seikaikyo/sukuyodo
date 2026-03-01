@@ -91,6 +91,22 @@ export interface Calculation {
   element_relation: string
 }
 
+export interface ClassicalDirectionView {
+  source_mansion: string
+  target_mansion: string
+  distance: number
+  group: { number: number; name: string; reading: string; head: string }
+  position: { name: string; index_in_group: number; full_name: string }
+  sutra: { text: string; ref: string }
+  interpretation: string
+}
+
+export interface ClassicalAnalysis {
+  source: string
+  person1_to_person2: ClassicalDirectionView
+  person2_to_person1: ClassicalDirectionView
+}
+
 export interface CompatibilityResult {
   person1: Person
   person2: Person
@@ -99,6 +115,7 @@ export interface CompatibilityResult {
   score: number
   element_bonus: number
   summary: string
+  classical_analysis?: ClassicalAnalysis
 }
 
 export interface FortuneScores {
