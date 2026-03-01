@@ -539,10 +539,20 @@ class SukuyodoService:
 
             source_mansion = self.mansions_data[source_idx]
             target_mansion = self.mansions_data[target_idx]
+            src = source_mansion["name_jp"]
+            tgt = target_mansion["name_jp"]
+
+            # 將白話解讀中的「你/對方/此人」替換為實際宿名
+            interp = position_text["interpretation"]
+            interp = interp.replace("你們", f"{src}與{tgt}")
+            interp = interp.replace("你的", f"{src}的")
+            interp = interp.replace("此人", tgt)
+            interp = interp.replace("對方", tgt)
+            interp = interp.replace("你", src)
 
             return {
-                "source_mansion": source_mansion["name_jp"],
-                "target_mansion": target_mansion["name_jp"],
+                "source_mansion": src,
+                "target_mansion": tgt,
                 "distance": distance,
                 "group": {
                     "number": group_number,
@@ -559,7 +569,7 @@ class SukuyodoService:
                     "text": position_text["sutra"],
                     "ref": position_text["ref"],
                 },
-                "interpretation": position_text["interpretation"],
+                "interpretation": interp,
             }
 
         return {

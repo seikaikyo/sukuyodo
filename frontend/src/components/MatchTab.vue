@@ -680,12 +680,12 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
         <!-- 方向解釋 -->
         <div v-if="compatibility.relation.direction" class="direction-box">
           <div class="direction-row">
-            <span class="direction-label">你→對方</span>
+            <span class="direction-label">{{ compatibility.person1.mansion }}→{{ compatibility.person2.mansion }}</span>
             <span class="direction-value">{{ compatibility.relation.direction }}</span>
             <span class="direction-desc">{{ directionDesc[compatibility.relation.direction] || '' }}</span>
           </div>
           <div class="direction-row">
-            <span class="direction-label">對方→你</span>
+            <span class="direction-label">{{ compatibility.person2.mansion }}→{{ compatibility.person1.mansion }}</span>
             <span class="direction-value">{{ getInverseDirection(compatibility.relation.direction) }}</span>
             <span class="direction-desc">{{ directionDesc[getInverseDirection(compatibility.relation.direction)] || '' }}</span>
           </div>
@@ -700,7 +700,7 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           <div class="classical-directions">
             <div class="classical-direction">
               <div class="classical-direction-title">
-                <span>你→對方</span>
+                <span>{{ compatibility.person1.mansion }}→{{ compatibility.person2.mansion }}</span>
                 <span class="classical-position-badge">{{ compatibility.classical_analysis.person1_to_person2.position.full_name }}</span>
               </div>
               <blockquote class="classical-sutra">
@@ -711,7 +711,7 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
             </div>
             <div class="classical-direction">
               <div class="classical-direction-title">
-                <span>對方→你</span>
+                <span>{{ compatibility.person2.mansion }}→{{ compatibility.person1.mansion }}</span>
                 <span class="classical-position-badge">{{ compatibility.classical_analysis.person2_to_person1.position.full_name }}</span>
               </div>
               <blockquote class="classical-sutra">
@@ -1040,12 +1040,12 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
         <!-- 方向解釋 -->
         <div v-if="companyCompat.relation.direction" class="direction-box">
           <div class="direction-row">
-            <span class="direction-label">你→公司</span>
+            <span class="direction-label">{{ companyCompat.person1.mansion }}→{{ companyCompat.person2.mansion }}</span>
             <span class="direction-value">{{ companyCompat.relation.direction }}</span>
             <span class="direction-desc">{{ directionDesc[companyCompat.relation.direction] || '' }}</span>
           </div>
           <div class="direction-row">
-            <span class="direction-label">公司→你</span>
+            <span class="direction-label">{{ companyCompat.person2.mansion }}→{{ companyCompat.person1.mansion }}</span>
             <span class="direction-value">{{ getInverseDirection(companyCompat.relation.direction) }}</span>
             <span class="direction-desc">{{ directionDesc[getInverseDirection(companyCompat.relation.direction)] || '' }}</span>
           </div>
@@ -1060,7 +1060,7 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           <div class="classical-directions">
             <div class="classical-direction">
               <div class="classical-direction-title">
-                <span>你→公司</span>
+                <span>{{ companyCompat.person1.mansion }}→{{ companyCompat.person2.mansion }}</span>
                 <span class="classical-position-badge">{{ companyCompat.classical_analysis.person1_to_person2.position.full_name }}</span>
               </div>
               <blockquote class="classical-sutra">
@@ -1071,7 +1071,7 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
             </div>
             <div class="classical-direction">
               <div class="classical-direction-title">
-                <span>公司→你</span>
+                <span>{{ companyCompat.person2.mansion }}→{{ companyCompat.person1.mansion }}</span>
                 <span class="classical-position-badge">{{ companyCompat.classical_analysis.person2_to_person1.position.full_name }}</span>
               </div>
               <blockquote class="classical-sutra">
