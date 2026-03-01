@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/proxy/gcis/:path*",
+      "destination": "https://data.gcis.nat.gov.tw/od/data/api/:path*"
+    }
+  ]
+}

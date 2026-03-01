@@ -1715,14 +1715,43 @@ export function useSukuyodo() {
     }
     gcisLoading.value = true
     try {
-      const res = await apiFetch(getApiUrl('/gcis/search'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: keyword.trim() }),
+      // 直接從前端呼叫 GCIS（透過 Vercel proxy 避免 CORS），
+      // 不繞 Render 後端（美國 IP 被 GCIS 擋）
+      const searchName = keyword.trim()
+        .replace('股份有限公司', '')
+        .replace('有限公司', '')
+      const params = new URLSearchParams({
+        '$format': 'json',
+        '$filter': `Company_Name like ${searchName} and Company_Status eq 01`,
+        '$top': '10',
       })
+      const gcisApiId = '6BBA2268-1367-4B42-9CCA-BC17499EBE8C'
+      const res = await fetch(`/proxy/gcis/${gcisApiId}?${params}`)
       if (res.ok) {
-        const data = await res.json()
-        gcisResults.value = data.data || []
+        const raw = await res.json()
+        if (Array.isArray(raw)) {
+          gcisResults.value = raw
+            .map((c: any) => {
+              const d = c.Company_Setup_Date || ''
+              if (d.length !== 7) return null
+              const y = parseInt(d.slice(0, 3), 10) + 1911
+              const m = d.slice(3, 5)
+              const day = d.slice(5, 7)
+              const fd = `${y}-${m}-${day}`
+              // 驗證日期格式
+              if (isNaN(new Date(fd).getTime())) return null
+              return {
+                name: c.Company_Name || '',
+                business_no: c.Business_Accounting_NO || '',
+                founding_date: fd,
+                responsible: c.Responsible_Name || '',
+                capital: c.Capital_Stock_Amount || '0',
+              }
+            })
+            .filter(Boolean)
+        } else {
+          gcisResults.value = []
+        }
       } else {
         gcisResults.value = []
       }
