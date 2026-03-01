@@ -1748,7 +1748,7 @@ export function useSukuyodo() {
                 capital: c.Capital_Stock_Amount || '0',
               }
             })
-            .filter(Boolean)
+            .filter((x): x is NonNullable<typeof x> => x !== null)
         } else {
           gcisResults.value = []
         }
