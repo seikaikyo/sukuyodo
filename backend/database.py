@@ -64,9 +64,10 @@ def init_db():
 
 
 def get_session():
-    """取得同步 Session"""
+    """取得同步 Session（資料庫未設定時回傳 None）"""
     if engine is None:
-        raise RuntimeError("資料庫未設定")
+        yield None
+        return
     with Session(engine) as session:
         yield session
 
