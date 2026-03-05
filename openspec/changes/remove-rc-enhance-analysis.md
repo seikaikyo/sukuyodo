@@ -1,7 +1,7 @@
 ---
 title: 移除 RC 功能 + 強化相性分析白話描述
 type: refactor
-status: in-progress
+status: completed
 created: 2026-03-04
 ---
 

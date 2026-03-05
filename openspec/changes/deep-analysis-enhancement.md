@@ -1,7 +1,7 @@
 ---
 title: 相性分析深度優化
 type: feature
-status: in-progress
+status: completed
 created: 2026-03-04
 ---
 
