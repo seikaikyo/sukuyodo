@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { LuckyDaySummary, LuckyDayCategoryMeta, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult } from '../composables/useSukuyodo'
+import type { LuckyDaySummary, LuckyDayCategoryMeta, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult, LuckyCalendarData, PairLuckyCalendarData } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
 import { getScoreClass, getRating, formatDate, getLocalDateStr } from '../utils/fortune-helpers'
+import LuckyCalendar from './LuckyCalendar.vue'
 
 const props = defineProps<{
   luckyDaySummary: LuckyDaySummary | null
@@ -16,6 +17,10 @@ const props = defineProps<{
   selectedPartnerId: string | null
   pairLuckyDays: PairLuckyDaysResult | null
   pairLuckyDaysLoading: boolean
+  luckyCalendar: LuckyCalendarData | null
+  luckyCalendarLoading: boolean
+  pairLuckyCalendar: PairLuckyCalendarData | null
+  pairLuckyCalendarLoading: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +31,8 @@ const emit = defineEmits<{
   (e: 'fetchSpecialDays', year: number, month: number): void
   (e: 'navigate-knowledge', tab: string): void
   (e: 'toggleCategory', key: string): void
+  (e: 'changeLuckyCalendarMonth', delta: number): void
+  (e: 'changePairCalendarMonth', delta: number): void
 }>()
 
 const { profile, addPartner, updatePartner, removePartner } = useProfile()
@@ -289,15 +296,15 @@ function getSpecialDayAdvice(type: string): string {
           </div>
         </div>
 
-        <!-- 宿曜吉日區塊 -->
-        <div v-if="luckyDaySummary" class="lucky-summary sukuyodo-section">
+        <!-- 宿曜吉日月曆 -->
+        <div class="lucky-summary sukuyodo-section">
           <h3 class="section-title">
             <sl-icon name="stars"></sl-icon>
             宿曜吉日
           </h3>
-          <p class="section-desc">根據您的本命宿計算的個人吉日</p>
+          <p class="section-desc">根據您的本命宿計算的個人吉日，點擊日期查看詳情</p>
 
-          <!-- 分類 chip 列 -->
+          <!-- 分類 chip 列（篩選用） -->
           <div v-if="luckyDayCategories.length > 0" class="category-chips">
             <button
               v-for="cat in luckyDayCategories"
@@ -311,57 +318,18 @@ function getSpecialDayAdvice(type: string): string {
             </button>
           </div>
 
-          <!-- 依分類分組結果 -->
-          <div class="category-list">
-            <div
-              v-for="cat in luckyDaySummary.categories"
-              :key="cat.key"
-              class="category-group"
-            >
-              <h4 class="category-group-title">
-                <sl-icon :name="cat.icon"></sl-icon>
-                {{ cat.name }}
-              </h4>
-
-              <div class="category-actions">
-                <div
-                  v-for="action in cat.actions"
-                  :key="action.key"
-                  class="category-section"
-                >
-                  <h5 class="category-name">{{ action.name }}</h5>
-
-                  <div v-if="action.lucky_days.length > 0" class="day-cards">
-                    <div
-                      v-for="day in action.lucky_days"
-                      :key="day.date"
-                      class="day-card"
-                      :class="getScoreClass(day.score)"
-                    >
-                      <div class="day-card-header">
-                        <span class="chip-date">{{ formatDate(day.date) }}</span>
-                        <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                        <span class="chip-rating">{{ day.rating || getRating(day.score) }}</span>
-                      </div>
-                      <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
-                      <div v-if="day.best_time || day.avoid_time" class="day-times">
-                        <div v-if="day.best_time" class="time-row best">
-                          <span class="time-label">推薦時段</span>
-                          <span class="time-value">{{ day.best_time }}</span>
-                        </div>
-                        <div v-if="day.avoid_time" class="time-row avoid">
-                          <span class="time-label">留意事項</span>
-                          <span class="time-value">{{ day.avoid_time }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-else class="no-lucky-days">
-                    <span>近期無特別吉日</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <LuckyCalendar
+            v-if="luckyCalendar"
+            :days="luckyCalendar.days"
+            :year="luckyCalendar.year"
+            :month="luckyCalendar.month"
+            :loading="luckyCalendarLoading"
+            mode="personal"
+            @change-month="emit('changeLuckyCalendarMonth', $event)"
+          />
+          <div v-else-if="luckyCalendarLoading" class="loading-state small">
+            <sl-spinner></sl-spinner>
+            <span>載入吉日月曆...</span>
           </div>
         </div>
 
@@ -525,44 +493,19 @@ function getSpecialDayAdvice(type: string): string {
               </div>
             </div>
 
-            <!-- 各項吉日 -->
-            <div class="pair-actions">
-              <div
-                v-for="action in pairLuckyDays.actions"
-                :key="action.action"
-                class="action-section"
-              >
-                <h5 class="action-name">{{ action.name }}</h5>
-                <div v-if="action.lucky_days.length > 0" class="day-cards">
-                  <div
-                    v-for="day in action.lucky_days"
-                    :key="day.date"
-                    class="day-card"
-                    :class="getScoreClass(day.score)"
-                  >
-                    <div class="day-card-header">
-                      <span class="chip-date">{{ formatDate(day.date) }}</span>
-                      <span class="chip-weekday">{{ day.weekday?.replace('曜日', '') }}</span>
-                      <span class="pair-day-rating" :class="day.rating === '大吉' ? 'top' : day.rating === '吉' ? 'good' : 'mid'">{{ day.rating || getRating(day.score) }}</span>
-                    </div>
-                    <p v-if="day.reason" class="day-reason">{{ day.reason }}</p>
-                    <div v-if="day.best_time || day.avoid_time" class="day-times">
-                      <div v-if="day.best_time" class="time-row best">
-                        <span class="time-label">推薦時段</span>
-                        <span class="time-value">{{ day.best_time }}</span>
-                      </div>
-                      <div v-if="day.avoid_time" class="time-row avoid">
-                        <span class="time-label">留意事項</span>
-                        <span class="time-value">{{ day.avoid_time }}</span>
-                      </div>
-                    </div>
-                    <p v-if="day.tip" class="pair-day-tip">{{ day.tip }}</p>
-                  </div>
-                </div>
-                <div v-else class="no-lucky-days">
-                  <span>近期無特別吉日</span>
-                </div>
-              </div>
+            <!-- 雙人吉日月曆 -->
+            <LuckyCalendar
+              v-if="pairLuckyCalendar"
+              :days="pairLuckyCalendar.days"
+              :year="pairLuckyCalendar.year"
+              :month="pairLuckyCalendar.month"
+              :loading="pairLuckyCalendarLoading"
+              mode="pair"
+              @change-month="emit('changePairCalendarMonth', $event)"
+            />
+            <div v-else-if="pairLuckyCalendarLoading" class="loading-state small">
+              <sl-spinner></sl-spinner>
+              <span>載入雙人月曆...</span>
             </div>
           </template>
         </div>

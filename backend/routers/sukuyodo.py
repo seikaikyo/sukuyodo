@@ -900,12 +900,130 @@ def get_pair_lucky_days(
     }
 
 
+@router.get("/lucky-days/calendar/{birth_date_str}/{year}/{month}")
+def get_lucky_days_calendar(
+    birth_date_str: str,
+    year: int,
+    month: int,
+    categories: str = "",
+    session: Session = Depends(get_session)
+):
+    """
+    取得整月吉日月曆（個人）
+
+    掃描指定月份每一天，回傳以日期為 key 的吉日地圖。
+
+    Args:
+        birth_date_str: 生日，格式 YYYY-MM-DD
+        year: 年份
+        month: 月份 (1-12)
+        categories: 逗號分隔的分類 key，空值=全部
+    """
+    try:
+        birth_date = date.fromisoformat(birth_date_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    if birth_date > today:
+        raise HTTPException(status_code=400, detail="生日不可為未來日期")
+    if birth_date.year < 1900:
+        raise HTTPException(status_code=400, detail="僅支援 1900 年後的日期")
+    if month < 1 or month > 12:
+        raise HTTPException(status_code=400, detail="月份必須在 1-12 之間")
+    if year < 1900 or year > 2100:
+        raise HTTPException(status_code=400, detail="年份必須在 1900-2100 之間")
+
+    cat_list = [c.strip() for c in categories.split(",") if c.strip()] if categories else None
+
+    try:
+        result = sukuyodo_service.get_lucky_days_calendar(
+            birth_date, year, month, cat_list
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    stats_service.log_usage(session, Features.SUKUYODO_LOOKUP)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
+@router.get("/lucky-days/pair-calendar/{date1}/{date2}/{year}/{month}")
+def get_pair_lucky_days_calendar(
+    date1: str,
+    date2: str,
+    year: int,
+    month: int,
+    relation: str = "friend",
+    session: Session = Depends(get_session)
+):
+    """
+    取得整月雙人吉日月曆
+
+    掃描指定月份每一天，回傳以日期為 key 的吉日地圖，含白話建議。
+
+    Args:
+        date1: 第一人（自己）的生日，格式 YYYY-MM-DD
+        date2: 第二人（收藏對象）的生日，格式 YYYY-MM-DD
+        year: 年份
+        month: 月份 (1-12)
+        relation: 關係類型（dating/spouse/parent/family/friend）
+    """
+    try:
+        birth_date1 = date.fromisoformat(date1)
+        birth_date2 = date.fromisoformat(date2)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    today = date.today()
+    for d in [birth_date1, birth_date2]:
+        if d > today:
+            raise HTTPException(status_code=400, detail="生日不可為未來日期")
+        if d.year < 1900:
+            raise HTTPException(status_code=400, detail="僅支援 1900 年後的日期")
+
+    if month < 1 or month > 12:
+        raise HTTPException(status_code=400, detail="月份必須在 1-12 之間")
+    if year < 1900 or year > 2100:
+        raise HTTPException(status_code=400, detail="年份必須在 1900-2100 之間")
+
+    valid_relations = ["dating", "spouse", "parent", "family", "friend"]
+    if relation not in valid_relations:
+        raise HTTPException(
+            status_code=400,
+            detail=f"無效的關係類型，可用值：{', '.join(valid_relations)}"
+        )
+
+    try:
+        result = sukuyodo_service.get_pair_lucky_days_calendar(
+            birth_date1, birth_date2, relation, year, month
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    stats_service.log_usage(session, Features.SUKUYODO_COMPATIBILITY)
+
+    return {
+        "success": True,
+        "data": result
+    }
+
+
 @router.post("/company-batch-analysis")
 def company_batch_analysis(request: CompanyBatchRequest):
     """
     公司批次分析
 
-    計算每間公司的相性、九曜流年、梯隊排名、RC 風險。
+    計算每間公司的相性、九曜流年、梯隊排名、綜合戰略建議。
     一次呼叫取得所有已收藏公司的綜合決策資訊。
 
     Args:

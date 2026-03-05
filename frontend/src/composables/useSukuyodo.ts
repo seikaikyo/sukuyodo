@@ -107,6 +107,28 @@ export interface ClassicalAnalysis {
   person2_to_person1: ClassicalDirectionView
 }
 
+export interface DirectionAnalysis {
+  direction: string
+  energy_flow: string
+  person1_perspective: string
+  person2_perspective: string
+  career_tip: string
+  inverse_direction: string
+  inverse_meaning: string
+}
+
+export interface PracticalGuidanceDirection {
+  position: string
+  do: string[]
+  avoid: string[]
+  career_advice: string
+}
+
+export interface PracticalGuidance {
+  person1_to_person2: PracticalGuidanceDirection
+  person2_to_person1: PracticalGuidanceDirection
+}
+
 export interface CompatibilityResult {
   person1: Person
   person2: Person
@@ -116,6 +138,8 @@ export interface CompatibilityResult {
   element_bonus: number
   summary: string
   classical_analysis?: ClassicalAnalysis
+  direction_analysis?: DirectionAnalysis
+  practical_guidance?: PracticalGuidance
 }
 
 export interface FortuneScores {
@@ -584,6 +608,58 @@ export interface PairLuckyAction {
   lucky_days: LuckyDay[]
 }
 
+// 吉日月曆型別
+export interface LuckyCalendarDay {
+  category: string
+  category_name: string
+  action: string
+  action_name: string
+  score: number
+  rating: string
+  reason: string
+  best_time?: string
+  avoid_time?: string
+  tip?: string
+  advice?: {
+    summary: string
+    do: string[]
+    avoid: string[]
+  }
+}
+
+export interface LuckyCalendarData {
+  year: number
+  month: number
+  your_mansion: {
+    name_jp: string
+    reading: string
+    element: string
+    index: number
+  }
+  days: Record<string, LuckyCalendarDay[]>
+}
+
+export interface PairLuckyCalendarData {
+  year: number
+  month: number
+  person1: {
+    mansion: string
+    reading: string
+    element: string
+  }
+  person2: {
+    mansion: string
+    reading: string
+    element: string
+  }
+  compatibility: {
+    relation: string
+    score: number
+    description: string
+  }
+  days: Record<string, LuckyCalendarDay[]>
+}
+
 // 日本選日曆注型別
 export interface JapaneseLuckyDay {
   date: string
@@ -858,12 +934,6 @@ export interface CompanyTier {
   reason: string
 }
 
-export interface CompanyRefCheck {
-  risk_level: 'high' | 'medium' | 'low'
-  risk_label: string
-  reason: string
-}
-
 export interface CompanyRecommendation {
   priority: number
   summary: string
@@ -895,10 +965,25 @@ export interface CompanyAnalysisItem {
   }
   company_fortune: CompanyFortuneInfo
   tier: CompanyTier
-  ref_check: CompanyRefCheck
   recommendation: CompanyRecommendation
   memo: string
   job_url: string
+}
+
+export interface StrategicCategory {
+  name: string
+  reason: string
+}
+
+export interface StrategicSummary {
+  top_pick: StrategicCategory | null
+  categories: {
+    best_match: StrategicCategory[]
+    growth_potential: StrategicCategory[]
+    safe_bet: StrategicCategory[]
+    watch_out: StrategicCategory[]
+  }
+  direction_insight: string
 }
 
 export interface CompanyBatchResult {
@@ -918,6 +1003,7 @@ export interface CompanyBatchResult {
     tier_3: number
     tier_4: number
   }
+  strategic_summary?: StrategicSummary
 }
 
 // ============================================================================
@@ -1061,6 +1147,16 @@ export function useSukuyodo() {
   const pairLuckyDays = ref<PairLuckyDaysResult | null>(null)
   const pairLuckyDaysLoading = ref(false)
 
+  // Lucky Calendar (吉日月曆)
+  const luckyCalendar = ref<LuckyCalendarData | null>(null)
+  const luckyCalendarLoading = ref(false)
+  const luckyCalendarYear = ref(new Date().getFullYear())
+  const luckyCalendarMonth = ref(new Date().getMonth() + 1)
+  const pairLuckyCalendar = ref<PairLuckyCalendarData | null>(null)
+  const pairLuckyCalendarLoading = ref(false)
+  const pairCalendarYear = ref(new Date().getFullYear())
+  const pairCalendarMonth = ref(new Date().getMonth() + 1)
+
   // Japanese Calendar (選日曆注)
   const japaneseCalendar = ref<JapaneseCalendarResult | null>(null)
   const japaneseCalendarLoading = ref(false)
@@ -1134,6 +1230,7 @@ export function useSukuyodo() {
           fetchCompatibleMansions()
           fetchAllFortunes()
           fetchLuckyDaySummary()
+          fetchLuckyCalendar()
           fetchJapaneseCalendar()
           fetchSpecialDays()
           fetchCalendarMonth()
@@ -1500,6 +1597,87 @@ export function useSukuyodo() {
   function clearPairSelection() {
     selectedPartnerId.value = null
     pairLuckyDays.value = null
+    pairLuckyCalendar.value = null
+  }
+
+  async function fetchLuckyCalendar(year?: number, month?: number) {
+    const queryDate = birthDate.value || myBirthDate.value
+    if (!queryDate) return
+
+    const targetYear = year ?? luckyCalendarYear.value
+    const targetMonth = month ?? luckyCalendarMonth.value
+
+    luckyCalendarLoading.value = true
+    luckyCalendar.value = null
+
+    const cats = profile.value.luckyDayCategories
+    const catParam = cats.length > 0 ? `?categories=${cats.join(',')}` : ''
+
+    try {
+      const res = await apiFetch(
+        getApiUrl(`/lucky-days/calendar/${queryDate}/${targetYear}/${targetMonth}${catParam}`)
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          luckyCalendar.value = data.data
+          luckyCalendarYear.value = targetYear
+          luckyCalendarMonth.value = targetMonth
+        }
+      }
+    } catch {
+      console.error('Failed to fetch lucky calendar')
+    } finally {
+      luckyCalendarLoading.value = false
+    }
+  }
+
+  function changeLuckyCalendarMonth(delta: number) {
+    let y = luckyCalendarYear.value
+    let m = luckyCalendarMonth.value + delta
+    if (m < 1) { m = 12; y-- }
+    if (m > 12) { m = 1; y++ }
+    fetchLuckyCalendar(y, m)
+  }
+
+  async function fetchPairLuckyCalendar(partnerId: string, year?: number, month?: number) {
+    const myDate = birthDate.value || myBirthDate.value
+    if (!myDate) return
+
+    const partner = profile.value.partners.find(p => p.id === partnerId)
+    if (!partner || !partner.birthDate) return
+
+    const targetYear = year ?? pairCalendarYear.value
+    const targetMonth = month ?? pairCalendarMonth.value
+
+    pairLuckyCalendarLoading.value = true
+    pairLuckyCalendar.value = null
+
+    try {
+      const res = await apiFetch(
+        getApiUrl(`/lucky-days/pair-calendar/${myDate}/${partner.birthDate}/${targetYear}/${targetMonth}?relation=${partner.relation}`)
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          pairLuckyCalendar.value = data.data
+          pairCalendarYear.value = targetYear
+          pairCalendarMonth.value = targetMonth
+        }
+      }
+    } catch {
+      console.error('Failed to fetch pair lucky calendar')
+    } finally {
+      pairLuckyCalendarLoading.value = false
+    }
+  }
+
+  function changePairCalendarMonth(partnerId: string, delta: number) {
+    let y = pairCalendarYear.value
+    let m = pairCalendarMonth.value + delta
+    if (m < 1) { m = 12; y-- }
+    if (m > 12) { m = 1; y++ }
+    fetchPairLuckyCalendar(partnerId, y, m)
   }
 
   async function calculateCompatibility() {
@@ -2137,6 +2315,10 @@ export function useSukuyodo() {
     selectedPartnerId,
     pairLuckyDays,
     pairLuckyDaysLoading,
+    luckyCalendar,
+    luckyCalendarLoading,
+    pairLuckyCalendar,
+    pairLuckyCalendarLoading,
 
     // Calendar
     calendarData,
@@ -2162,6 +2344,10 @@ export function useSukuyodo() {
     fetchSpecialDays,
     fetchPairLuckyDays,
     clearPairSelection,
+    fetchLuckyCalendar,
+    changeLuckyCalendarMonth,
+    fetchPairLuckyCalendar,
+    changePairCalendarMonth,
     calculateCompatibility,
     calculateCompanyCompatibility,
     fetchCompanyCompatibilities,

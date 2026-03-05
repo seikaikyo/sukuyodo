@@ -454,15 +454,6 @@ function getKuyouLevelClass(level: string): string {
   }
 }
 
-// RC 風險 CSS class
-function getRefCheckClass(riskLevel: string): string {
-  switch (riskLevel) {
-    case 'high': return 'rc-high'
-    case 'medium': return 'rc-medium'
-    case 'low': return 'rc-low'
-    default: return ''
-  }
-}
 
 function getCompanyVerdict(relation: Relation): CompanyVerdict {
   const type = relation.type
@@ -691,6 +682,31 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           </div>
         </div>
 
+        <!-- 方向深度分析 -->
+        <div v-if="compatibility.direction_analysis" class="direction-deep-box">
+          <div class="direction-deep-header">
+            <h5>能量流動分析</h5>
+          </div>
+          <div class="energy-flow-row">
+            <span class="energy-flow-icon">{{ compatibility.direction_analysis.direction }}</span>
+            <span class="energy-flow-text">{{ compatibility.direction_analysis.energy_flow }}</span>
+          </div>
+          <div class="perspective-cards">
+            <div class="perspective-card">
+              <span class="perspective-label">{{ compatibility.person1.mansion }} 視角</span>
+              <p>{{ compatibility.direction_analysis.person1_perspective }}</p>
+            </div>
+            <div class="perspective-card">
+              <span class="perspective-label">{{ compatibility.person2.mansion }} 視角</span>
+              <p>{{ compatibility.direction_analysis.person2_perspective }}</p>
+            </div>
+          </div>
+          <div class="career-tip-highlight">
+            <span class="career-tip-label">職場建議</span>
+            <span>{{ compatibility.direction_analysis.career_tip }}</span>
+          </div>
+        </div>
+
         <!-- 原典三九秘法 -->
         <div v-if="compatibility.classical_analysis" class="classical-analysis-box">
           <div class="classical-header">
@@ -719,6 +735,51 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                 <cite>{{ compatibility.classical_analysis.person2_to_person1.sutra.ref }}</cite>
               </blockquote>
               <p class="classical-interpretation">{{ compatibility.classical_analysis.person2_to_person1.interpretation }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 經文實用行動建議 -->
+        <div v-if="compatibility.practical_guidance" class="practical-guidance-box">
+          <div class="practical-guidance-header">
+            <h5>行動建議</h5>
+          </div>
+          <div class="guidance-directions">
+            <div class="guidance-direction">
+              <span class="guidance-direction-label">{{ compatibility.person1.mansion }}→{{ compatibility.person2.mansion }}（{{ compatibility.practical_guidance.person1_to_person2.position }}）</span>
+              <div class="guidance-lists">
+                <div class="guidance-do">
+                  <span class="guidance-list-label">宜</span>
+                  <ul>
+                    <li v-for="item in compatibility.practical_guidance.person1_to_person2.do" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="guidance-avoid">
+                  <span class="guidance-list-label">忌</span>
+                  <ul>
+                    <li v-for="item in compatibility.practical_guidance.person1_to_person2.avoid" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="guidance-career">{{ compatibility.practical_guidance.person1_to_person2.career_advice }}</p>
+            </div>
+            <div class="guidance-direction">
+              <span class="guidance-direction-label">{{ compatibility.person2.mansion }}→{{ compatibility.person1.mansion }}（{{ compatibility.practical_guidance.person2_to_person1.position }}）</span>
+              <div class="guidance-lists">
+                <div class="guidance-do">
+                  <span class="guidance-list-label">宜</span>
+                  <ul>
+                    <li v-for="item in compatibility.practical_guidance.person2_to_person1.do" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="guidance-avoid">
+                  <span class="guidance-list-label">忌</span>
+                  <ul>
+                    <li v-for="item in compatibility.practical_guidance.person2_to_person1.avoid" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="guidance-career">{{ compatibility.practical_guidance.person2_to_person1.career_advice }}</p>
             </div>
           </div>
         </div>
@@ -1051,6 +1112,31 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           </div>
         </div>
 
+        <!-- 方向深度分析 -->
+        <div v-if="companyCompat.direction_analysis" class="direction-deep-box">
+          <div class="direction-deep-header">
+            <h5>能量流動分析</h5>
+          </div>
+          <div class="energy-flow-row">
+            <span class="energy-flow-icon">{{ companyCompat.direction_analysis.direction }}</span>
+            <span class="energy-flow-text">{{ companyCompat.direction_analysis.energy_flow }}</span>
+          </div>
+          <div class="perspective-cards">
+            <div class="perspective-card">
+              <span class="perspective-label">{{ companyCompat.person1.mansion }} 視角</span>
+              <p>{{ companyCompat.direction_analysis.person1_perspective }}</p>
+            </div>
+            <div class="perspective-card">
+              <span class="perspective-label">{{ companyCompat.person2.mansion }} 視角</span>
+              <p>{{ companyCompat.direction_analysis.person2_perspective }}</p>
+            </div>
+          </div>
+          <div class="career-tip-highlight">
+            <span class="career-tip-label">職場建議</span>
+            <span>{{ companyCompat.direction_analysis.career_tip }}</span>
+          </div>
+        </div>
+
         <!-- 原典三九秘法 -->
         <div v-if="companyCompat.classical_analysis" class="classical-analysis-box">
           <div class="classical-header">
@@ -1079,6 +1165,51 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                 <cite>{{ companyCompat.classical_analysis.person2_to_person1.sutra.ref }}</cite>
               </blockquote>
               <p class="classical-interpretation">{{ companyCompat.classical_analysis.person2_to_person1.interpretation }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 經文實用行動建議 -->
+        <div v-if="companyCompat.practical_guidance" class="practical-guidance-box">
+          <div class="practical-guidance-header">
+            <h5>行動建議</h5>
+          </div>
+          <div class="guidance-directions">
+            <div class="guidance-direction">
+              <span class="guidance-direction-label">{{ companyCompat.person1.mansion }}→{{ companyCompat.person2.mansion }}（{{ companyCompat.practical_guidance.person1_to_person2.position }}）</span>
+              <div class="guidance-lists">
+                <div class="guidance-do">
+                  <span class="guidance-list-label">宜</span>
+                  <ul>
+                    <li v-for="item in companyCompat.practical_guidance.person1_to_person2.do" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="guidance-avoid">
+                  <span class="guidance-list-label">忌</span>
+                  <ul>
+                    <li v-for="item in companyCompat.practical_guidance.person1_to_person2.avoid" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="guidance-career">{{ companyCompat.practical_guidance.person1_to_person2.career_advice }}</p>
+            </div>
+            <div class="guidance-direction">
+              <span class="guidance-direction-label">{{ companyCompat.person2.mansion }}→{{ companyCompat.person1.mansion }}（{{ companyCompat.practical_guidance.person2_to_person1.position }}）</span>
+              <div class="guidance-lists">
+                <div class="guidance-do">
+                  <span class="guidance-list-label">宜</span>
+                  <ul>
+                    <li v-for="item in companyCompat.practical_guidance.person2_to_person1.do" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+                <div class="guidance-avoid">
+                  <span class="guidance-list-label">忌</span>
+                  <ul>
+                    <li v-for="item in companyCompat.practical_guidance.person2_to_person1.avoid" :key="item">{{ item }}</li>
+                  </ul>
+                </div>
+              </div>
+              <p class="guidance-career">{{ companyCompat.practical_guidance.person2_to_person1.career_advice }}</p>
             </div>
           </div>
         </div>
@@ -1197,6 +1328,55 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
           </span>
         </div>
 
+        <!-- 綜合戰略建議 -->
+        <div v-if="currentBatchResult.strategic_summary" class="strategic-summary-section">
+          <h4 class="strategic-summary-title">綜合戰略分析</h4>
+
+          <!-- 首選推薦 -->
+          <div v-if="currentBatchResult.strategic_summary.top_pick" class="top-pick-card">
+            <span class="top-pick-label">首選推薦</span>
+            <span class="top-pick-name">{{ currentBatchResult.strategic_summary.top_pick.name }}</span>
+            <span class="top-pick-reason">{{ currentBatchResult.strategic_summary.top_pick.reason }}</span>
+          </div>
+
+          <!-- 分類卡片 -->
+          <div class="strategy-categories">
+            <div v-if="currentBatchResult.strategic_summary.categories.best_match.length > 0" class="strategy-category best-match">
+              <span class="category-label">最佳匹配</span>
+              <div v-for="item in currentBatchResult.strategic_summary.categories.best_match" :key="item.name" class="category-item">
+                <span class="category-item-name">{{ item.name }}</span>
+                <span class="category-item-reason">{{ item.reason }}</span>
+              </div>
+            </div>
+            <div v-if="currentBatchResult.strategic_summary.categories.growth_potential.length > 0" class="strategy-category growth-potential">
+              <span class="category-label">潛力成長</span>
+              <div v-for="item in currentBatchResult.strategic_summary.categories.growth_potential" :key="item.name" class="category-item">
+                <span class="category-item-name">{{ item.name }}</span>
+                <span class="category-item-reason">{{ item.reason }}</span>
+              </div>
+            </div>
+            <div v-if="currentBatchResult.strategic_summary.categories.safe_bet.length > 0" class="strategy-category safe-bet">
+              <span class="category-label">穩健選擇</span>
+              <div v-for="item in currentBatchResult.strategic_summary.categories.safe_bet" :key="item.name" class="category-item">
+                <span class="category-item-name">{{ item.name }}</span>
+                <span class="category-item-reason">{{ item.reason }}</span>
+              </div>
+            </div>
+            <div v-if="currentBatchResult.strategic_summary.categories.watch_out.length > 0" class="strategy-category watch-out">
+              <span class="category-label">需留意</span>
+              <div v-for="item in currentBatchResult.strategic_summary.categories.watch_out" :key="item.name" class="category-item">
+                <span class="category-item-name">{{ item.name }}</span>
+                <span class="category-item-reason">{{ item.reason }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 方向洞察 -->
+          <p v-if="currentBatchResult.strategic_summary.direction_insight" class="direction-insight">
+            {{ currentBatchResult.strategic_summary.direction_insight }}
+          </p>
+        </div>
+
         <!-- 按梯隊分組顯示 -->
         <template v-for="tierNum in [1, 2, 3, 4]" :key="tierNum">
           <div v-if="getCompaniesByTier(tierNum).length > 0" class="tier-group">
@@ -1238,9 +1418,6 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                       <span class="kuyou-badge-sm" :class="getKuyouLevelClass(item.company_fortune.kuyou_star.level)">
                         {{ item.company_fortune.kuyou_star.level }}
                       </span>
-                      <span class="rc-badge-sm" :class="getRefCheckClass(item.ref_check.risk_level)">
-                        RC{{ item.ref_check.risk_label }}
-                      </span>
                     </div>
                   </div>
                   <div class="partner-score-area">
@@ -1274,15 +1451,6 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
                       <span class="fortune-score">整體 {{ item.company_fortune.overall }}</span>
                       <span class="fortune-score">事業 {{ item.company_fortune.career }}</span>
                     </div>
-                  </div>
-
-                  <!-- RC 風險說明 -->
-                  <div class="rc-detail-box">
-                    <h5>Reference Check</h5>
-                    <span class="rc-badge" :class="getRefCheckClass(item.ref_check.risk_level)">
-                      {{ item.ref_check.risk_label }}風險
-                    </span>
-                    <span class="rc-reason">{{ item.ref_check.reason }}</span>
                   </div>
 
                   <!-- Action Items -->
@@ -2220,6 +2388,340 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   .classical-header {
     flex-direction: column;
     gap: var(--space-xs);
+  }
+}
+
+/* Direction Deep Analysis */
+.direction-deep-box {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.direction-deep-header h5 {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--font-lg);
+  color: var(--stellar-gold);
+}
+
+.energy-flow-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+}
+
+.energy-flow-icon {
+  font-size: var(--font-xl);
+  font-weight: 700;
+  color: var(--stellar-gold);
+}
+
+.energy-flow-text {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+.perspective-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.perspective-card {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.perspective-label {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
+}
+
+.perspective-card p {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.career-tip-highlight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: color-mix(in srgb, var(--stellar) 10%, transparent);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--stellar);
+}
+
+.career-tip-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--stellar);
+  white-space: nowrap;
+}
+
+.career-tip-highlight > span:last-child {
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+@media (max-width: 767px) {
+  .perspective-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Practical Guidance */
+.practical-guidance-box {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.practical-guidance-header h5 {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-display);
+  font-size: var(--font-lg);
+  color: var(--stellar-gold);
+}
+
+.guidance-directions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.guidance-direction {
+  padding: var(--space-sm) 0;
+}
+
+.guidance-direction + .guidance-direction {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-md);
+}
+
+.guidance-direction-label {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.guidance-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.guidance-do,
+.guidance-avoid {
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+}
+
+.guidance-do {
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.guidance-avoid {
+  background: color-mix(in srgb, var(--warning) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.guidance-list-label {
+  display: block;
+  font-size: var(--font-xs);
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.guidance-do .guidance-list-label {
+  color: var(--success);
+}
+
+.guidance-avoid .guidance-list-label {
+  color: var(--warning);
+}
+
+.guidance-do ul,
+.guidance-avoid ul {
+  margin: 0;
+  padding-left: var(--space-md);
+  font-size: var(--font-sm);
+  color: var(--text-primary);
+}
+
+.guidance-do li,
+.guidance-avoid li {
+  margin-bottom: 2px;
+}
+
+.guidance-career {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (max-width: 767px) {
+  .guidance-lists {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Strategic Summary */
+.strategic-summary-section {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+}
+
+.strategic-summary-title {
+  font-family: var(--font-display);
+  font-size: var(--font-xl);
+  color: var(--stellar-gold);
+  margin: 0 0 var(--space-lg);
+}
+
+.top-pick-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: color-mix(in srgb, var(--stellar) 10%, transparent);
+  border: 1px solid var(--stellar);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.top-pick-label {
+  font-size: var(--font-xs);
+  font-weight: 700;
+  color: var(--text-on-accent);
+  background: var(--stellar);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.top-pick-name {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.top-pick-reason {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+}
+
+.strategy-categories {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.strategy-category {
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.strategy-category.best-match {
+  background: color-mix(in srgb, var(--stellar) 5%, transparent);
+  border-color: color-mix(in srgb, var(--stellar) 30%, transparent);
+}
+
+.strategy-category.growth-potential {
+  background: color-mix(in srgb, var(--success) 5%, transparent);
+  border-color: color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.strategy-category.safe-bet {
+  background: color-mix(in srgb, var(--caution) 5%, transparent);
+  border-color: color-mix(in srgb, var(--caution) 30%, transparent);
+}
+
+.strategy-category.watch-out {
+  background: color-mix(in srgb, var(--warning) 5%, transparent);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.category-label {
+  display: block;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  margin-bottom: var(--space-sm);
+}
+
+.best-match .category-label { color: var(--stellar); }
+.growth-potential .category-label { color: var(--success); }
+.safe-bet .category-label { color: var(--caution); }
+.watch-out .category-label { color: var(--warning); }
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-xs) 0;
+}
+
+.category-item + .category-item {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-xs);
+}
+
+.category-item-name {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.category-item-reason {
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
+}
+
+.direction-insight {
+  margin: 0;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-base);
+  border-radius: var(--radius-sm);
+  line-height: 1.6;
+}
+
+@media (max-width: 767px) {
+  .strategy-categories {
+    grid-template-columns: 1fr;
+  }
+  .top-pick-card {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -3297,28 +3799,6 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   margin-top: 2px;
 }
 
-.rc-badge-sm {
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.rc-high {
-  background: var(--warning);
-  color: var(--text-on-accent);
-}
-
-.rc-medium {
-  background: var(--caution);
-  color: var(--bg-primary);
-}
-
-.rc-low {
-  background: var(--info);
-  color: var(--text-on-accent);
-}
-
 .recommendation-box {
   display: flex;
   align-items: center;
@@ -3366,37 +3846,6 @@ function getCompanyVerdict(relation: Relation): CompanyVerdict {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-}
-
-.rc-detail-box {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--bg-elevated);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.rc-detail-box h5 {
-  font-size: var(--font-sm);
-  color: var(--accent);
-  margin: 0;
-  white-space: nowrap;
-}
-
-.rc-badge {
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.rc-reason {
-  font-size: var(--font-sm);
-  color: var(--text-secondary);
 }
 
 .action-items {

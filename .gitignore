@@ -38,3 +38,5 @@ report-*.html
 
 # Personal notes
 docs/ai-red-team-zh-attack-surface.md
+.vercel
+.env*.local

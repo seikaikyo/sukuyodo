@@ -582,7 +582,7 @@ class CompanySearchService:
         companies: list[dict],
     ) -> dict:
         """
-        批次分析公司：相性 + 公司流年 + 梯隊排名 + RC 風險
+        批次分析公司：相性 + 公司流年 + 梯隊排名 + 綜合戰略
 
         Args:
             birth_date: 使用者生日
@@ -633,13 +633,11 @@ class CompanySearchService:
             # 梯隊
             tier = self._calculate_tier(score, company_level, relation_type, direction)
 
-            # RC 風險
             memo = company.get("memo", "")
-            ref_check = self._estimate_ref_check(company.get("name", ""), memo)
 
             # 投遞建議
             recommendation = self._build_recommendation(
-                tier, ref_check, score, company_level, relation_type, direction
+                tier, score, company_level, relation_type, direction
             )
 
             results.append({
@@ -652,7 +650,6 @@ class CompanySearchService:
                 },
                 "company_fortune": company_fortune,
                 "tier": tier,
-                "ref_check": ref_check,
                 "recommendation": recommendation,
                 "memo": memo,
                 "job_url": company.get("job_url", ""),
@@ -682,6 +679,159 @@ class CompanySearchService:
             },
             "companies": results,
             "tier_summary": tier_summary,
+            "strategic_summary": self._build_strategic_summary(results, user_yearly),
+        }
+
+    def _build_strategic_summary(self, results: list, user_yearly: dict) -> dict:
+        """跨公司綜合戰略建議
+
+        根據所有公司的相性、梯隊、流年等綜合資料，產出策略性總結。
+
+        Args:
+            results: 已排序的公司分析結果列表
+            user_yearly: 使用者流年資料
+
+        Returns:
+            首選推薦、分類建議、方向洞察
+        """
+        if not results:
+            return {"top_pick": None, "categories": {}, "direction_insight": ""}
+
+        # 分類邏輯
+        best_match = []
+        growth_potential = []
+        safe_bet = []
+        watch_out = []
+
+        # 方向白話對照
+        direction_desc = {
+            "栄": "對方帶給你好運和提升",
+            "親": "對方自然親近你、合作意願高",
+            "衰": "你在關係中能量會被消耗",
+            "友": "你會主動付出照顧對方",
+            "安": "對方給你穩定感和安全感",
+            "壊": "對方會打破你的既有模式",
+            "危": "對方帶來風險和挑戰",
+            "成": "對方幫你在專業領域成事",
+            "命": "你們本質相同，互為鏡像",
+            "業": "前世因果的牽引，業力推動事情自然成形",
+            "胎": "未來潛力的萌發，長遠有發展空間",
+        }
+
+        for r in results:
+            name = r.get("name", "")
+            score = r["compatibility"]["score"]
+            relation = r["compatibility"]["relation"]
+            rel_type = relation.get("type", "")
+            direction = relation.get("direction", "")
+            company_level = r.get("company_fortune", {}).get("kuyou_star", {}).get("level", "")
+            rel_name = relation.get("name", "")
+            dir_text = direction_desc.get(direction, "")
+
+            # 最佳匹配：栄親 or score >= 85
+            if rel_type == "eishin" or score >= 85:
+                reason = f"{rel_name}（{score}分）— {dir_text}"
+                if company_level in ("大吉", "半吉"):
+                    reason += f"，加上公司今年流年{company_level}，時機很好"
+                best_match.append({"name": name, "reason": reason})
+
+            # 潛力成長：業胎/命
+            elif rel_type in ("gyotai", "mei"):
+                if rel_type == "gyotai":
+                    if direction == "業":
+                        reason = f"{rel_name}（{score}分）— 你跟這間公司有前世累積的因緣，業力會推著事情往前走，不需要刻意經營也會有進展"
+                    else:
+                        reason = f"{rel_name}（{score}分）— 你在對方眼中帶有未來可能性，短期效果未必明顯，但長遠來看有發展潛力"
+                else:
+                    reason = f"{rel_name}（{score}分）— 你跟這間公司本質相似，進去會有似曾相識的感覺，適合當長期夥伴但要注意分工"
+                growth_potential.append({"name": name, "reason": reason})
+
+            # 穩健選擇：score 60-84
+            elif 60 <= score < 85:
+                reason = f"{rel_name}（{score}分）— {dir_text}"
+                if direction == "友":
+                    reason += "，你會比較辛苦但投入的心力會轉化成人脈"
+                elif direction == "衰":
+                    reason += "，適合短期合作而非長期發展"
+                elif direction == "成":
+                    reason += "，適合在專業技術領域深度合作"
+                safe_bet.append({"name": name, "reason": reason})
+
+            # 需留意：score < 60
+            else:
+                reason = f"{rel_name}（{score}分）— {dir_text}"
+                if direction == "壊":
+                    reason += "。衝擊力強，入職後環境會大幅改變你的工作模式，要有心理準備"
+                elif direction == "危":
+                    reason += "。不確定性高，重大決定前務必三思"
+                elif direction == "衰":
+                    reason += "。長期下來你的能量會被持續消耗"
+                watch_out.append({"name": name, "reason": reason})
+
+        # 首選推薦：取第一名（已按梯隊+分數排序）
+        top = results[0]
+        top_relation = top["compatibility"]["relation"]
+        top_direction = top_relation.get("direction", "")
+        top_score = top["compatibility"]["score"]
+        top_rel_name = top_relation.get("name", "")
+        top_dir_text = direction_desc.get(top_direction, "")
+        top_company_level = top.get("company_fortune", {}).get("kuyou_star", {}).get("level", "")
+
+        top_reason = f"{top_rel_name}・第{top['tier']['rank']}梯隊・{top_score}分 — {top_dir_text}"
+        if top_company_level:
+            top_reason += f"，公司今年流年{top_company_level}"
+
+        top_pick = {
+            "name": top.get("name", ""),
+            "reason": top_reason,
+        }
+
+        # 方向洞察：根據使用者本命宿和流年
+        user_mansion = user_yearly.get("your_mansion", {})
+        user_element = user_mansion.get("element", "")
+        user_mansion_name = user_mansion.get("name_jp", "")
+        user_kuyou = user_yearly.get("kuyou_star", {})
+        user_level = user_kuyou.get("level", "")
+        user_star = user_kuyou.get("name", "")
+
+        insight_parts = []
+        if user_element and user_mansion_name:
+            insight_parts.append(f"你的本命宿是{user_mansion_name}（{user_element}屬性）")
+        if user_star and user_level:
+            insight_parts.append(f"今年走{user_star}，運勢等級{user_level}")
+
+        # 統計栄親數量
+        eishin_count = sum(1 for r in results if r["compatibility"]["relation"].get("type") == "eishin")
+        total = len(results)
+        if eishin_count > 0:
+            insight_parts.append(
+                f"投遞的 {total} 間公司中有 {eishin_count} 間是栄親關係，整體組合相當不錯"
+            )
+
+        # 統計各方向分佈
+        dir_counts = {}
+        for r in results:
+            d = r["compatibility"]["relation"].get("direction", "")
+            if d:
+                dir_counts[d] = dir_counts.get(d, 0) + 1
+        if dir_counts:
+            dominant = max(dir_counts, key=dir_counts.get)
+            if dir_counts[dominant] >= 2:
+                insight_parts.append(
+                    f"方向以「{dominant}」居多（{dir_counts[dominant]} 間），{direction_desc.get(dominant, '')}"
+                )
+
+        direction_insight = "。".join(insight_parts) + "。" if insight_parts else ""
+
+        return {
+            "top_pick": top_pick,
+            "categories": {
+                "best_match": best_match,
+                "growth_potential": growth_potential,
+                "safe_bet": safe_bet,
+                "watch_out": watch_out,
+            },
+            "direction_insight": direction_insight,
         }
 
     def calculate_lucky_dates(
@@ -843,80 +993,55 @@ class CompanySearchService:
             "reason": reasons[rank],
         }
 
-    def _estimate_ref_check(self, company_name: str, memo: str) -> dict:
-        """估算 Reference Check 風險"""
-        combined = f"{company_name} {memo}".lower()
-
-        # 高風險：上市大廠、金融業
-        high_keywords = [
-            "台積電", "鴻海", "聯發科", "日月光", "中華電信",
-            "台達電", "廣達", "仁寶", "緯創", "和碩",
-            "國泰", "富邦", "中信", "玉山", "兆豐",
-            "銀行", "證券", "保險", "金控",
-        ]
-        for kw in high_keywords:
-            if kw in combined:
-                return {
-                    "risk_level": "high",
-                    "risk_label": "高",
-                    "reason": f"大型企業/金融業，RC 流程嚴謹（含 {kw}）",
-                }
-
-        # 中風險：科技/半導體/製造業
-        mid_keywords = [
-            "科技", "半導體", "光電", "精密", "電子",
-            "資訊", "通訊", "系統", "智慧", "自動化",
-            "製造", "工業", "材料",
-        ]
-        for kw in mid_keywords:
-            if kw in combined:
-                return {
-                    "risk_level": "medium",
-                    "risk_label": "中",
-                    "reason": f"中型科技/製造業，可能有基本 RC（含 {kw}）",
-                }
-
-        return {
-            "risk_level": "low",
-            "risk_label": "低",
-            "reason": "一般企業，RC 機率較低",
-        }
-
     def _build_recommendation(
         self,
         tier: dict,
-        ref_check: dict,
         score: int,
         company_level: str,
         relation_type: str,
         direction: str,
     ) -> dict:
-        """產生投遞建議"""
+        """產生投遞建議（含方向分析的白話說明）"""
         rank = tier["rank"]
         action_items = []
 
+        # 方向對應的具體行動建議
+        direction_actions = {
+            "栄": "對方帶給你好運，面試時展現積極態度，對方會覺得你很順眼",
+            "親": "對方自然被你吸引，面試氛圍會比較輕鬆，記得展現真實的自己",
+            "衰": "你在關係中能量會被消耗，入職後注意工作量分配，避免過度投入",
+            "友": "你會是主動付出的那方，做好心理準備承擔較多責任",
+            "安": "這間公司能給你安定感，適合追求穩定發展的時期",
+            "壊": "入職後工作環境會打破你原本的習慣，把這當作成長的機會",
+            "危": "存在不確定性，面試時多問公司近況和團隊穩定度",
+            "成": "適合在專業技術領域發揮，面試時強調你的專業能力",
+            "命": "你跟這間公司本質相似，面試時會有共鳴但要注意角色分工",
+            "業": "前世因緣的牽引，順其自然不需要刻意經營",
+            "胎": "長期潛力型，短期未必有感覺但值得觀望",
+        }
+
         if rank == 1:
-            summary = "強力推薦投遞，相性和時機都好"
-            action_items.append("優先準備履歷和面試")
-            action_items.append("把握今年的好運勢積極爭取")
+            summary = "強力推薦 — 相性和時機都到位，是目前最值得爭取的選擇"
+            action_items.append("優先準備履歷和面試，排在投遞順序第一位")
+            action_items.append("今年運勢配合度高，越早行動越好")
         elif rank == 2:
-            summary = "值得投遞，條件良好"
-            action_items.append("正常準備即可")
+            summary = "值得投遞 — 條件不錯，正常發揮就有機會"
+            action_items.append("按正常流程準備，不需要特別緊張")
         elif rank == 3:
-            summary = "相性好但今年時機一般，可投但別押寶"
-            action_items.append("同時準備其他選項")
-            action_items.append("面試時注意公司近期狀況")
+            summary = "可以投 — 相性還行但公司今年時機不太好，別把雞蛋放同一個籃子"
+            action_items.append("同時準備其他公司，分散風險")
+            action_items.append("面試時多了解公司今年的營運狀況")
         else:
-            summary = "條件一般，當備選方案"
-            action_items.append("先投其他梯隊的公司")
+            summary = "備選 — 整體條件一般，有更好的選擇時優先考慮其他公司"
+            action_items.append("先專注投遞梯隊更前面的公司")
 
-        if ref_check["risk_level"] == "high":
-            action_items.append("RC 風險高，確認前東家關係良好")
-        elif ref_check["risk_level"] == "medium":
-            action_items.append("可能有 RC，準備好推薦人選")
+        # 加入方向的具體行動建議
+        if direction and direction in direction_actions:
+            action_items.append(direction_actions[direction])
 
+        # 安壊壊方特別警告
         if relation_type == "ankai" and direction == "壊":
-            action_items.append("壊方關係，面試和入職後留意人際衝突")
+            action_items.append("壊方關係衝擊力大，入職初期可能會不太適應，撐過磨合期就好")
 
         return {
             "priority": 0,  # 排序後再設定

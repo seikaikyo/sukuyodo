@@ -138,6 +138,135 @@ class SukuyodoService:
         },
     }
 
+    # 三九秘法位置 → 現代行動建議（職場/人際實用化）
+    PRACTICAL_ACTION_MAP = {
+        "命": {
+            "do": ["深入自我觀察", "與對方互相映照優缺點"],
+            "avoid": ["衝動行事", "在關係中強求主導"],
+            "career": "適合做長期夥伴或合夥人，但需要明確分工避免互相牽制",
+        },
+        "栄": {
+            "do": ["積極爭取合作機會", "借力拓展事業版圖", "把握對方帶來的資源"],
+            "avoid": ["錯過黃金時機", "對好運視而不見"],
+            "career": "對方能提升你的職場運勢，適合主動投遞、爭取面試",
+        },
+        "衰": {
+            "do": ["放慢節奏", "借助對方反省自身不足", "處理累積的問題"],
+            "avoid": ["期待對方帶來直接好處", "在此關係中投入過多資源"],
+            "career": "對方在你的生命中扮演療癒者角色，適合短期合作而非長期依賴",
+        },
+        "安": {
+            "do": ["建立穩定的合作基礎", "推進安頓性質的事務", "長期佈局"],
+            "avoid": ["急於求成", "忽略細節和根基"],
+            "career": "此公司環境穩定踏實，適合需要安定感的職場發展",
+        },
+        "危": {
+            "do": ["保持警覺", "做好風險評估", "設定停損點"],
+            "avoid": ["做重大決定", "忽視不安的直覺"],
+            "career": "此關係帶有變動性，互動時需特別謹慎",
+        },
+        "成": {
+            "do": ["在專業領域深入合作", "共同學習精進", "推動專案落地"],
+            "avoid": ["只談不做", "忽略成果驗收"],
+            "career": "適合在技術或專業領域借力成事，共同精進",
+        },
+        "壊": {
+            "do": ["利用衝擊力打破僵局", "在必要時果斷行動"],
+            "avoid": ["長期消耗", "期望維持現狀不變"],
+            "career": "此關係的衝擊是一次性的，適合短期突破而非長期合作",
+        },
+        "友": {
+            "do": ["主動付出和照顧", "建立社交連結", "分享資源"],
+            "avoid": ["只付出不設界限", "忽略自身需求"],
+            "career": "你是關係中的給予方，投入的心力會轉化為人脈和信任",
+        },
+        "親": {
+            "do": ["接受對方的善意", "順勢發展關係", "擴大交友圈"],
+            "avoid": ["被動等待", "不回應對方的好意"],
+            "career": "對方自然被你吸引，合作意願高，抓住這份緣分",
+        },
+        "業": {
+            "do": ["順應因果自然發展", "理解前世今生的牽連"],
+            "avoid": ["強行改變關係走向", "急躁推進"],
+            "career": "有深厚的因果牽連，業力推動下事情會自然成形",
+        },
+        "胎": {
+            "do": ["耐心等待時機成熟", "播種未來的可能性"],
+            "avoid": ["揠苗助長", "否定長期潛力"],
+            "career": "潛力型關係，短期未必見效，但長遠有發展空間",
+        },
+    }
+
+    # 方向在職場情境的深度解讀（雙視角）
+    DIRECTION_CAREER_MEANINGS = {
+        "栄": {
+            "energy_flow": "對方給予你正面能量",
+            "as_person1": "你是被提升方，此公司環境有利你的發展",
+            "as_person2": "你是提升者，你能帶給對方正面影響",
+            "career_tip": "主動爭取，這是你的貴人位",
+        },
+        "親": {
+            "energy_flow": "對方自然親近你",
+            "as_person1": "你被對方吸引，合作意願自然高",
+            "as_person2": "你是被親近的一方，對方會主動靠過來",
+            "career_tip": "順勢發展，不需要刻意經營",
+        },
+        "衰": {
+            "energy_flow": "對方消耗你的能量",
+            "as_person1": "你是能量流失方，長期互動需注意消耗",
+            "as_person2": "你是療癒者角色，幫助對方排除負面",
+            "career_tip": "短期合作可，長期需要評估投入產出比",
+        },
+        "友": {
+            "energy_flow": "你主動給予對方",
+            "as_person1": "你是付出方，會自然想照顧對方",
+            "as_person2": "你是接受方，對方會為你付出",
+            "career_tip": "你的投入會轉化為人脈和信任",
+        },
+        "安": {
+            "energy_flow": "對方給予你穩定感",
+            "as_person1": "你從對方身上獲得安定的力量",
+            "as_person2": "你是對方的安定錨，提供穩固支持",
+            "career_tip": "適合長期穩定的合作關係",
+        },
+        "壊": {
+            "energy_flow": "對方打破你的既有模式",
+            "as_person1": "你是被衝擊方，現狀會被打破",
+            "as_person2": "你是衝擊者，能幫對方突破僵局",
+            "career_tip": "做好心理準備，變動是成長的機會",
+        },
+        "危": {
+            "energy_flow": "對方帶給你風險和挑戰",
+            "as_person1": "你處於被動承受風險的位置",
+            "as_person2": "你是挑戰的來源，能推動對方成長",
+            "career_tip": "謹慎評估，設好停損點再行動",
+        },
+        "成": {
+            "energy_flow": "對方幫助你成就目標",
+            "as_person1": "你是借力方，對方能助你成事",
+            "as_person2": "你是成就者，能幫對方完成目標",
+            "career_tip": "適合在專業領域深度合作",
+        },
+        "命": {
+            "energy_flow": "雙方互為鏡像",
+            "as_person1": "你與對方本質相同，互相映照",
+            "as_person2": "對方與你本質相同，互相映照",
+            "career_tip": "適合做夥伴，但需明確分工",
+        },
+        "業": {
+            "energy_flow": "過去因果的牽引力",
+            "as_person1": "你感受到深厚的業力牽連",
+            "as_person2": "對方受到你過去累積的影響",
+            "career_tip": "順應因果，不強求不抗拒",
+        },
+        "胎": {
+            "energy_flow": "未來可能性的萌發",
+            "as_person1": "你感受到未來的潛力和可能",
+            "as_person2": "對方在你身上看到未來的希望",
+            "career_tip": "長期投資型關係，耐心等待收穫",
+        },
+    }
+
     def __init__(self):
         self._mansions_data = None
         self._relations_data = None
@@ -514,7 +643,9 @@ class SukuyodoService:
             "score": final_score,
             "element_bonus": element_bonus,
             "summary": self._generate_summary(mansion1, mansion2, relation, final_score),
-            "classical_analysis": self.get_classical_analysis(mansion1["index"], mansion2["index"])
+            "classical_analysis": self.get_classical_analysis(mansion1["index"], mansion2["index"]),
+            "direction_analysis": self.get_direction_analysis(relation.get("direction", "命")),
+            "practical_guidance": self.get_practical_guidance(mansion1["index"], mansion2["index"]),
         }
 
     def get_classical_analysis(self, index1: int, index2: int) -> dict:
@@ -576,6 +707,63 @@ class SukuyodoService:
             "source": "T21n1299 宿曜經 卷下",
             "person1_to_person2": _build_direction_view(index1, index2),
             "person2_to_person1": _build_direction_view(index2, index1),
+        }
+
+    def get_direction_analysis(self, direction: str) -> dict:
+        """方向性深度分析：能量流動 + 職場意涵
+
+        Args:
+            direction: 方向標籤（栄/衰/安/危/成/壊/友/親/命/業/胎）
+
+        Returns:
+            能量流動、雙方視角、職場建議、反方向資訊
+        """
+        direction_pairs = {
+            "栄": "親", "親": "栄",
+            "友": "衰", "衰": "友",
+            "安": "壊", "壊": "安",
+            "危": "成", "成": "危",
+            "命": "命", "業": "胎", "胎": "業",
+        }
+
+        meaning = self.DIRECTION_CAREER_MEANINGS.get(direction, {})
+        inverse = direction_pairs.get(direction, direction)
+        inverse_meaning = self.DIRECTION_CAREER_MEANINGS.get(inverse, {})
+
+        return {
+            "direction": direction,
+            "energy_flow": meaning.get("energy_flow", ""),
+            "person1_perspective": meaning.get("as_person1", ""),
+            "person2_perspective": meaning.get("as_person2", ""),
+            "career_tip": meaning.get("career_tip", ""),
+            "inverse_direction": inverse,
+            "inverse_meaning": inverse_meaning.get("energy_flow", ""),
+        }
+
+    def get_practical_guidance(self, index1: int, index2: int) -> dict:
+        """根據三九秘法位置產出現代行動建議
+
+        Args:
+            index1: person1 的宿曜 index (0-26)
+            index2: person2 的宿曜 index (0-26)
+
+        Returns:
+            雙向實用行動建議（宜做/忌做/職場建議）
+        """
+        def _build_guidance(source_idx: int, target_idx: int) -> dict:
+            distance = (target_idx - source_idx) % 27
+            position_name = self.SANKU_POSITION_NAMES[distance]
+            actions = self.PRACTICAL_ACTION_MAP.get(position_name, {})
+            return {
+                "position": position_name,
+                "do": actions.get("do", []),
+                "avoid": actions.get("avoid", []),
+                "career_advice": actions.get("career", ""),
+            }
+
+        return {
+            "person1_to_person2": _build_guidance(index1, index2),
+            "person2_to_person1": _build_guidance(index2, index1),
         }
 
     def _get_element_relation(self, elem1: str, elem2: str) -> str:
@@ -4725,6 +4913,497 @@ class SukuyodoService:
                 "description": compatibility["relation"]["description"]
             },
             "actions": results
+        }
+
+    # ==================== 吉日月曆 ====================
+
+    # 雙人吉日白話建議模板
+    # 依關係品質(good/neutral/bad) × action 分類
+    PAIR_ADVICE_TEMPLATES = {
+        # === good (eishin/gyotai) ===
+        ("good", "date"): {
+            "summary": "今天你們的互動會特別自然，不用刻意找話題也能聊得開心。氣氛好到連沉默都是舒服的。",
+            "do": ["分享最近的想法或感受", "嘗試沒去過的地方", "拍幾張合照留念"],
+            "avoid": ["催促對方做決定", "提起讓對方有壓力的話題"]
+        },
+        ("good", "confession"): {
+            "summary": "對方今天對你的好感度比平時高，你說的話會被認真聽進去。直接表達的效果比暗示好。",
+            "do": ["找一個兩人都放鬆的場合", "用簡單的話說出你的感受", "給對方回應的空間"],
+            "avoid": ["在公共場所造成壓力", "準備太長的台詞反而不自然"]
+        },
+        ("good", "meet_parents"): {
+            "summary": "長輩今天的接受度比較高，你的表現會被用善意的眼光看待。放鬆做自己就好。",
+            "do": ["帶一份用心挑選的伴手禮", "主動幫忙但不過度表現", "真誠地回答問題"],
+            "avoid": ["過度緊張反而讓氣氛僵硬", "話太多或太少都不好"]
+        },
+        ("good", "engagement"): {
+            "summary": "雙方家庭的能量場今天特別和諧，談條件時容易找到讓雙方都舒服的平衡點。",
+            "do": ["事前跟雙方確認期待", "保持從容的節奏", "記錄重要的約定"],
+            "avoid": ["在細節上過度計較", "讓任何一方覺得被冷落"]
+        },
+        ("good", "register"): {
+            "summary": "今天登記的能量場特別穩定，這個日期會成為你們回憶裡溫暖的起點。",
+            "do": ["帶一件有紀念意義的小物", "儀式結束後一起吃頓好的", "手寫一段話給對方"],
+            "avoid": ["行程排太滿反而匆忙", "忘記享受這個時刻"]
+        },
+        ("good", "wedding"): {
+            "summary": "婚禮當天的氛圍會很好，賓客也能感受到你們的幸福。專心享受就好。",
+            "do": ["提前跟攝影師溝通想要的畫面", "留時間跟重要的人說話", "接受不完美的小插曲"],
+            "avoid": ["因為小細節影響心情", "行程太趕讓自己疲憊"]
+        },
+        ("good", "travel"): {
+            "summary": "旅途中你們的默契會特別好，臨時改行程也能玩得開心。放輕鬆享受過程。",
+            "do": ["讓彼此都有想去的地方", "留一些隨性探索的時間", "一起嘗試新事物"],
+            "avoid": ["把行程排得太緊", "一個人決定所有事情"]
+        },
+        ("good", "discussion"): {
+            "summary": "今天你們的溝通效率特別高，複雜的事情也能談得清楚。趁這天把重要的事情攤開來聊。",
+            "do": ["先聽完對方的想法再回應", "把結論記下來", "感謝對方的坦誠"],
+            "avoid": ["打斷對方的話", "用情緒取代論點"]
+        },
+        ("good", "visit"): {
+            "summary": "今天去看長輩的氛圍會特別溫馨，你的陪伴讓對方感覺被重視。",
+            "do": ["帶對方喜歡的東西", "多聽少說", "拍幾張照片記錄"],
+            "avoid": ["趕時間的感覺", "只顧著滑手機"]
+        },
+        ("good", "gift"): {
+            "summary": "今天送禮的時機很好，對方收到會特別開心。用心比貴重重要。",
+            "do": ["挑選對方真正需要或喜歡的", "附上一句手寫的話", "當面送比寄送更有溫度"],
+            "avoid": ["送太貴的東西反而造成壓力", "敷衍了事"]
+        },
+        ("good", "gathering"): {
+            "summary": "今天的聚會氣氛會很好，大家都處於放鬆的狀態，容易聊出有意思的話題。",
+            "do": ["選一個大家都方便的地點", "主動帶動話題", "拍張團體照"],
+            "avoid": ["只跟特定的人聊天", "低頭看手機"]
+        },
+        ("good", "collaboration"): {
+            "summary": "合作的默契今天特別好，分工明確之後效率會很高。是啟動新計畫的好時機。",
+            "do": ["先確認雙方的目標一致", "各自負責擅長的部分", "定期回報進度"],
+            "avoid": ["模糊的分工", "單方面改變方向"]
+        },
+        # === neutral (yusui/kisei/mei) ===
+        ("neutral", "date"): {
+            "summary": "今天的約會節奏不會太快也不會太慢，適合好好認識彼此。不用刻意製造驚喜。",
+            "do": ["選一個安靜舒服的地方", "聊一些平時沒機會聊的話題", "保持自然的互動"],
+            "avoid": ["安排太多活動", "期待值拉太高"]
+        },
+        ("neutral", "confession"): {
+            "summary": "對方今天的心情平穩，會理性地考慮你說的話。結果不一定馬上有，但會被認真對待。",
+            "do": ["選一個不趕時間的場合", "說完之後給對方思考的空間", "不管結果如何保持風度"],
+            "avoid": ["用太戲劇化的方式", "要求對方馬上回答"]
+        },
+        ("neutral", "meet_parents"): {
+            "summary": "長輩今天的態度中性偏正面，你的表現不需要特別完美，但基本禮貌要到位。",
+            "do": ["準時到場", "回答問題時誠懇", "表現出你對關係的重視"],
+            "avoid": ["過度謙虛或過度表現", "忽略任何一方家長"]
+        },
+        ("neutral", "engagement"): {
+            "summary": "條件的溝通需要多一些耐心，雙方可能有不同的想法，但都能透過討論找到共識。",
+            "do": ["提前準備好想討論的項目", "保持開放的態度", "把重要的約定寫下來"],
+            "avoid": ["堅持己見不讓步", "在小事上花太多時間"]
+        },
+        ("neutral", "register"): {
+            "summary": "登記的流程會順利完成，雖然不會有太多戲劇性的感動，但踏實的幸福感是真實的。",
+            "do": ["把流程確認清楚", "帶齊需要的文件", "事後安排一個小慶祝"],
+            "avoid": ["把這天跟其他雜事排在一起", "忘記留紀念照"]
+        },
+        ("neutral", "wedding"): {
+            "summary": "婚禮會順利進行，可能有一兩個小插曲但不影響整體。事前的準備越充分越好。",
+            "do": ["再確認一次流程表", "指派一個信任的人當天協調", "專注在你們自己的幸福"],
+            "avoid": ["當天才處理遺漏的事情", "讓瑣事消耗你的精力"]
+        },
+        ("neutral", "travel"): {
+            "summary": "旅途大致順利，偶爾可能需要調整計畫。保持彈性、互相配合就好。",
+            "do": ["備好替代方案", "輪流決定行程", "不舒服就直說"],
+            "avoid": ["把行程排到分秒不差", "一個人承擔所有決策"]
+        },
+        ("neutral", "discussion"): {
+            "summary": "溝通需要比平時多一點耐心，但只要雙方都願意聽，就能找到解法。",
+            "do": ["把想說的重點先整理好", "用「我覺得」而非「你應該」", "確認彼此的理解一致"],
+            "avoid": ["帶著情緒開口", "翻舊帳"]
+        },
+        ("neutral", "visit"): {
+            "summary": "探訪的氣氛平穩，對方會覺得被關心。不用準備太多，人到就是心意。",
+            "do": ["帶一些日常的小東西", "聊聊近況", "幫忙做一些小事"],
+            "avoid": ["待太久反而讓對方累", "只聊自己的事"]
+        },
+        ("neutral", "gift"): {
+            "summary": "送禮的效果中規中矩，重點在於你有想到對方，而非禮物多貴重。",
+            "do": ["選實用的東西", "包裝稍微用心一點", "看對方的反應調整"],
+            "avoid": ["送跟對方需求無關的東西", "期待對方有很大的反應"]
+        },
+        ("neutral", "gathering"): {
+            "summary": "聚會的氣氛需要有人帶動，但只要暖場起來就會越來越熱絡。",
+            "do": ["準備一兩個話題備用", "注意比較安靜的人", "時間不用太長"],
+            "avoid": ["讓場面冷掉太久", "只聊工作或八卦"]
+        },
+        ("neutral", "collaboration"): {
+            "summary": "合作推進的速度中等，需要多確認方向是否一致。多花一點時間溝通是值得的。",
+            "do": ["開始前先對齊目標", "遇到分歧馬上討論", "階段性確認成果"],
+            "avoid": ["各做各的不溝通", "想當然以為對方理解"]
+        },
+        # === bad (ankai) ===
+        ("bad", "date"): {
+            "summary": "今天的互動容易有摩擦，可能是雞毛蒜皮的小事引發不必要的爭執。如果能改天更好。",
+            "do": ["選輕鬆不需要做決定的活動", "對方說什麼先不急著反駁", "控制自己的情緒"],
+            "avoid": ["去人太多或太吵的地方", "討論敏感話題", "期待太高"]
+        },
+        ("bad", "confession"): {
+            "summary": "今天告白的成功率偏低，對方的接收狀態不太理想。建議等一個更好的時機。",
+            "do": ["先按兵不動", "維持正常的互動就好", "觀察對方的狀態"],
+            "avoid": ["衝動表白", "用訊息代替面對面", "把對方的冷淡當拒絕"]
+        },
+        ("bad", "meet_parents"): {
+            "summary": "長輩今天的心情可能不太穩定，容易對小事挑剔。如果能延期到更好的日子是首選。",
+            "do": ["降低期待值", "保持最基本的禮貌", "不用刻意表現"],
+            "avoid": ["說太多自己的事", "急著讓對方喜歡你", "回嘴或辯解"]
+        },
+        ("bad", "travel"): {
+            "summary": "旅途中容易出現延誤、意見不合或突發狀況。多預留緩衝時間，互相包容很重要。",
+            "do": ["準備備案", "東西帶齊", "有狀況先深呼吸"],
+            "avoid": ["趕行程", "把責任推給對方", "因為小事發脾氣"]
+        },
+        ("bad", "discussion"): {
+            "summary": "今天的溝通容易雞同鴨講，說了半天還是各說各話。建議只處理緊急的事，其他改天談。",
+            "do": ["只講最重要的一兩件事", "多用書面確認", "保留彈性"],
+            "avoid": ["一次處理太多議題", "用指責的語氣", "在情緒不好時硬聊"]
+        },
+        ("bad", "visit"): {
+            "summary": "今天拜訪的氣氛可能有點緊繃，對方的狀態不太好。簡短問候就好。",
+            "do": ["控制拜訪時間", "帶一些對方需要的東西", "少說多做"],
+            "avoid": ["待太久", "提起讓對方不舒服的話題", "強迫互動"]
+        },
+        ("bad", "gathering"): {
+            "summary": "聚會中可能有些微妙的氣氛，有人心情不好或話不投機。保持低調就好。",
+            "do": ["跟聊得來的人互動", "氣氛不對就早點離開", "不用勉強融入"],
+            "avoid": ["挑起爭議話題", "喝太多", "在背後議論"]
+        },
+        ("bad", "collaboration"): {
+            "summary": "合作的摩擦係數今天偏高，容易在方向或細節上產生分歧。能延後就延後。",
+            "do": ["用書面確認重要決定", "保持專業態度", "有分歧先暫停"],
+            "avoid": ["一意孤行", "在情緒上跟對方對抗", "做出無法挽回的決定"]
+        },
+        ("bad", "gift"): {
+            "summary": "今天送禮的效果可能不如預期，對方的反應偏平淡。不是你的問題，是時機不對。",
+            "do": ["如果一定要送就選實用的", "不要期待太大的反應", "改天補送效果更好"],
+            "avoid": ["送太貴的東西", "要求對方馬上拆開"]
+        },
+        ("bad", "engagement"): {
+            "summary": "今天談條件容易卡住，雙方的期待落差比較大。建議另找日子再繼續。",
+            "do": ["先確認哪些是雙方的底線", "不用急著一次談完", "保持尊重"],
+            "avoid": ["最後通牒式的談判", "在情緒不好時做決定", "讓任何一方感到被施壓"]
+        },
+        ("bad", "register"): {
+            "summary": "建議換到更好的日期登記。如果非今天不可，保持平常心、專注在你們的決定本身。",
+            "do": ["簡單完成流程", "事後安排一個放鬆的活動", "不要被小事影響心情"],
+            "avoid": ["當天處理其他壓力大的事", "過度在意細節"]
+        },
+        ("bad", "wedding"): {
+            "summary": "婚禮日期建議慎選。如果已經無法更改，做好萬全準備就能把風險降到最低。",
+            "do": ["所有環節再確認一次", "多準備一兩個備案", "指定一個應急聯絡人"],
+            "avoid": ["臨時更改流程", "讓自己承擔所有壓力"]
+        },
+    }
+
+    def _get_pair_advice(self, relation_quality: str, action_key: str) -> Optional[dict]:
+        """取得雙人吉日的白話建議"""
+        advice = self.PAIR_ADVICE_TEMPLATES.get((relation_quality, action_key))
+        if advice:
+            return advice
+        # 通用 fallback
+        fallback = self.PAIR_ADVICE_TEMPLATES.get((relation_quality, "date"))
+        return fallback
+
+    @staticmethod
+    def _classify_relation_quality(relation_type: str) -> str:
+        """將宿曜關係分為 good/neutral/bad 三檔"""
+        if relation_type in ("eishin", "gyotai"):
+            return "good"
+        elif relation_type in ("ankai",):
+            return "bad"
+        else:  # yusui, kisei, mei
+            return "neutral"
+
+    def get_lucky_days_calendar(
+        self,
+        birth_date: date,
+        year: int,
+        month: int,
+        categories: list[str] | None = None
+    ) -> dict:
+        """
+        取得整月吉日月曆（個人）
+
+        掃描指定月份每一天，回傳以日期為 key 的吉日地圖。
+
+        Args:
+            birth_date: 西曆生日
+            year: 年份
+            month: 月份 (1-12)
+            categories: 篩選的分類列表，None = 全部
+
+        Returns:
+            月曆吉日資料
+        """
+        import calendar as cal
+        from datetime import timedelta
+
+        mansion = self.get_mansion(birth_date)
+        user_element = mansion["element"]
+        user_index = mansion["index"]
+        fortune_data = self._load_fortune_data()
+
+        # 取得當月天數
+        _, days_in_month = cal.monthrange(year, month)
+        all_cats = self.LUCKY_DAY_CATEGORIES
+        target_cats = {k: v for k, v in all_cats.items() if not categories or k in categories}
+
+        days_map: dict[str, list] = {}
+        mansion_names = {11: "室宿", 8: "女宿", 21: "鬼宿"}
+
+        for day_num in range(1, days_in_month + 1):
+            check_date = date(year, month, day_num)
+
+            # 計算當日運勢
+            daily_fortune = self.calculate_daily_fortune(birth_date, check_date)
+            score = daily_fortune["fortune"]["overall"]
+            day_level = daily_fortune["fortune"].get("level", "chukichi")
+
+            # 取得當日資訊
+            weekday = check_date.weekday()
+            jp_weekday = (weekday + 1) % 7
+            day_element = fortune_data["weekday_elements"][str(jp_weekday)]["element"]
+            day_name = fortune_data["weekday_elements"][str(jp_weekday)]["name"]
+
+            # 計算當日宿
+            day_mansion_index = self._get_corrected_mansion_index(check_date)
+            relation = self.get_relation_type(user_index, day_mansion_index)
+            relation_type = relation["type"]
+
+            # 取得特殊狀態
+            ryouhan_info = daily_fortune.get("ryouhan")
+            sanki_info = daily_fortune.get("sanki", {})
+            special_day_info = daily_fortune.get("special_day")
+
+            date_key = check_date.isoformat()
+            day_results = []
+
+            for cat_key, cat_config in target_cats.items():
+                for act_key, action_config in cat_config["actions"].items():
+                    favor_relations = action_config.get("favor_relations", ["eishin"])
+                    avoid_relations = action_config.get("avoid_relations", ["ankai", "kisei"])
+                    favor_score = action_config.get("favor_score", 70)
+                    favor_weekdays = action_config.get("favor_weekdays", None)
+                    favor_mansions = action_config.get("favor_mansions", None)
+
+                    # 排除條件（與 get_lucky_days 同邏輯）
+                    if action_config.get("avoid_ryouhan", False) and ryouhan_info:
+                        continue
+                    if action_config.get("avoid_dark_week", False) and sanki_info.get("is_dark_week", False):
+                        continue
+                    if action_config.get("avoid_rasetsu", False) and special_day_info and special_day_info.get("type") == "rasetsu":
+                        if not ryouhan_info:
+                            continue
+                    if relation_type in avoid_relations:
+                        continue
+                    avoid_weekdays = action_config.get("avoid_weekdays", None)
+                    if avoid_weekdays and weekday in avoid_weekdays:
+                        continue
+                    if action_config.get("avoid_birth_mansion") and day_mansion_index == user_index:
+                        continue
+                    if day_level in ("shokyo", "kyo"):
+                        continue
+
+                    # 判斷吉日條件
+                    is_lucky = False
+                    lucky_reason = ""
+
+                    if relation_type in favor_relations:
+                        is_lucky = True
+                        lucky_reason = f"{relation['name']}日，{self._get_relation_benefit(relation_type, act_key)}"
+                    elif favor_mansions and day_mansion_index in favor_mansions:
+                        is_lucky = True
+                        m_name = mansion_names.get(day_mansion_index, f"index {day_mansion_index}")
+                        lucky_reason = f"當日宿為{m_name}，傳統上特別適合{action_config['name']}"
+                    elif day_element == user_element and score >= favor_score:
+                        is_lucky = True
+                        lucky_reason = f"{day_name}（{day_element}曜）與你的本命元素相同，能量共振"
+                    elif self._is_generating(day_element, user_element) and score >= favor_score:
+                        is_lucky = True
+                        lucky_reason = f"{day_name}的{day_element}曜能量滋養你的本命元素，形成相生"
+                    elif score >= favor_score + 5:
+                        if favor_weekdays and weekday in favor_weekdays:
+                            is_lucky = True
+                            lucky_reason = f"運勢{score}分，加上{day_name}適合{action_config['name']}"
+                        elif score >= favor_score + 10:
+                            is_lucky = True
+                            lucky_reason = f"運勢高達{score}分，適合處理重要事務"
+
+                    if is_lucky:
+                        rating = self.LEVEL_NAMES.get(day_level, {"zh": "中吉"})["zh"]
+                        time_tip = self._get_personal_time_tip(day_element, user_element, act_key)
+
+                        day_results.append({
+                            "category": cat_key,
+                            "category_name": cat_config["name"],
+                            "action": act_key,
+                            "action_name": action_config["name"],
+                            "score": score,
+                            "rating": rating,
+                            "reason": lucky_reason,
+                            "best_time": time_tip["best_time"],
+                            "avoid_time": time_tip["avoid_time"]
+                        })
+
+            if day_results:
+                days_map[date_key] = day_results
+
+        return {
+            "year": year,
+            "month": month,
+            "your_mansion": {
+                "name_jp": mansion["name_jp"],
+                "reading": mansion["reading"],
+                "element": user_element,
+                "index": user_index
+            },
+            "days": days_map
+        }
+
+    def get_pair_lucky_days_calendar(
+        self,
+        birth_date1: date,
+        birth_date2: date,
+        relation_type: str,
+        year: int,
+        month: int
+    ) -> dict:
+        """
+        取得整月雙人吉日月曆
+
+        掃描指定月份每一天，回傳以日期為 key 的吉日地圖，每個吉日附帶白話建議。
+
+        Args:
+            birth_date1: 第一人（自己）的生日
+            birth_date2: 第二人（收藏對象）的生日
+            relation_type: 關係類型（dating/spouse/parent/family/friend）
+            year: 年份
+            month: 月份 (1-12)
+
+        Returns:
+            月曆雙人吉日資料
+        """
+        import calendar as cal
+        from datetime import timedelta
+
+        if relation_type not in self.PAIR_LUCKY_ACTIONS:
+            raise ValueError(f"無效的關係類型: {relation_type}")
+
+        relation_config = self.PAIR_LUCKY_ACTIONS[relation_type]
+
+        mansion1 = self.get_mansion(birth_date1)
+        mansion2 = self.get_mansion(birth_date2)
+        compatibility = self.calculate_compatibility(birth_date1, birth_date2)
+
+        fortune_data = self._load_fortune_data()
+        _, days_in_month = cal.monthrange(year, month)
+
+        days_map: dict[str, list] = {}
+
+        for day_num in range(1, days_in_month + 1):
+            check_date = date(year, month, day_num)
+
+            # 計算雙方當日運勢
+            fortune1 = self.calculate_daily_fortune(birth_date1, check_date)
+            fortune2 = self.calculate_daily_fortune(birth_date2, check_date)
+            avg_score = (fortune1["fortune"]["overall"] + fortune2["fortune"]["overall"]) // 2
+
+            # 取得當日資訊
+            weekday = check_date.weekday()
+            jp_weekday = (weekday + 1) % 7
+            day_info = fortune_data["weekday_elements"][str(jp_weekday)]
+            day_name = day_info["name"]
+            day_element = day_info["element"]
+
+            day_mansion_index = self._get_corrected_mansion_index(check_date)
+
+            relation1 = self.get_relation_type(mansion1["index"], day_mansion_index)
+            relation2 = self.get_relation_type(mansion2["index"], day_mansion_index)
+
+            date_key = check_date.isoformat()
+            day_results = []
+
+            for action in relation_config["actions"]:
+                favor_relations = action["favor_relations"]
+                favor_score = action["favor_score"]
+
+                is_lucky = False
+                lucky_reason = ""
+
+                if relation1["type"] in favor_relations and relation2["type"] in favor_relations:
+                    is_lucky = True
+                    lucky_reason = f"雙方與當日宿同時形成{relation1['name']}/{relation2['name']}的良好關係，能量場高度契合"
+                elif (relation1["type"] in favor_relations and relation2["type"] not in ["ankai", "kisei"]) or \
+                     (relation2["type"] in favor_relations and relation1["type"] not in ["ankai", "kisei"]):
+                    if avg_score >= favor_score:
+                        is_lucky = True
+                        lucky_reason = f"雙方運勢平均 {avg_score} 分，其中一方與當日宿關係良好"
+                elif avg_score >= favor_score + 10:
+                    if relation1["type"] not in ["ankai", "kisei"] and relation2["type"] not in ["ankai", "kisei"]:
+                        is_lucky = True
+                        lucky_reason = f"雙方運勢平均高達 {avg_score} 分，狀態都處於高峰期"
+
+                if is_lucky:
+                    rating = "大吉" if avg_score >= 85 else "吉" if avg_score >= 70 else "中吉"
+
+                    time_tip = self._get_pair_time_tip(
+                        relation1["type"], relation2["type"],
+                        day_element, mansion1["element"], mansion2["element"],
+                        action["key"]
+                    )
+
+                    # 根據雙方關係品質生成白話建議
+                    # 用兩人對當日宿的關係中「較差的那個」來決定品質
+                    q1 = self._classify_relation_quality(relation1["type"])
+                    q2 = self._classify_relation_quality(relation2["type"])
+                    quality_order = {"bad": 0, "neutral": 1, "good": 2}
+                    final_quality = q1 if quality_order[q1] <= quality_order[q2] else q2
+                    advice = self._get_pair_advice(final_quality, action["key"])
+
+                    day_results.append({
+                        "action": action["key"],
+                        "name": action["name"],
+                        "score": avg_score,
+                        "rating": rating,
+                        "reason": lucky_reason,
+                        "best_time": time_tip["best_time"],
+                        "avoid_time": time_tip["avoid_time"],
+                        "tip": time_tip["tip"],
+                        "advice": advice
+                    })
+
+            if day_results:
+                days_map[date_key] = day_results
+
+        return {
+            "year": year,
+            "month": month,
+            "person1": {
+                "mansion": mansion1["name_jp"],
+                "reading": mansion1["reading"],
+                "element": mansion1["element"]
+            },
+            "person2": {
+                "mansion": mansion2["name_jp"],
+                "reading": mansion2["reading"],
+                "element": mansion2["element"]
+            },
+            "compatibility": {
+                "relation": compatibility["relation"]["name"],
+                "score": compatibility["score"],
+                "description": compatibility["relation"]["description"]
+            },
+            "days": days_map
         }
 
 

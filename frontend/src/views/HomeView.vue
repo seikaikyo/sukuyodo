@@ -111,6 +111,10 @@ const {
   selectedPartnerId,
   pairLuckyDays,
   pairLuckyDaysLoading,
+  luckyCalendar,
+  luckyCalendarLoading,
+  pairLuckyCalendar,
+  pairLuckyCalendarLoading,
 
   // Calendar
   calendarData,
@@ -130,6 +134,10 @@ const {
   fetchLuckyDaySummary,
   fetchPairLuckyDays,
   clearPairSelection,
+  fetchLuckyCalendar,
+  changeLuckyCalendarMonth,
+  fetchPairLuckyCalendar,
+  changePairCalendarMonth,
   fetchDailyFortuneForDate,
   fetchYearlyRange,
   fetchSpecialDays,
@@ -155,6 +163,12 @@ const activeSeekerId = ref<string>('self')
 function handleToggleCategory(key: string) {
   toggleLuckyCategory(key)
   fetchLuckyDaySummary()
+  fetchLuckyCalendar()
+}
+
+function handleSelectPartner(partnerId: string) {
+  fetchPairLuckyDays(partnerId)
+  fetchPairLuckyCalendar(partnerId)
 }
 
 // Profile & Partner management state
@@ -694,12 +708,18 @@ onUnmounted(() => {
         :selected-partner-id="selectedPartnerId"
         :pair-lucky-days="pairLuckyDays"
         :pair-lucky-days-loading="pairLuckyDaysLoading"
+        :lucky-calendar="luckyCalendar"
+        :lucky-calendar-loading="luckyCalendarLoading"
+        :pair-lucky-calendar="pairLuckyCalendar"
+        :pair-lucky-calendar-loading="pairLuckyCalendarLoading"
         @update:active-lucky-tab="activeLuckyTab = $event"
-        @select-partner="fetchPairLuckyDays"
+        @select-partner="handleSelectPartner"
         @clear-partner="clearPairSelection"
-        @refresh-partner="fetchPairLuckyDays"
+        @refresh-partner="handleSelectPartner"
         @fetch-special-days="fetchSpecialDays"
         @toggle-category="handleToggleCategory"
+        @change-lucky-calendar-month="changeLuckyCalendarMonth"
+        @change-pair-calendar-month="(delta: number) => selectedPartnerId && changePairCalendarMonth(selectedPartnerId, delta)"
         @navigate-knowledge="(tab: string) => { activeMainTab = 'knowledge'; activeKnowledgeTab = tab as any }"
       />
 
