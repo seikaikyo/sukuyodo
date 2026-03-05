@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import type { LuckyDaySummary, LuckyDayCategoryMeta, PairLuckyDaysResult, JapaneseCalendarResult, SpecialDaysResult, LuckyCalendarData, PairLuckyCalendarData } from '../composables/useSukuyodo'
 import { useProfile, RELATION_TYPES, type Partner, type RelationType } from '../stores/profile'
-import { getScoreClass, getRating, formatDate, getLocalDateStr } from '../utils/fortune-helpers'
+import { getScoreClass, formatDate, getLocalDateStr } from '../utils/fortune-helpers'
 import LuckyCalendar from './LuckyCalendar.vue'
 
 const props = defineProps<{

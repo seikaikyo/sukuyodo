@@ -85,7 +85,7 @@ function getDayCategories(dayNum: number): { bg: string; color: string; abbr: st
   for (const item of items) {
     if (!seen.has(item.category)) {
       seen.add(item.category)
-      result.push(CATEGORY_COLORS[item.category] || { bg: 'rgba(0,0,0,0.1)', color: '#666', abbr: item.category_name[0] })
+      result.push(CATEGORY_COLORS[item.category] || { bg: 'rgba(0,0,0,0.1)', color: '#666', abbr: item.category_name?.[0] || '?' })
     }
     if (result.length >= 3) break
   }
@@ -100,7 +100,7 @@ function getDayActions(dayNum: number): { abbr: string; name: string }[] {
   for (const item of items) {
     if (!seen.has(item.action)) {
       seen.add(item.action)
-      result.push({ abbr: ACTION_ABBRS[item.action] || item.action_name?.[0] || item.name?.[0] || '?', name: (item as any).name || item.action_name || item.action })
+      result.push({ abbr: ACTION_ABBRS[item.action] || item.action_name?.[0] || '?', name: item.action_name || item.action })
     }
     if (result.length >= 3) break
   }
@@ -131,7 +131,7 @@ function isSelected(dayNum: number): boolean {
 // 在格子後面計算展開行的位置
 const expandedRow = computed(() => {
   if (!selectedDate.value) return null
-  const dayNum = parseInt(selectedDate.value.split('-')[2])
+  const dayNum = parseInt(selectedDate.value.split('-')[2] || '1')
   const firstDate = new Date(props.year, props.month - 1, 1)
   const startWeekday = firstDate.getDay()
   const cellIndex = startWeekday + dayNum - 1
@@ -281,7 +281,7 @@ function getRatingClass(rating: string): string {
                   background: (CATEGORY_COLORS[item.category] || {}).bg || 'rgba(0,0,0,0.1)',
                   color: (CATEGORY_COLORS[item.category] || {}).color || '#666'
                 }">{{ item.category_name || '' }}</span>
-                <span class="item-action-name">{{ (item as any).name || item.action_name || '' }}</span>
+                <span class="item-action-name">{{ item.action_name || '' }}</span>
                 <span class="item-rating" :class="getRatingClass(item.rating)">{{ item.rating }}</span>
                 <span class="item-score">{{ item.score }}分</span>
               </div>
