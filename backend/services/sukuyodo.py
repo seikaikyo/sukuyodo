@@ -4677,6 +4677,10 @@ class SukuyodoService:
         #    - 壊日：「宜作鎮壓、降伏」→ 已由壊日條件處理
         if sanki.get("is_dark_week", False):
             conflicts.append("破壊の週")
+            # 剃髮特殊規則：暗黒の一週間忌剃髮（修行者慣例）
+            if action_key == "teihatsu" and not excluded:
+                excluded = True
+                exclude_reason = "暗黒の一週間，不宜剃髮"
 
         # --- 降級條件 ---
 
