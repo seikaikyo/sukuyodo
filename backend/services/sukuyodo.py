@@ -2724,21 +2724,6 @@ class SukuyodoService:
             fortune_data["element_relations"]["neutral"]
         )["description"]
 
-        # 基礎分數
-        base_score = 70 + base_bonus
-
-        # 各項運勢（基於元素親和，非隨機數）
-        def calc_weekly_category(category: str) -> int:
-            cat_data = fortune_data["fortune_categories"][category]
-            cat_bonus = 6 if user_element in cat_data["favorable_elements"] else 0
-            day_bonus = 4 if center_element in cat_data["favorable_elements"] else 0
-            return max(30, min(100, base_score + cat_bonus + day_bonus))
-
-        career_score = calc_weekly_category("career")
-        love_score = calc_weekly_category("love")
-        health_score = calc_weekly_category("health")
-        wealth_score = calc_weekly_category("wealth")
-
         # 收集每日運勢（8天）+ 特殊日/凌犯/暗黒統計
         daily_overview = []
         week_warnings = []
@@ -2779,6 +2764,18 @@ class SukuyodoService:
         # 週整體分數 = 8 天每日分數平均（日分數已從等級映射，自然傳遞）
         overall_score = round(sum(d["score"] for d in daily_overview) / len(daily_overview))
         overall_score = max(30, min(100, overall_score))
+
+        # 各項運勢（以日運平均為基礎，與月運算法一致）
+        def calc_weekly_category(category: str) -> int:
+            cat_data = fortune_data["fortune_categories"][category]
+            cat_bonus = 6 if user_element in cat_data["favorable_elements"] else 0
+            day_bonus = 4 if center_element in cat_data["favorable_elements"] else 0
+            return max(30, min(100, overall_score + cat_bonus + day_bonus))
+
+        career_score = calc_weekly_category("career")
+        love_score = calc_weekly_category("love")
+        health_score = calc_weekly_category("health")
+        wealth_score = calc_weekly_category("wealth")
 
         # 週警告彙整
         if ryouhan_count > 0:
@@ -4234,7 +4231,7 @@ class SukuyodoService:
                 "first_date": {"name": "第一次約會", "favor_relations": ["eishin", "gyotai", "yusui"], "favor_weekdays": [4, 5], "favor_score": 70},
                 "confession": {"name": "告白", "favor_relations": ["eishin", "mei", "yusui"], "favor_score": 70},
                 "matchmaking": {"name": "相親", "favor_relations": ["eishin", "gyotai", "yusui"], "favor_score": 70},
-                "breakup": {"name": "分手", "favor_relations": ["yusui", "ankai"], "favor_score": 60}
+                "breakup": {"name": "分手", "favor_relations": ["yusui", "ankai"], "avoid_relations": ["kisei"], "favor_score": 60}
             }
         },
         "shopping": {
