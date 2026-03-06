@@ -620,6 +620,8 @@ export interface LuckyCalendarDay {
   best_time?: string
   avoid_time?: string
   tip?: string
+  conflicts?: string[]
+  boosts?: string[]
   advice?: {
     summary: string
     do: string[]

@@ -872,7 +872,7 @@ def get_pair_lucky_days(
             )
 
     # 驗證關係類型
-    valid_relations = ["dating", "spouse", "parent", "family", "friend"]
+    valid_relations = ["dating", "spouse", "parent", "family", "friend", "master"]
     if relation not in valid_relations:
         raise HTTPException(
             status_code=400,
@@ -996,7 +996,7 @@ def get_pair_lucky_days_calendar(
     if year < 1900 or year > 2100:
         raise HTTPException(status_code=400, detail="年份必須在 1900-2100 之間")
 
-    valid_relations = ["dating", "spouse", "parent", "family", "friend"]
+    valid_relations = ["dating", "spouse", "parent", "family", "friend", "master"]
     if relation not in valid_relations:
         raise HTTPException(
             status_code=400,

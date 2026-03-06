@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
 
-export type RelationType = 'dating' | 'spouse' | 'parent' | 'family' | 'friend'
+export type RelationType = 'dating' | 'spouse' | 'parent' | 'family' | 'friend' | 'master'
 
 export const RELATION_TYPES: { value: RelationType; label: string }[] = [
   { value: 'dating', label: '交往對象' },
@@ -8,6 +8,7 @@ export const RELATION_TYPES: { value: RelationType; label: string }[] = [
   { value: 'parent', label: '父母' },
   { value: 'family', label: '家人' },
   { value: 'friend', label: '朋友/同事' },
+  { value: 'master', label: '師徒' },
 ]
 
 export interface Partner {

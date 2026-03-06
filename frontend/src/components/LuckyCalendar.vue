@@ -48,6 +48,10 @@ const ACTION_ABBRS: Record<string, string> = {
   gift: '送',
   gathering: '聚',
   collaboration: '合',
+  denpo: '傳',
+  kanjo: '灌',
+  jukai: '戒',
+  teaching: '教',
 }
 
 const monthLabel = computed(() => `${props.year}年${props.month}月`)
@@ -287,6 +291,11 @@ function getRatingClass(rating: string): string {
               </div>
 
               <p v-if="item.reason" class="item-reason">{{ item.reason }}</p>
+
+              <div v-if="item.boosts?.length || item.conflicts?.length" class="item-tags">
+                <span v-for="b in (item.boosts || [])" :key="b" class="boost-tag">{{ b }}</span>
+                <span v-for="c in (item.conflicts || [])" :key="c" class="conflict-tag">{{ c }}</span>
+              </div>
 
               <div v-if="item.best_time || item.avoid_time" class="item-times">
                 <div v-if="item.best_time" class="time-row best">
@@ -644,6 +653,33 @@ function getRatingClass(rating: string): string {
   font-size: var(--font-xs);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: var(--space-xs);
+}
+
+.boost-tag {
+  display: inline-block;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(184, 134, 11, 0.15);
+  color: #B8860B;
+}
+
+.conflict-tag {
+  display: inline-block;
+  font-size: var(--font-xs);
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(197, 48, 48, 0.15);
+  color: #C53030;
 }
 
 .item-times {

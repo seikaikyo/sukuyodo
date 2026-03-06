@@ -4204,9 +4204,6 @@ class SukuyodoService:
                     "favor_weekdays": [2, 4],
                     "avoid_weekdays": [1],
                     "avoid_birth_mansion": True,
-                    "avoid_ryouhan": True,
-                    "avoid_dark_week": True,
-                    "avoid_rasetsu": True,
                     "favor_mansions": [11, 8, 21],
                     "favor_score": 70
                 }
@@ -4321,48 +4318,18 @@ class SukuyodoService:
             is_lucky = False
             lucky_reason = ""
 
-            # 取得凌犯、三期、特殊日資訊（用於吉日過濾）
-            ryouhan_info = daily_fortune.get("ryouhan")
-            sanki_info = daily_fortune.get("sanki", {})
-            special_day_info = daily_fortune.get("special_day")
-
-            # 檢查凌犯期間（吉凶逆轉，不宜重要行動）
-            if action_config.get("avoid_ryouhan", False) and ryouhan_info:
+            # 統一品質評估（凌犯/壊の日/羅刹日/暗黒の一週間/甘露日/金剛峯日等）
+            quality = self._evaluate_day_quality(daily_fortune, action)
+            if quality["excluded"]:
                 if len(avoid_days) < 5:
                     avoid_days.append({
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": score,
                         "level": day_level,
-                        "reason": "凌犯期間，吉凶逆轉不穩定，不宜重要行動"
+                        "reason": quality["exclude_reason"]
                     })
                 continue
-
-            # 檢查暗黒の一週間（破壊の週 distance 9-15）
-            if action_config.get("avoid_dark_week", False) and sanki_info.get("is_dark_week", False):
-                if len(avoid_days) < 5:
-                    avoid_days.append({
-                        "date": check_date.isoformat(),
-                        "weekday": day_name,
-                        "score": score,
-                        "level": day_level,
-                        "reason": "暗黒の一週間（破壊の週），能量低迷期，建議避開"
-                    })
-                continue
-
-            # 檢查羅刹日（凶日，正常情況下不宜重要行動）
-            if action_config.get("avoid_rasetsu", False) and special_day_info and special_day_info.get("type") == "rasetsu":
-                # 凌犯中羅刹日逆轉為吉，不需避開（已被凌犯檢查攔截）
-                if not ryouhan_info:
-                    if len(avoid_days) < 5:
-                        avoid_days.append({
-                            "date": check_date.isoformat(),
-                            "weekday": day_name,
-                            "score": score,
-                            "level": day_level,
-                            "reason": "羅刹日，災厄之日，務必避開"
-                        })
-                    continue
 
             # 檢查避開的關係
             if relation_type in avoid_relations:
@@ -4447,13 +4414,15 @@ class SukuyodoService:
                     lucky_reason = f"整體運勢高達{score}分，各方面能量都處於高峰期，適合處理重要事務"
 
             if is_lucky and len(lucky_days) < 8:
-                # 評級直接取等級名稱
+                # 評級直接取等級名稱，再根據品質評估調整
                 rating = self.LEVEL_NAMES.get(day_level, {"zh": "中吉"})["zh"]
+                if quality["rating_shift"] != 0:
+                    rating = self._shift_rating_name(rating, quality["rating_shift"])
 
                 # 時段建議
                 time_tip = self._get_personal_time_tip(day_element, user_element, action)
 
-                lucky_days.append({
+                day_entry: dict = {
                     "date": check_date.isoformat(),
                     "weekday": day_name,
                     "score": score,
@@ -4462,7 +4431,13 @@ class SukuyodoService:
                     "reason": lucky_reason,
                     "best_time": time_tip["best_time"],
                     "avoid_time": time_tip["avoid_time"]
-                })
+                }
+                if quality["conflicts"]:
+                    day_entry["conflicts"] = quality["conflicts"]
+                if quality["boosts"]:
+                    day_entry["boosts"] = quality["boosts"]
+
+                lucky_days.append(day_entry)
 
         return {
             "category": category,
@@ -4634,6 +4609,124 @@ class SukuyodoService:
         ]
         return (elem1, elem2) in GENERATING_PAIRS or (elem2, elem1) in GENERATING_PAIRS
 
+    def _evaluate_day_quality(self, daily_fortune: dict, action_key: str | None = None) -> dict:
+        """
+        評估某天的品質（負面因素排除、正面因素加持）
+
+        統一處理凌犯/壊の日/羅刹日/暗黒の一週間等排除條件，
+        以及甘露日/金剛峯日/業の日/成の日等加持條件。
+
+        Args:
+            daily_fortune: calculate_daily_fortune 的回傳
+            action_key: 具體行動（如 "denpo", "kanjo", "teihatsu"）
+
+        Returns:
+            品質評估結果
+        """
+        ryouhan = daily_fortune.get("ryouhan")
+        sanki = daily_fortune.get("sanki", {})
+        special_day = daily_fortune.get("special_day")
+        day_type = sanki.get("day_type", "")
+
+        excluded = False
+        exclude_reason = ""
+        rating_shift = 0
+        shift_reasons: list[str] = []
+        conflicts: list[str] = []
+        boosts: list[str] = []
+
+        # --- 排除條件 ---
+
+        # 1. 凌犯期間
+        if ryouhan:
+            excluded = True
+            exclude_reason = "凌犯期間，吉凶逆轉不穩定，不宜重要行動"
+            conflicts.append("凌犯")
+
+        # 2. 壊の日
+        if day_type == "壊の日":
+            if not excluded:
+                excluded = True
+                exclude_reason = "壊の日，萬事不宜"
+            conflicts.append("壊の日")
+
+        # 3. 羅刹日（凌犯中逆轉為吉，但凌犯本身已排除）
+        if special_day and special_day.get("type") == "rasetsu":
+            if not ryouhan:
+                if not excluded:
+                    excluded = True
+                    exclude_reason = "羅刹日，災厄之日，務必避開"
+                conflicts.append("羅刹日")
+
+        # 4. 暗黒の一週間
+        if sanki.get("is_dark_week", False):
+            if not excluded:
+                excluded = True
+                exclude_reason = "暗黒の一週間，能量低迷期，建議避開"
+            conflicts.append("暗黒週")
+
+        # --- 降級條件 ---
+
+        # 5. 衰の日
+        if day_type == "衰の日":
+            rating_shift -= 1
+            shift_reasons.append("衰の日")
+            conflicts.append("衰の日")
+
+        # 6. 危の日
+        if day_type == "危の日":
+            rating_shift -= 1
+            shift_reasons.append("危の日")
+            conflicts.append("危の日")
+
+        # --- 加持條件 ---
+
+        # 7. 甘露日
+        if special_day and special_day.get("type") == "kanro":
+            boosts.append("甘露日")
+            if action_key in ("kanjo", "jukai"):
+                rating_shift += 1
+                shift_reasons.append("甘露日利灌頂/授戒")
+
+        # 8. 金剛峯日
+        if special_day and special_day.get("type") == "kongou":
+            boosts.append("金剛峯日")
+
+        # 9. 業の日
+        if day_type == "業の日":
+            boosts.append("業の日")
+
+        # 10. 成の日 + 教學
+        if day_type == "成の日" and action_key == "teaching":
+            rating_shift += 1
+            shift_reasons.append("成の日利教學")
+            boosts.append("成の日")
+
+        # 衝突判定：同時有加持和排除 → 維持排除
+        if boosts and conflicts and not excluded:
+            excluded = True
+            exclude_reason = f"{'、'.join(conflicts)}與{'、'.join(boosts)}衝突，宜避開"
+
+        return {
+            "excluded": excluded,
+            "exclude_reason": exclude_reason,
+            "rating_shift": rating_shift,
+            "shift_reasons": shift_reasons,
+            "conflicts": conflicts,
+            "boosts": boosts,
+        }
+
+    @staticmethod
+    def _shift_rating_name(rating_zh: str, shift: int) -> str:
+        """在大吉/吉/中吉之間切換評級"""
+        levels = ["中吉", "吉", "大吉"]
+        try:
+            idx = levels.index(rating_zh)
+        except ValueError:
+            return rating_zh
+        new_idx = max(0, min(len(levels) - 1, idx + shift))
+        return levels[new_idx]
+
     # ==================== 雙人吉日 ====================
 
     # 關係類型對應的吉日項目
@@ -4679,6 +4772,15 @@ class SukuyodoService:
                 {"key": "gathering", "name": "聚會", "favor_relations": ["eishin", "yusui", "gyotai"], "favor_score": 65},
                 {"key": "collaboration", "name": "合作", "favor_relations": ["eishin", "gyotai"], "favor_score": 75},
                 {"key": "travel", "name": "旅遊", "favor_relations": ["eishin", "yusui"], "favor_score": 70},
+            ]
+        },
+        "master": {  # 師徒
+            "name": "師徒",
+            "actions": [
+                {"key": "denpo", "name": "傳法", "favor_relations": ["eishin", "mei", "gyotai"], "favor_score": 80},
+                {"key": "kanjo", "name": "灌頂", "favor_relations": ["eishin", "mei"], "favor_score": 80},
+                {"key": "jukai", "name": "授戒", "favor_relations": ["eishin", "mei", "gyotai"], "favor_score": 80},
+                {"key": "teaching", "name": "教學", "favor_relations": ["eishin", "gyotai", "yusui"], "favor_score": 70},
             ]
         }
     }
@@ -4754,6 +4856,10 @@ class SukuyodoService:
             "trip": "出發時間盡量排在上午。早出門的旅途心情比較好，也有更多時間享受目的地",
             "gift": "挑禮物選在自己狀態好的時段去，你的品味判斷力跟精神狀態直接相關",
             "meeting": "正式場合排在雙方都精神好的時段。開場前十分鐘到場，從容的態度是最好的開場白",
+            "denpo": "傳法儀式排在早課後的上午時段，師徒雙方精神最清明。寅時起身淨身，辰時開壇最為如法",
+            "kanjo": "灌頂以上午為宜，日光充足時結界清淨。儀式前師徒都要靜坐片刻收攝身心",
+            "jukai": "授戒宜在上午，受者心神安定時理解戒律最為深入。儀式後留時間讓受者提問",
+            "teaching": "教學選雙方都精神集中的時段。上午講義理、下午練實修，效率最好",
             "register": "登記和簽約選上午，精神清醒而且處理完還有一整天可以慶祝",
             "wedding": "婚禮儀式排在上午到中午，賓客的精神和心情都在最好的狀態",
             "engagement": "訂婚是溫馨的場合，下午茶時段或晚餐時段都適合，選雙方家庭方便的時間",
@@ -4833,6 +4939,13 @@ class SukuyodoService:
                 # 取雙方運勢平均
                 avg_score = (fortune1["fortune"]["overall"] + fortune2["fortune"]["overall"]) // 2
 
+                # 統一品質評估（雙方都檢查）
+                q1 = self._evaluate_day_quality(fortune1, action["key"])
+                q2 = self._evaluate_day_quality(fortune2, action["key"])
+
+                if q1["excluded"] or q2["excluded"]:
+                    continue
+
                 # 取得當日資訊
                 weekday = check_date.weekday()
                 jp_weekday = (weekday + 1) % 7
@@ -4867,8 +4980,22 @@ class SukuyodoService:
                         is_lucky = True
                         lucky_reason = f"雙方運勢平均高達 {avg_score} 分，兩人的狀態都處於高峰期，很適合一起{action['name']}"
 
+                # master 關係額外規則：傳法/灌頂/授戒雙方都要 >= 60
+                if is_lucky and relation_type == "master" and action["key"] in ("denpo", "kanjo", "jukai"):
+                    if fortune1["fortune"]["overall"] < 60 or fortune2["fortune"]["overall"] < 60:
+                        is_lucky = False
+
                 if is_lucky and len(lucky_days) < 5:
                     rating = "大吉" if avg_score >= 85 else "吉" if avg_score >= 70 else "中吉"
+
+                    # 品質調整：取雙方中較差的 rating_shift
+                    min_shift = min(q1["rating_shift"], q2["rating_shift"])
+                    if min_shift != 0:
+                        rating = self._shift_rating_name(rating, min_shift)
+
+                    # 合併衝突/加持標記
+                    all_conflicts = list(set(q1["conflicts"] + q2["conflicts"]))
+                    all_boosts = list(set(q1["boosts"] + q2["boosts"]))
 
                     # 時段建議
                     time_tip = self._get_pair_time_tip(
@@ -4877,7 +5004,7 @@ class SukuyodoService:
                         action["key"]
                     )
 
-                    lucky_days.append({
+                    day_entry: dict = {
                         "date": check_date.isoformat(),
                         "weekday": day_name,
                         "score": avg_score,
@@ -4886,7 +5013,13 @@ class SukuyodoService:
                         "best_time": time_tip["best_time"],
                         "avoid_time": time_tip["avoid_time"],
                         "tip": time_tip["tip"]
-                    })
+                    }
+                    if all_conflicts:
+                        day_entry["conflicts"] = all_conflicts
+                    if all_boosts:
+                        day_entry["boosts"] = all_boosts
+
+                    lucky_days.append(day_entry)
 
             results.append({
                 "action": action["key"],
@@ -5103,6 +5236,67 @@ class SukuyodoService:
             "do": ["所有環節再確認一次", "多準備一兩個備案", "指定一個應急聯絡人"],
             "avoid": ["臨時更改流程", "讓自己承擔所有壓力"]
         },
+        # === master 師徒 ===
+        ("good", "denpo"): {
+            "summary": "師徒之間的法脈傳承在今天特別順暢，弟子的根器和師父的加持力都處於高峰。",
+            "do": ["提前齋戒淨身", "選清淨莊嚴的場所", "師徒雙方先靜坐收攝"],
+            "avoid": ["倉促行事", "心緒未定時強行開壇"]
+        },
+        ("good", "kanjo"): {
+            "summary": "灌頂的因緣殊勝，受者今天的領受力特別強，加持力容易相應。",
+            "do": ["提前準備壇城法器", "受者前夜持戒清淨", "儀式後留時間回向"],
+            "avoid": ["受者身心疲憊時勉強進行", "省略必要的前行"]
+        },
+        ("good", "jukai"): {
+            "summary": "授戒的時機很好，受者今天對戒律的理解力和發願心都處於最佳狀態。",
+            "do": ["事前講解戒條內容", "確認受者的發心", "儀式莊嚴如法"],
+            "avoid": ["趕時間導致受者理解不足", "忽略受者的疑問"]
+        },
+        ("good", "teaching"): {
+            "summary": "教學的效果今天特別好，弟子的專注力和理解力都比平時高。適合講深一點的內容。",
+            "do": ["備好教材和實修指導", "觀察弟子的理解程度", "留時間答疑"],
+            "avoid": ["一次講太多消化不了", "只講理論不給實修方向"]
+        },
+        ("neutral", "denpo"): {
+            "summary": "傳法的條件中等，師徒雙方的狀態都還可以。做好準備工作能補足時機上的不足。",
+            "do": ["充分的前行準備", "師徒先共修暖身", "確認雙方身心狀態"],
+            "avoid": ["隨意開壇", "忽略準備工作"]
+        },
+        ("neutral", "kanjo"): {
+            "summary": "灌頂可以進行但要多花心思在前行上。受者的狀態需要用準備工作來調整到位。",
+            "do": ["加強前行修法", "確認受者的身心準備", "儀式按部就班"],
+            "avoid": ["省略前行步驟", "對受者的準備度要求太低"]
+        },
+        ("neutral", "jukai"): {
+            "summary": "授戒可以進行，受者的接受度中等。多花時間在戒條講解上會有更好的效果。",
+            "do": ["逐條講解戒律", "給受者充分的思考時間", "確認受者真正理解"],
+            "avoid": ["形式化地走流程", "忽略受者的個別狀況"]
+        },
+        ("neutral", "teaching"): {
+            "summary": "教學效果普通，弟子的吸收速度中等。以基礎和複習為主比較有效率。",
+            "do": ["複習上次的內容", "用具體例子說明", "進度不用太快"],
+            "avoid": ["講全新的難度高的內容", "一直講不給弟子消化的時間"]
+        },
+        ("bad", "denpo"): {
+            "summary": "傳法的時機不佳，師徒雙方的能量場容易干擾。強烈建議另擇吉日。",
+            "do": ["延期到更好的日子", "如果不能延期就加強護摩前行", "師徒各自先調整狀態"],
+            "avoid": ["在能量不穩定時傳承重要法脈", "忽略不吉的徵兆"]
+        },
+        ("bad", "kanjo"): {
+            "summary": "灌頂建議改期。今天的能量場不利於加持力的傳遞，受者的領受也容易打折扣。",
+            "do": ["改期是最好的選擇", "非改不可就大幅加強前行", "師父先獨修穩定自身"],
+            "avoid": ["勉強進行形式上的灌頂", "在師父或受者狀態不佳時開壇"]
+        },
+        ("bad", "jukai"): {
+            "summary": "授戒建議延期。受者今天的心念不夠穩定，勉強受戒反而容易產生障礙。",
+            "do": ["另擇吉日", "讓受者多準備一段時間", "先進行預備的學戒課程"],
+            "avoid": ["趕進度強行授戒", "忽略受者的身心狀態"]
+        },
+        ("bad", "teaching"): {
+            "summary": "教學效果偏差，弟子的專注力和理解力今天都比較低。輕量的複習比硬教新東西好。",
+            "do": ["輕鬆地複習舊內容", "聊一些修行體會", "早點結束讓弟子休息"],
+            "avoid": ["講新的重要內容", "因為弟子理解慢而不耐煩"]
+        },
     }
 
     def _get_pair_advice(self, relation_quality: str, action_key: str) -> Optional[dict]:
@@ -5180,13 +5374,11 @@ class SukuyodoService:
             relation = self.get_relation_type(user_index, day_mansion_index)
             relation_type = relation["type"]
 
-            # 取得特殊狀態
-            ryouhan_info = daily_fortune.get("ryouhan")
-            sanki_info = daily_fortune.get("sanki", {})
-            special_day_info = daily_fortune.get("special_day")
-
             date_key = check_date.isoformat()
             day_results = []
+
+            # 統一品質評估（每日只算一次，action 無關的部分共用）
+            quality_cache: dict[str, dict] = {}
 
             for cat_key, cat_config in target_cats.items():
                 for act_key, action_config in cat_config["actions"].items():
@@ -5196,14 +5388,15 @@ class SukuyodoService:
                     favor_weekdays = action_config.get("favor_weekdays", None)
                     favor_mansions = action_config.get("favor_mansions", None)
 
-                    # 排除條件（與 get_lucky_days 同邏輯）
-                    if action_config.get("avoid_ryouhan", False) and ryouhan_info:
+                    # 品質評估（含凌犯/壊の日/羅刹日/暗黒等排除）
+                    if act_key not in quality_cache:
+                        quality_cache[act_key] = self._evaluate_day_quality(daily_fortune, act_key)
+                    quality = quality_cache[act_key]
+
+                    if quality["excluded"]:
                         continue
-                    if action_config.get("avoid_dark_week", False) and sanki_info.get("is_dark_week", False):
-                        continue
-                    if action_config.get("avoid_rasetsu", False) and special_day_info and special_day_info.get("type") == "rasetsu":
-                        if not ryouhan_info:
-                            continue
+
+                    # action 特有排除
                     if relation_type in avoid_relations:
                         continue
                     avoid_weekdays = action_config.get("avoid_weekdays", None)
@@ -5241,9 +5434,11 @@ class SukuyodoService:
 
                     if is_lucky:
                         rating = self.LEVEL_NAMES.get(day_level, {"zh": "中吉"})["zh"]
+                        if quality["rating_shift"] != 0:
+                            rating = self._shift_rating_name(rating, quality["rating_shift"])
                         time_tip = self._get_personal_time_tip(day_element, user_element, act_key)
 
-                        day_results.append({
+                        day_entry: dict = {
                             "category": cat_key,
                             "category_name": cat_config["name"],
                             "action": act_key,
@@ -5253,7 +5448,13 @@ class SukuyodoService:
                             "reason": lucky_reason,
                             "best_time": time_tip["best_time"],
                             "avoid_time": time_tip["avoid_time"]
-                        })
+                        }
+                        if quality["conflicts"]:
+                            day_entry["conflicts"] = quality["conflicts"]
+                        if quality["boosts"]:
+                            day_entry["boosts"] = quality["boosts"]
+
+                        day_results.append(day_entry)
 
             if day_results:
                 days_map[date_key] = day_results
@@ -5337,6 +5538,13 @@ class SukuyodoService:
                 favor_relations = action["favor_relations"]
                 favor_score = action["favor_score"]
 
+                # 統一品質評估（雙方都檢查）
+                dq1 = self._evaluate_day_quality(fortune1, action["key"])
+                dq2 = self._evaluate_day_quality(fortune2, action["key"])
+
+                if dq1["excluded"] or dq2["excluded"]:
+                    continue
+
                 is_lucky = False
                 lucky_reason = ""
 
@@ -5353,8 +5561,21 @@ class SukuyodoService:
                         is_lucky = True
                         lucky_reason = f"雙方運勢平均高達 {avg_score} 分，狀態都處於高峰期"
 
+                # master 關係額外規則
+                if is_lucky and relation_type == "master" and action["key"] in ("denpo", "kanjo", "jukai"):
+                    if fortune1["fortune"]["overall"] < 60 or fortune2["fortune"]["overall"] < 60:
+                        is_lucky = False
+
                 if is_lucky:
                     rating = "大吉" if avg_score >= 85 else "吉" if avg_score >= 70 else "中吉"
+
+                    # 品質調整
+                    min_shift = min(dq1["rating_shift"], dq2["rating_shift"])
+                    if min_shift != 0:
+                        rating = self._shift_rating_name(rating, min_shift)
+
+                    all_conflicts = list(set(dq1["conflicts"] + dq2["conflicts"]))
+                    all_boosts = list(set(dq1["boosts"] + dq2["boosts"]))
 
                     time_tip = self._get_pair_time_tip(
                         relation1["type"], relation2["type"],
@@ -5362,15 +5583,14 @@ class SukuyodoService:
                         action["key"]
                     )
 
-                    # 根據雙方關係品質生成白話建議
-                    # 用兩人對當日宿的關係中「較差的那個」來決定品質
-                    q1 = self._classify_relation_quality(relation1["type"])
-                    q2 = self._classify_relation_quality(relation2["type"])
+                    # 白話建議
+                    rq1 = self._classify_relation_quality(relation1["type"])
+                    rq2 = self._classify_relation_quality(relation2["type"])
                     quality_order = {"bad": 0, "neutral": 1, "good": 2}
-                    final_quality = q1 if quality_order[q1] <= quality_order[q2] else q2
+                    final_quality = rq1 if quality_order[rq1] <= quality_order[rq2] else rq2
                     advice = self._get_pair_advice(final_quality, action["key"])
 
-                    day_results.append({
+                    day_entry: dict = {
                         "action": action["key"],
                         "name": action["name"],
                         "score": avg_score,
@@ -5380,7 +5600,13 @@ class SukuyodoService:
                         "avoid_time": time_tip["avoid_time"],
                         "tip": time_tip["tip"],
                         "advice": advice
-                    })
+                    }
+                    if all_conflicts:
+                        day_entry["conflicts"] = all_conflicts
+                    if all_boosts:
+                        day_entry["boosts"] = all_boosts
+
+                    day_results.append(day_entry)
 
             if day_results:
                 days_map[date_key] = day_results
