@@ -191,3 +191,16 @@ clean_high = [d for d in all_daily
 - [x] 測試：三月吉日驗證通過（3/6 栄日正確列入，3/10 不被暗黒排除）
 - [x] 測試：TypeScript 建構通過
 - [x] 測試：壊日/業日正確排除，栄日/安日/成日不被排除
+- [x] P1-W1~W6: SANKI_DAY_TYPES 全 11 型描述對照原典修正（含校勘注）
+- [x] P1-W7: 命日/胎日排除邏輯（不宜舉動百事）
+- [x] P1-W8: 業日排除邏輯（品三/卷下矛盾註記，系統從卷下）
+- [x] P2-W9: 金剛峯日 content_classic 替換為 T21 原文
+- [x] P2-W10: 羅刹日 content_classic 替換為 T21 原文（品五+品八）
+- [x] P2-W11: 九曜流年法 content_classic 標註「非 T21n1299 原文，寺院傳承」
+- [x] P2-W12: 三期サイクル content_classic 替換為 T21 原文 + 標註編者歸納
+- [x] P2-W13: 暗黒の一週間 content_classic 改為逐日原典引用
+- [x] P2-W14: 甘露日 content_classic 替換為 T21 原文（已在前輪完成）
+- [x] P2-W15: 凌犯 content_classic 替換為 T21 原文（已在前輪完成）
+- [x] 測試：monthly_fortune best_days 過濾正確（3/24=100, 3/31=100, 3/15=95）
+- [x] 測試：JSON 格式驗證通過
+- [x] 測試：TypeScript 建構通過（第二輪）
