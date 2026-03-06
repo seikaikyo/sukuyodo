@@ -2175,7 +2175,9 @@ class SukuyodoService:
                 else:
                     level = self._shift_level(level, -1)  # 正常羅刹 → 降級
             elif special_day_type == "kongou":
-                level = self._shift_level(level, +1)  # 金剛峯 → 升級（不受凌犯影響）
+                # 金剛峯日「宜作一切降伏法」(T21 p.398b-c)，降伏法本身在壊日亦可行(p.398a)，
+                # 其護持性質穿透凌犯干擾。原典未明確記載此例外，屬密教實踐詮釋。
+                level = self._shift_level(level, +1)  # 金剛峯 → 升級（不受凌犯逆轉）
 
             # 等級已在極值無法位移時，特殊日加持轉為分數溢出
             if level == prev_level and special_day_type in ("kanro", "kongou") and not ryouhan:
@@ -6221,7 +6223,7 @@ class SukuyodoService:
 
         # 凌犯 + 六害宿（最需警戒）
         if has_ryouhan and has_rokugai:
-            return '凌犯期間碰上六害宿，今天是整段凌犯裡最該避開的日子，低調再低調'
+            return '凌犯期間碰上六害宿，今天最該避開。原典記載宜修福：入灌頂及護摩，並修諸功德'
 
         # 破壊の週：依三九日型分別建議（原典各日吉凶不同）
         if is_dark:
@@ -6244,7 +6246,7 @@ class SukuyodoService:
 
         # 凌犯期間（無特殊日、無六害宿）
         if has_ryouhan:
-            return '凌犯期間：吉凶可能跟平常相反，遇到意外別太驚訝，穩住心態'
+            return '凌犯期間：吉凶可能相反，宜修福（護摩、諸功德），穩住心態'
 
         # 一般日按等級
         if level == '大吉':

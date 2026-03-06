@@ -1,7 +1,7 @@
 ---
 title: ICS 日曆訂閱功能（webcal://）
 type: feature
-status: in-progress
+status: testing
 created: 2026-03-06
 ---
 
@@ -124,13 +124,13 @@ Response: Content-Type: text/calendar; charset=utf-8
 
 ## Checklist
 
-- [ ] 新增 ICS_TOKEN_SECRET 環境變數（Render）
-- [ ] 實作 ics_token.py（Fernet 加解密）
-- [ ] 實作後端 ICS 產生器（移植 ics-generator.ts）
-- [ ] 實作 POST /subscribe endpoint
-- [ ] 實作 GET /ics/{token} endpoint
-- [ ] 前端訂閱按鈕 + Dialog
+- [x] 新增 ICS_TOKEN_SECRET 環境變數（Render）
+- [x] 實作 ics_token.py（Fernet 加解密）
+- [x] 實作後端 ICS 產生器（移植 ics-generator.ts）
+- [x] 實作 POST /subscribe endpoint
+- [x] 實作 GET /ics/{token} endpoint
+- [x] 前端訂閱按鈕 + Dialog
 - [ ] Apple Calendar 實機測試
 - [ ] Google Calendar 實機測試
-- [ ] Token 過期/偽造測試
-- [ ] ISO 27001 合規檢查（密鑰管理、日誌、傳輸加密）
+- [x] Token 過期/偽造測試（curl 驗證通過）
+- [x] ISO 27001 合規檢查（密鑰管理、日誌、傳輸加密）
