@@ -26,6 +26,7 @@ interface PersonalDay {
   level_name?: string
   sanki_period: string
   sanki_period_index: number
+  sanki_day_type?: string
   is_dark_week: boolean
   rokugai: boolean | null
 }
@@ -172,12 +173,17 @@ function getDayTip(
     return '凌犯期間碰上六害宿，今天是整段凌犯裡最該避開的日子，低調再低調'
   }
 
-  // 暗黒の一週間
+  // 破壊の週：依三九日型分別建議（原典各日吉凶不同）
   if (isDark) {
-    if (level === '大吉' || level === '吉') {
-      return '暗黒期間但運勢還行，不用太擔心，只是別衝太快'
-    }
-    return '暗黒の一週間：低潮期，做好手邊的事就好，別急著推進新東西'
+    const dayType = personal?.sanki_day_type ?? ''
+    if (dayType === '栄の日') return '破壊の週但逢栄日，原典記載諸吉事大吉。可正常行動'
+    if (dayType === '安の日') return '破壊の週但逢安日，原典記載作壇場吉。穩定踏實的一天'
+    if (dayType === '成の日') return '破壊の週但逢成日，原典記載修道學問、成就法吉。適合修行精進'
+    if (dayType === '壊の日') return '破壊の週壊日，原典記載降伏法可行，餘事不宜'
+    if (dayType === '業の日') return '破壊の週業日，原典記載所作不成就。低調收斂為上'
+    if (dayType === '衰の日') return '破壊の週衰日，原典記載宜解除諸惡、療病。保守度過'
+    if (dayType === '危の日') return '破壊の週危日，社交聚會可行，重大決定宜避開'
+    return '破壊の週，整體氣運偏弱，做好手邊的事就好'
   }
 
   // 凌犯期間（無特殊日、無六害宿）
@@ -269,7 +275,8 @@ function buildDayEvent(day: CalendarDay, index: number): string[] {
     descParts.push('-- 凌犯期間: 吉凶逆転に注意 --')
   }
   if (personal?.is_dark_week) {
-    descParts.push('-- 暗黒の一週間 --')
+    const dayType = personal?.sanki_day_type ?? ''
+    descParts.push(`-- 破壊の週 (${dayType || '二九'}) --`)
   }
   if (personal?.rokugai) {
     descParts.push('-- 六害宿 --')

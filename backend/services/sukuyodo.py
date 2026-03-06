@@ -1468,9 +1468,9 @@ class SukuyodoService:
             "name": "金剛峯日",
             "reading": "こんごうぶび",
             "level": "吉",
-            "description": "宿曜經記載的吉日。七曜與當日宿形成堅固的守護能量，做事容易成就。適合修法、寫經、授戒、出家受戒、面試、考試等需要毅力與持續力的行動。",
-            "description_classic": "金剛峯者，金剛界之堅固守護也。七曜與宿値相成，成事不壞。此日所作，堅牢不退，久長成就。",
-            "description_ja": "金剛峯日は七曜と当日の宿が堅固な守護の力を形成する吉日なり。「金剛」は密教の金剛界に由来し、壊れることなき力を象徴する。この日に始めたことは持続しやすく、修法・写経・授戒など継続力を要する行に適す。"
+            "description": "宿曜經記載的吉日。七曜與當日宿形成堅固的守護能量。原典記載「宜作一切降伏法，誦日天子呪及作護摩，並諸猛利等事」。適合護摩修法、降伏法、寫經、授戒、出家受戒、面試、考試等需要毅力與持續力的行動。",
+            "description_classic": "金剛峯者，金剛界之堅固守護也。宜作一切降伏法，誦日天子呪及作護摩，並諸猛利等事。此日所作，堅牢不退，久長成就。",
+            "description_ja": "金剛峯日は七曜と当日の宿が堅固な守護の力を形成する吉日なり。原典に「一切の降伏法を作し、日天子呪を誦し、及び護摩を作すに宜し」とある。密教の金剛界に由来し、護摩修法・降伏法・写経・授戒など猛利の行に最適なり。"
         },
         "rasetsu": {
             "name": "羅刹日",
@@ -1623,41 +1623,41 @@ class SukuyodoService:
         # 各期的第 1 天（起始日）
         "period_start": {
             1: {"name": "命の日", "reading": "めいのひ",
-                "description": "27 日循環的起點，本命宿回歸之日，適合重新審視自己的原點。新的循環開始，能量重置。",
-                "description_ja": "27 日循環の起點。本命宿に回歸する日で、自分自身の原點を見つめ直すのに適している。新しい循環が始まり、エネルギーがリセットされる。"},
+                "description": "27 日循環的起點，本命宿回歸之日。原典記載「不宜舉動百事」，應靜守本分，不宜開展新事或做重大決定。適合反省與沉澱。",
+                "description_ja": "27 日循環の起点にして本命宿回帰の日。原典に「百事を挙動するに宜しからず」とあり、新規の着手や重大な決断を避け、静かに自省するのが良い。"},
             2: {"name": "業の日", "reading": "ごうのひ",
-                "description": "前世因緣顯現的業之位置，過去行為的結果容易浮現，需面對拖延已久的課題。同時也是破壞週的入口。",
-                "description_ja": "前世からの因縁を示す業の位置。過去の行動の結果が現れやすく、先送りにしていた課題に向き合うことになる日。破壊の週の入口でもある。"},
+                "description": "前世因緣顯現的業之位置。原典記載「所作善惡亦不成就，甚衰」，做什麼都難有結果，應低調收斂，不宜妄動。破壊の週的入口。",
+                "description_ja": "前世からの因縁を示す業の位置。原典に「善悪ともに成就せず、甚だ衰なり」とあり、何をしても結果に繋がりにくい。控えめに過ごし、破壊の週の入口として心構えを整える日。"},
             3: {"name": "胎の日", "reading": "たいのひ",
-                "description": "再生的開始，對應胎之位置，能感知尚未成形的可能性。適合靜心內省，為下一個循環播下種子。",
-                "description_ja": "再生の始まり。新しいものが宿る胎の位置にあたり、まだ形になっていない可能性を感じ取れる日。静かに内省し、次の循環に向けた種を蒔くとよい。"},
+                "description": "再生的開始，對應胎之位置。原典記載「不宜舉動百事」，與命日同為靜守之日。適合靜心內省，為下一個循環做準備。",
+                "description_ja": "再生の始まりにして胎の位置。原典に「百事を挙動するに宜しからず」とあり、命の日と同じく静守の日。内省を深め、次の循環に備える時。"},
         },
         # 第 2-9 天（全期共通）
         "day": {
             2: {"name": "栄の日", "reading": "えいのひ",
-                "description": "繁榮之氣運行之日，事情順利推進，容易獲得他人認可。適合交涉和公開場合，積極行動為吉。",
-                "description_ja": "繁栄の気が巡る日。物事が順調に進み、人からの評価も得やすい。交渉事や公の場への参加に好適。積極的に動いて吉。"},
+                "description": "原典記載「諸吉事並大吉」。入官拜職、交涉買賣、裁著新衣、沐浴皆吉。出家人剃髮、承事師主、啟請法要亦吉。積極行動的好日子。",
+                "description_ja": "原典に「諸の吉事並びに大吉なり」とある。官職拝命・交渉・買い物・裁縫・沐浴すべて吉。出家者の剃髪・師事・法要請願にも好適。積極的に動いて吉。"},
             3: {"name": "衰の日", "reading": "すいのひ",
-                "description": "氣勢減弱之日，不宜勉強，保守度過為上策。但內省和學習的吸收力反而提高。",
-                "description_ja": "気の勢いが弱まる日。無理をせず、控えめに過ごすのが基本。ただし内省や學びには向いており、知識を吸収する力は高い。"},
+                "description": "原典記載「唯宜解除諸惡、療病」。氣勢減弱，一般行動不宜勉強。但適合除障、破邪、療病等淨化性質的行為，以及內省學習。",
+                "description_ja": "原典に「唯だ諸悪を解除し、病を療するに宜し」とある。気勢は弱まるが、障碍除去・邪気祓い・治療など浄化の行には向く。内省と学びにも良い。"},
             4: {"name": "安の日", "reading": "あんのひ",
-                "description": "穩定安寧之氣流動的日子，適合處理日常事務，身心容易沉穩。與其冒險不如踏實前行。",
-                "description_ja": "穏やかで安定した氣が流れる日。日常の用事をこなすのに適しており、心身ともに落ち着きやすい。大きな冒険よりも着実な一歩を。"},
+                "description": "原典記載「移徙吉、造作園宅、安坐臥床帳、作壇場並吉」。穩定安寧之日，搬遷、造宅、設壇修法皆吉。踏實前行的好時機。",
+                "description_ja": "原典に「移徙吉、園宅を造作し、壇場を作るに並びに吉」とある。安定の気が流れ、引越し・建築・壇場設営に好適。着実に進めるのが吉。"},
             5: {"name": "危の日", "reading": "きのひ",
-                "description": "需要注意的日子，容易判斷失誤，衝動行為易適得其反。避免重要契約或決定，謹慎行事。",
-                "description_ja": "注意を要する日。判断を誤りやすく、衝動的な行動は裏目に出る。重要な契約や決断は避け、慎重に行動すること。"},
+                "description": "原典記載「宜結交、定婚姻、歡宴聚會吉」，但另記「危壊日不宜遠行、移徙、買賣、裁衣」。社交聚會吉，重大契約或遠行則宜避開。",
+                "description_ja": "原典に「結交を宜し、婚姻を定め、歓宴聚会に吉」とある一方、「危壊日は遠行・移徙・売買・裁衣に宜しからず」とも。社交は吉、重要契約や旅行は避けるのが良い。"},
             6: {"name": "成の日", "reading": "せいのひ",
-                "description": "事情容易成就之日，努力的成果開花結果，最適合收尾和完成。具有將事情完成的能量。",
-                "description_ja": "物事が成就しやすい日。努力の成果が実を結び、仕上げや完了に最適。始めたことを完成させるエネルギーがある。"},
+                "description": "原典記載「宜修道學問、合和長年藥法、作諸成就法並吉」。修法、學問、成就法皆吉。努力的成果開花結果，適合修行精進和完成重要事項。",
+                "description_ja": "原典に「修道学問に宜し、諸の成就法を作すに並びに吉」とある。修法・学問・成就法すべてに好適。努力が実を結び、修行精進と重要事項の完遂に最適。"},
             7: {"name": "壊の日", "reading": "かいのひ",
-                "description": "破壞與變革之氣強烈的日子，適合斬斷舊習慣和不必要的關係，但不適合開始新事物。具有辨別該破壞之物的力量。",
-                "description_ja": "破壊と変革の氣が強い日。古い習慣や不要な関係を断つには好機だが、新たに始めることには不向き。壊すべきものを見極める力がある。"},
+                "description": "原典記載「宜作鎮壓、降伏怨讎及討伐阻壞奸惡之謀，餘並不堪」。降伏法和鎮壓可行，但其他事務不宜。具有破邪顯正的力量。",
+                "description_ja": "原典に「鎮圧を作し、怨讐を降伏するに宜し、余は並びに堪えず」とある。降伏法・鎮圧は可能だが、他の事には不向き。破邪顕正の力がある日。"},
             8: {"name": "友の日", "reading": "ゆうのひ",
-                "description": "友好之氣流動的日子，人際關係圓滑，適合商量和協作。與信任的人相處可補充能量。",
-                "description_ja": "友好的な氣が流れる日。人間関係が円滑になり、相談事や共同作業に向いている。信頼できる人と過ごすとエネルギーが充電される。"},
+                "description": "原典記載「宜結交朋友大吉」。友好之氣流動，人際關係圓滑，適合社交、商量和協作。與信任的人相處可補充能量。",
+                "description_ja": "原典に「朋友と結交するに大吉」とある。友好的な気が流れ、人間関係が円滑に。相談事や共同作業に好適。信頼できる人と過ごすと良い。"},
             9: {"name": "親の日", "reading": "しんのひ",
-                "description": "親密關係加深之日，與家人、伴侶、至交的時間格外充實。敞開心扉的交流能提升運氣，適合作為期的總結。",
-                "description_ja": "親密な関係が深まる日。家族、恋人、親しい友人との時間が充実する。心を開いた交流が運気を高め、期の締めくくりにふさわしい。"},
+                "description": "原典記載「宜結交、定婚姻、歡宴聚會並吉」。親密關係加深之日，與家人、伴侶、至交的時間格外充實。適合作為一期的總結。",
+                "description_ja": "原典に「結交を宜し、婚姻を定め、歓宴聚会に並びに吉」とある。親密な関係が深まり、家族・恋人・親しい友人との時間が充実する日。期の締めくくりに良い。"},
         }
     }
 
@@ -2412,8 +2412,8 @@ class SukuyodoService:
                 "health_desc_ja": health_desc_ja,
                 "wealth_desc_ja": wealth_desc_ja,
                 "ryouhan_active": ryouhan is not None,
-                "ryouhan_warning": "凌犯期間中，吉凶判斷可能與平時相反。表面順遂之事暗藏風險，表面困難之事反有轉機。重大決策宜延後。" if ryouhan else None,
-                "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。順調に見える事柄にも注意が必要です。重要な決断は延期をお勧めします。" if ryouhan else None,
+                "ryouhan_warning": "凌犯期間中，吉凶判斷可能與平時相反。表面順遂之事暗藏風險，表面困難之事反有轉機。重大決策宜延後。原典記載化解之法為「入灌頂及護摩，並修諸功德」。" if ryouhan else None,
+                "ryouhan_warning_ja": "凌犯期間中のため、吉凶の判断が通常と逆転する可能性があります。原典には「灌頂に入り護摩を作し、並びに諸の功徳を修す」が禳いの法と記されています。重要な決断は延期をお勧めします。" if ryouhan else None,
                 "effective_interpretation": self.LEVEL_INTERPRETATION.get(final_level, "neutral")
             },
             "advice": advice,
@@ -4030,11 +4030,11 @@ class SukuyodoService:
         Returns:
             月度策略 dict
         """
-        # === 1. best_days：top 3 高分日（score >= 70，無凌犯/暗黒/羅刹） ===
+        # === 1. best_days：top 3 高分日（score >= 70，無凌犯/羅刹） ===
+        # 注意：不再整體排除 is_dark_week，原典各日吉凶不同
         clean_high = [d for d in all_daily
                       if d["score"] >= 70
                       and not d.get("ryouhan_active", False)
-                      and not d.get("is_dark_week", False)
                       and not (d.get("special_day") and "羅刹" in (d.get("special_day") or ""))]
         clean_high.sort(key=lambda x: -x["score"])
         best_days = []
@@ -4577,7 +4577,7 @@ class SukuyodoService:
                 "trip": f"{element}性本命宿者，旅遊的精髓在於體驗而非打卡。不用把行程塞滿，留一些空白時間隨性探索。有時候迷路的那條小巷，反而藏著整趟旅行最美的風景。"
             },
             "grooming": {
-                "teihatsu": f"{element}性本命宿者，剃髮前先沐浴淨身，以清晨或上午為佳。水曜日（水星之力，清淨智慧）和金曜日（金星之力，莊嚴身儀）是傳統上最適合剃髮的日子。火曜日災厄最重，務必避開。羅刹日和暗黒の一週間（破壊の週 distance 9-15）期間也應避免。剃髮後端坐片刻，收攝身心。"
+                "teihatsu": f"{element}性本命宿者，剃髮前先沐浴淨身，以清晨或上午為佳。水曜日（水星之力，清淨智慧）和金曜日（金星之力，莊嚴身儀）是傳統上最適合剃髮的日子。火曜日災厄最重，務必避開。羅刹日不宜舉動百事，應避免。破壊の週中，原典記載栄日「剃髮吉」，其餘日型宜謹慎。剃髮後端坐片刻，收攝身心。"
             },
             "beauty": {
                 "hair_coloring": f"{element}性本命宿者，染髮前一天不要洗頭，頭皮的天然油脂能保護髮質。選色的時候考慮你平時的穿著風格和膚色，百搭的色調比流行色更實用。",
@@ -4643,11 +4643,12 @@ class SukuyodoService:
             exclude_reason = "凌犯期間，吉凶逆轉不穩定，不宜重要行動"
             conflicts.append("凌犯")
 
-        # 2. 壊の日
+        # 2. 壊の日（原典：「宜作鎮壓、降伏怨讎及討伐，餘並不堪」）
+        #    降伏法/降伏護摩可行，一般吉日仍排除
         if day_type == "壊の日":
             if not excluded:
                 excluded = True
-                exclude_reason = "壊の日，萬事不宜"
+                exclude_reason = "壊の日，降伏法可行，餘事不宜"
             conflicts.append("壊の日")
 
         # 3. 羅刹日（凌犯中逆轉為吉，但凌犯本身已排除）
@@ -4658,12 +4659,17 @@ class SukuyodoService:
                     exclude_reason = "羅刹日，災厄之日，務必避開"
                 conflicts.append("羅刹日")
 
-        # 4. 暗黒の一週間
+        # 4. 破壊の週：不再整體排除，改為逐日判斷三九日型
+        #    原典 T21n1299 p.397c-398a 各日吉凶：
+        #    - 業日：「所作善惡亦不成就，甚衰」→ 已由起始日判斷排除
+        #    - 栄日：「諸吉事並大吉」→ 不排除
+        #    - 衰日：「唯宜解除諸惡、療病」→ 由降級條件處理
+        #    - 安日：「作壇場並吉」→ 不排除
+        #    - 危日：「結交、婚姻、歡宴吉」→ 由降級條件處理
+        #    - 成日：「修道學問、作諸成就法並吉」→ 不排除
+        #    - 壊日：「宜作鎮壓、降伏」→ 已由壊日條件處理
         if sanki.get("is_dark_week", False):
-            if not excluded:
-                excluded = True
-                exclude_reason = "暗黒の一週間，能量低迷期，建議避開"
-            conflicts.append("暗黒週")
+            conflicts.append("破壊の週")
 
         # --- 降級條件 ---
 
@@ -4692,20 +4698,39 @@ class SukuyodoService:
         if special_day and special_day.get("type") == "kongou":
             boosts.append("金剛峯日")
 
-        # 9. 業の日
+        # 9. 業の日（原典：「所作善惡亦不成就，甚衰」→ 排除）
         if day_type == "業の日":
-            boosts.append("業の日")
+            if not excluded:
+                excluded = True
+                exclude_reason = "業の日，所作善惡亦不成就"
+            conflicts.append("業の日")
 
-        # 10. 成の日 + 教學
+        # 10. 命の日（原典：「不宜舉動百事」→ 排除）
+        if day_type == "命の日":
+            if not excluded:
+                excluded = True
+                exclude_reason = "命の日，本命宿回歸，不宜舉動百事"
+            conflicts.append("命の日")
+
+        # 11. 胎の日（原典：「不宜舉動百事」→ 排除）
+        if day_type == "胎の日":
+            if not excluded:
+                excluded = True
+                exclude_reason = "胎の日，再生準備之日，不宜舉動百事"
+            conflicts.append("胎の日")
+
+        # 12. 成の日 + 教學
         if day_type == "成の日" and action_key == "teaching":
             rating_shift += 1
             shift_reasons.append("成の日利教學")
             boosts.append("成の日")
 
-        # 衝突判定：同時有加持和排除 → 維持排除
-        if boosts and conflicts and not excluded:
+        # 衝突判定：同時有實質衝突（非僅破壊の週標記）和加持 → 維持排除
+        # 破壊の週只是資訊標記，逐日判斷由各日型條件處理
+        real_conflicts = [c for c in conflicts if c != "破壊の週"]
+        if boosts and real_conflicts and not excluded:
             excluded = True
-            exclude_reason = f"{'、'.join(conflicts)}與{'、'.join(boosts)}衝突，宜避開"
+            exclude_reason = f"{'、'.join(real_conflicts)}與{'、'.join(boosts)}衝突，宜避開"
 
         return {
             "excluded": excluded,
@@ -5792,8 +5817,8 @@ class SukuyodoService:
         is_auspicious_relation = mansion_relation_type in ("eishin", "mei")
         is_mild_auspicious = mansion_relation_type in ("eishin", "mei", "kisei")
 
-        # 1. triple_auspicious：甘露/金剛 + 栄親/命 + 非暗黒
-        if special_day_type in ("kanro", "kongou") and is_auspicious_relation and not is_dark_week:
+        # 1. triple_auspicious：甘露/金剛 + 栄親/命（破壊の週的栄日/安日/成日仍可觸發）
+        if special_day_type in ("kanro", "kongou") and is_auspicious_relation:
             if not ryouhan:
                 results.append({
                     "pattern": "triple_auspicious",
@@ -5837,15 +5862,17 @@ class SukuyodoService:
                 "description_classic": "凌犯六害相重，禍不單行。宜閉門靜守，不可興作。"
             })
 
-        # 5. compounded_negative：安壊 + 暗黒の一週間
-        if mansion_relation_type == "ankai" and is_dark_week:
+        # 5. compounded_negative：安壊 + 破壊の週の凶日型（業/衰/危/壊）
+        sanki_day_type = sanki.get("day_type", "")
+        dark_week_bad_days = ("業の日", "衰の日", "危の日", "壊の日")
+        if mansion_relation_type == "ankai" and is_dark_week and sanki_day_type in dark_week_bad_days:
             results.append({
                 "pattern": "compounded_negative",
                 "severity": 4,
                 "name": "凶因重疊",
-                "description": "安壊的破壞性與暗黒の一週間的低迷期重疊，運勢處於谷底。今天不是行動的日子，專注在不需要外界配合的事情上。",
-                "description_ja": "安壊の破壊性と暗黒の一週間の低迷期が重なり、運勢は最低点に。行動を控え、外部との関わりを最小限に留めるべし。",
-                "description_classic": "安壊逢暗黒，凶上加凶。宜靜守本分，不可妄動求進。"
+                "description": "安壊的破壞性與破壊の週的凶日型重疊，運勢處於谷底。今天不是行動的日子，專注在不需要外界配合的事情上。",
+                "description_ja": "安壊の破壊性と破壊の週の凶日型が重なり、運勢は最低点に。行動を控え、外部との関わりを最小限に留めるべし。",
+                "description_classic": "安壊逢破壊の凶日，凶上加凶。宜靜守本分，不可妄動求進。"
             })
 
         # 6. dark_rasetsu：羅刹日 + 暗黒の一週間
