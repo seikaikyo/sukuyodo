@@ -6130,6 +6130,272 @@ class SukuyodoService:
 
         return result
 
+    # ========================================================================
+    # ICS 月曆產生（RFC 5545）
+    # ========================================================================
+
+    @staticmethod
+    def _ics_escape(text: str) -> str:
+        """跳脫 ICS 特殊字元"""
+        return (
+            text
+            .replace('\\', '\\\\')
+            .replace(';', '\\;')
+            .replace(',', '\\,')
+            .replace('\n', '\\n')
+        )
+
+    @staticmethod
+    def _ics_fold_line(line: str) -> str:
+        """RFC 5545 行摺疊：第一行 75 bytes，後續行 74 bytes（含前綴空格）"""
+        encoded = line.encode('utf-8')
+        if len(encoded) <= 75:
+            return line
+
+        parts: list[str] = []
+        start = 0
+
+        while start < len(line):
+            max_bytes = 75 if start == 0 else 74
+            end = start
+            current_bytes = 0
+
+            while end < len(line):
+                char_bytes = len(line[end].encode('utf-8'))
+                if current_bytes + char_bytes > max_bytes:
+                    break
+                current_bytes += char_bytes
+                end += 1
+
+            if end == start:
+                # 單一字元超過限制（不應發生），強制推進
+                end = start + 1
+
+            parts.append(line[start:end])
+            start = end
+
+        return '\r\n '.join(parts)
+
+    @staticmethod
+    def _ics_format_date(d: date) -> str:
+        """日期格式化為 ICS VALUE=DATE 格式（例: 20260115）"""
+        return d.strftime('%Y%m%d')
+
+    @staticmethod
+    def _ics_fortune_level(score: int, level_name: str = "") -> str:
+        """運勢分數轉等級名稱"""
+        if level_name:
+            return level_name
+        if score >= 90:
+            return '大吉'
+        if score >= 75:
+            return '吉'
+        if score >= 60:
+            return '中吉'
+        if score >= 45:
+            return '小凶'
+        return '凶'
+
+    @staticmethod
+    def _ics_day_tip(level: str | None, personal: dict | None, day: dict) -> str:
+        """白話提醒：依特殊日、凌犯、破壊の週、一般等級產生每日建議"""
+        has_ryouhan = bool(day.get('ryouhan') and day['ryouhan'].get('active'))
+        is_dark = bool(personal and personal.get('is_dark_week'))
+        has_rokugai = bool(personal and personal.get('rokugai'))
+        special_type = day['special_day']['type'] if day.get('special_day') else None
+        reversed_ = bool(day.get('special_day') and day['special_day'].get('ryouhan_reversed'))
+
+        # 特殊日優先
+        if special_type == 'kanro' and not reversed_:
+            return '甘露日：今天是難得的大吉日，適合開始新計畫、簽約、重要面談'
+        if special_type == 'kanro' and reversed_:
+            return '甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時'
+        if special_type == 'kongou' and not reversed_:
+            return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、下決心'
+        if special_type == 'kongou' and reversed_:
+            return '金剛峯日但凌犯逆轉，強勢能量易生阻力。建議先評估局勢，蓄勢待發'
+        if special_type == 'rasetsu' and not reversed_:
+            return '羅刹日：百事不宜，能延就延，今天不適合做重要決定'
+        if special_type == 'rasetsu' and reversed_:
+            return '羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂'
+
+        # 凌犯 + 六害宿（最需警戒）
+        if has_ryouhan and has_rokugai:
+            return '凌犯期間碰上六害宿，今天是整段凌犯裡最該避開的日子，低調再低調'
+
+        # 破壊の週：依三九日型分別建議（原典各日吉凶不同）
+        if is_dark:
+            day_type = (personal or {}).get('sanki_day_type', '')
+            if day_type == '栄の日':
+                return '破壊の週但逢栄日，原典記載諸吉事大吉。可正常行動'
+            if day_type == '安の日':
+                return '破壊の週但逢安日，原典記載作壇場吉。穩定踏實的一天'
+            if day_type == '成の日':
+                return '破壊の週但逢成日，原典記載修道學問、成就法吉。適合修行精進'
+            if day_type == '壊の日':
+                return '破壊の週壊日，原典記載降伏法可行，餘事不宜'
+            if day_type == '業の日':
+                return '破壊の週業日，原典記載所作不成就。低調收斂為上'
+            if day_type == '衰の日':
+                return '破壊の週衰日，原典記載宜解除諸惡、療病。保守度過'
+            if day_type == '危の日':
+                return '破壊の週危日，社交聚會可行，重大決定宜避開'
+            return '破壊の週，整體氣運偏弱，做好手邊的事就好'
+
+        # 凌犯期間（無特殊日、無六害宿）
+        if has_ryouhan:
+            return '凌犯期間：吉凶可能跟平常相反，遇到意外別太驚訝，穩住心態'
+
+        # 一般日按等級
+        if level == '大吉':
+            return '運勢很好的一天，想做什麼就行動吧，機會來了別猶豫'
+        if level == '吉':
+            return '不錯的一天，適合推進計畫、見重要的人'
+        if level == '中吉':
+            return '普通偏好，按部就班做事就行，不需要特別小心'
+        if level == '小凶':
+            return '稍微注意一下，別做太冒險的決定，穩穩來就沒問題'
+        if level == '凶':
+            return '運勢偏低，避開重大決策和衝突，今天適合休息充電'
+
+        return '平穩的一天'
+
+    def generate_ics_calendar(self, birth_date: date, year: int) -> str:
+        """
+        產生整年 ICS 月曆字串（RFC 5545）
+
+        整合 12 個月的月曆資料，為每天產生一個全天事件，
+        包含運勢等級、三期、特殊日標記及白話提醒。
+
+        Args:
+            birth_date: 出生日期
+            year: 西曆年份
+
+        Returns:
+            RFC 5545 格式的 ICS 字串
+        """
+        from datetime import timedelta, datetime, timezone
+
+        # 取得使用者本命宿資訊
+        user_mansion = self.get_mansion(birth_date)
+        mansion_name = user_mansion['name_jp']
+        mansion_element = user_mansion['element']
+        user_index = user_mansion['index']
+
+        # DTSTAMP：產生時間（UTC）
+        dtstamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+        # VCALENDAR 標頭
+        lines: list[str] = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            self._ics_fold_line(f'PRODID:-//Sukuyodo//Fortune Calendar//{year}//ZH'),
+            'CALSCALE:GREGORIAN',
+            'METHOD:PUBLISH',
+            self._ics_fold_line(
+                f'X-WR-CALNAME:{self._ics_escape(f"{mansion_name}({mansion_element}) {year} 年運勢")}'
+            ),
+            'X-WR-TIMEZONE:Asia/Taipei',
+        ]
+
+        # 逐月取得月曆資料
+        event_index = 0
+        for month in range(1, 13):
+            cal_data = self.get_calendar_month(year, month, birth_date)
+
+            for day in cal_data['days']:
+                personal = day.get('personal')
+                level = None
+                if personal:
+                    level = self._ics_fortune_level(
+                        personal['fortune_score'],
+                        personal.get('level_name', '')
+                    )
+
+                    # 補算 sanki_day_type（get_calendar_month 不含此欄位）
+                    if 'sanki_day_type' not in personal or personal.get('sanki_day_type') is None:
+                        day_mansion_index = day['day_mansion']['index']
+                        sanki_info = self.get_sanki_cycle(user_index, day_mansion_index)
+                        personal['sanki_day_type'] = sanki_info['day_type']
+
+                # 標題：等級 | 三期縮寫 | 特殊標記
+                title_segments: list[str] = []
+                if level:
+                    title_segments.append(level)
+                if personal:
+                    sanki_short = personal['sanki_period'].replace('の週', '')
+                    title_segments.append(sanki_short)
+
+                # 第三段：特殊標記
+                markers: list[str] = []
+                if day.get('special_day'):
+                    reversed_tag = '(逆転)' if day['special_day'].get('ryouhan_reversed') else ''
+                    markers.append(f"{day['special_day']['name']}{reversed_tag}")
+                if day.get('ryouhan') and day['ryouhan'].get('active') and not day.get('special_day'):
+                    markers.append('凌犯')
+                if personal and personal.get('is_dark_week'):
+                    markers.append('暗黒')
+                if personal and personal.get('rokugai'):
+                    markers.append('六害宿')
+                if markers:
+                    title_segments.append(' '.join(markers))
+
+                summary = ' | '.join(title_segments)
+
+                # 白話提醒
+                tip = self._ics_day_tip(level, personal, day)
+
+                # 描述（白話提醒 + 詳細資訊）
+                desc_parts: list[str] = [tip, '---']
+                if personal:
+                    desc_parts.append(f"運勢: {personal['fortune_score']} ({level})")
+                    desc_parts.append(f"關係: {personal['relation_name']}")
+                    desc_parts.append(
+                        f"宿: {day['day_mansion']['name_jp']}"
+                        f"({day['day_mansion']['element']}) - {day['weekday']}"
+                    )
+                    desc_parts.append(f"三期: {personal['sanki_period']}")
+                if day.get('special_day'):
+                    sd = day['special_day']
+                    if sd.get('ryouhan_reversed'):
+                        sd_label = f"{sd['name']} (凌犯逆転: {sd['level']})"
+                    else:
+                        sd_label = f"{sd['name']} ({sd['level']})"
+                    desc_parts.append(f"特殊日: {sd_label}")
+                if day.get('ryouhan') and day['ryouhan'].get('active'):
+                    desc_parts.append('-- 凌犯期間: 吉凶逆転に注意 --')
+                if personal and personal.get('is_dark_week'):
+                    day_type = personal.get('sanki_day_type', '')
+                    desc_parts.append(f"-- 破壊の週 ({day_type or '二九'}) --")
+                if personal and personal.get('rokugai'):
+                    desc_parts.append('-- 六害宿 --')
+
+                description = '\\n'.join(desc_parts)
+
+                # 全天事件日期
+                target_date = date.fromisoformat(day['date'])
+                dt_start = self._ics_format_date(target_date)
+                dt_end = self._ics_format_date(target_date + timedelta(days=1))
+
+                # VEVENT
+                uid = f"{day['date']}-{event_index}@sukuyodo"
+                lines.append('BEGIN:VEVENT')
+                lines.append(f'DTSTAMP:{dtstamp}')
+                lines.append(self._ics_fold_line(f'UID:{uid}'))
+                lines.append(f'DTSTART;VALUE=DATE:{dt_start}')
+                lines.append(f'DTEND;VALUE=DATE:{dt_end}')
+                lines.append(self._ics_fold_line(f'SUMMARY:{self._ics_escape(summary)}'))
+                if description:
+                    lines.append(self._ics_fold_line(f'DESCRIPTION:{description}'))
+                lines.append('TRANSP:TRANSPARENT')
+                lines.append('END:VEVENT')
+
+                event_index += 1
+
+        lines.append('END:VCALENDAR')
+
+        return '\r\n'.join(lines)
+
 
 # 全域實例
 sukuyodo_service = SukuyodoService()

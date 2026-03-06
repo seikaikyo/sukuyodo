@@ -5,6 +5,7 @@ import type { DailyFortune, WeeklyFortune, MonthlyFortune, YearlyFortune, Mansio
 import { getScoreClass, formatDate } from '../utils/fortune-helpers'
 import { generateDecadeReport } from '../utils/report-generator'
 import { generateIcsCalendar, downloadIcs } from '../utils/ics-generator'
+import { apiFetch, getApiUrl } from '../config/api'
 import { useProfile } from '../stores/profile'
 
 const props = defineProps<{
@@ -248,6 +249,59 @@ async function exportIcsCalendar() {
     console.error('ICS export failed', e)
   } finally {
     icsExporting.value = false
+  }
+}
+
+// ICS 日曆訂閱
+const subscribeLoading = ref(false)
+const subscribeDialogOpen = ref(false)
+const subscribeUrls = ref<{ webcal_url: string; https_url: string; expires_at: string } | null>(null)
+const subscribeCopied = ref(false)
+
+async function openSubscribeDialog() {
+  if (!props.birthDate || subscribeLoading.value) return
+  const year = props.yearlyFortune?.year ?? new Date().getFullYear()
+
+  subscribeLoading.value = true
+  try {
+    const res = await apiFetch(getApiUrl('/calendar/subscribe'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birth_date: props.birthDate, year }),
+    })
+    if (!res.ok) throw new Error('subscribe failed')
+    const json = await res.json()
+    subscribeUrls.value = json.data
+    subscribeDialogOpen.value = true
+  } catch (e) {
+    console.error('Subscribe failed', e)
+  } finally {
+    subscribeLoading.value = false
+  }
+}
+
+function openWebcal() {
+  if (subscribeUrls.value) {
+    window.location.href = subscribeUrls.value.webcal_url
+  }
+}
+
+async function copySubscribeUrl() {
+  if (!subscribeUrls.value) return
+  try {
+    await navigator.clipboard.writeText(subscribeUrls.value.https_url)
+    subscribeCopied.value = true
+    setTimeout(() => { subscribeCopied.value = false }, 2000)
+  } catch {
+    // fallback
+    const input = document.createElement('input')
+    input.value = subscribeUrls.value.https_url
+    document.body.appendChild(input)
+    input.select()
+    document.execCommand('copy')
+    document.body.removeChild(input)
+    subscribeCopied.value = true
+    setTimeout(() => { subscribeCopied.value = false }, 2000)
   }
 }
 </script>
@@ -845,6 +899,12 @@ async function exportIcsCalendar() {
               :disabled="icsExporting"
               @click="exportIcsCalendar"
             >{{ icsExporting ? '匯出中...' : '匯出日曆' }}</button>
+            <button
+              v-if="birthDate"
+              class="export-btn subscribe-btn"
+              :disabled="subscribeLoading"
+              @click="openSubscribeDialog"
+            >{{ subscribeLoading ? '處理中...' : '訂閱日曆' }}</button>
           </div>
 
           <div v-if="yearlyFortune.kuyou_star" class="current-year-kuyou">
@@ -1473,6 +1533,37 @@ async function exportIcsCalendar() {
             </div>
           </div>
         </template>
+      </div>
+    </div>
+    <!-- 訂閱日曆 Dialog -->
+    <div v-if="subscribeDialogOpen" class="subscribe-overlay" @click.self="subscribeDialogOpen = false">
+      <div class="subscribe-dialog" role="dialog" aria-label="訂閱日曆">
+        <h3 class="subscribe-title">訂閱日曆</h3>
+        <p class="subscribe-desc">日曆 app 會每天自動更新，不需要重新匯入。</p>
+
+        <div class="subscribe-actions">
+          <button class="subscribe-action-btn primary" @click="openWebcal">
+            <sl-icon name="calendar-plus" aria-hidden="true"></sl-icon>
+            加入日曆 app
+          </button>
+          <button class="subscribe-action-btn" @click="copySubscribeUrl">
+            <sl-icon :name="subscribeCopied ? 'check-lg' : 'clipboard'" aria-hidden="true"></sl-icon>
+            {{ subscribeCopied ? '已複製' : '複製連結' }}
+          </button>
+        </div>
+
+        <div v-if="subscribeUrls" class="subscribe-url-box">
+          <code class="subscribe-url">{{ subscribeUrls.https_url }}</code>
+        </div>
+
+        <p class="subscribe-hint">
+          iPhone/Mac 點「加入日曆 app」即可。<br>
+          Google Calendar 請複製連結後，到設定 > 透過 URL 新增日曆。
+        </p>
+
+        <button class="subscribe-close" @click="subscribeDialogOpen = false" aria-label="關閉">
+          <sl-icon name="x-lg" aria-hidden="true"></sl-icon>
+        </button>
       </div>
     </div>
   </section>
@@ -3820,5 +3911,133 @@ async function exportIcsCalendar() {
   font-size: var(--font-sm);
   color: var(--text-secondary);
   line-height: 1.5;
+}
+
+/* 訂閱按鈕 */
+.subscribe-btn {
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.subscribe-btn:hover {
+  background: var(--accent);
+  color: var(--bg-surface);
+}
+
+/* 訂閱 Dialog */
+.subscribe-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.subscribe-dialog {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.subscribe-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.subscribe-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.subscribe-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.subscribe-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  min-height: 44px;
+  transition: background-color 0.2s;
+}
+
+.subscribe-action-btn:hover {
+  background: var(--bg-surface);
+}
+
+.subscribe-action-btn.primary {
+  background: var(--accent);
+  color: var(--bg-surface);
+  border-color: var(--accent);
+}
+
+.subscribe-action-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.subscribe-url-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+}
+
+.subscribe-url {
+  font-size: 11px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.subscribe-hint {
+  font-size: 12px;
+  color: var(--text-muted, var(--text-secondary));
+  line-height: 1.6;
+  margin: 0;
+}
+
+.subscribe-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subscribe-close:hover {
+  color: var(--text-primary);
 }
 </style>

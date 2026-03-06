@@ -2,6 +2,7 @@
 import os
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlmodel import Session
 
@@ -10,14 +11,21 @@ from services.sukuyodo import sukuyodo_service
 from services.company_search import company_search_service
 from services.stats import stats_service
 from services.japanese_calendar import japanese_calendar_service
+from services.ics_token import generate_token, decrypt_token, get_token_expiry
 from models.stats import Features
 
 APP_PIN = os.environ.get("APP_PIN", "")
 
 
 def verify_pin(request: Request):
-    """驗證 PIN。APP_PIN 未設定時放行（本地開發）"""
+    """驗證 PIN。APP_PIN 未設定時放行（本地開發）
+
+    例外：/calendar/ics/ 端點以 Token 驗證取代 PIN（供日曆 app 存取）
+    """
     if not APP_PIN:
+        return
+    # ICS 訂閱端點以 Token 加密保護，跳過 PIN 驗證
+    if "/calendar/ics/" in request.url.path:
         return
     pin = request.headers.get("X-App-Pin", "")
     if pin != APP_PIN:
@@ -1228,3 +1236,106 @@ async def search_companies(request: CompanySearchRequest):
         "data": results,
         "count": len(results),
     }
+
+
+# ============================================================================
+# ICS 日曆訂閱（Token 保護，不需 PIN）
+# ============================================================================
+
+
+class SubscribeRequest(BaseModel):
+    """日曆訂閱請求"""
+    birth_date: str  # YYYY-MM-DD
+    year: int
+
+
+@router.post("/calendar/subscribe")
+def create_ics_subscription(request: SubscribeRequest):
+    """產生 ICS 日曆訂閱 Token
+
+    回傳 webcal:// 和 https:// URL 供使用者訂閱。
+    Token 有效期 400 天，過期後需重新取得。
+    """
+    # 驗證生日格式
+    try:
+        birth = date.fromisoformat(request.birth_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail="日期格式錯誤，請使用 YYYY-MM-DD"
+        )
+
+    if birth > date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="生日不可為未來日期"
+        )
+
+    if request.year < 1900 or request.year > 2100:
+        raise HTTPException(
+            status_code=400,
+            detail="年份必須在 1900-2100 之間"
+        )
+
+    token = generate_token(request.birth_date, request.year)
+    expiry = get_token_expiry()
+
+    # 從環境變數取得後端基底 URL
+    base_url = os.environ.get(
+        "ICS_BASE_URL",
+        "https://sukuyodo-backend.onrender.com"
+    )
+    ics_path = f"/api/sukuyodo/calendar/ics/{token}"
+
+    return {
+        "success": True,
+        "data": {
+            "webcal_url": f"webcal://{base_url.replace('https://', '').replace('http://', '')}{ics_path}",
+            "https_url": f"{base_url}{ics_path}",
+            "expires_at": expiry.isoformat(),
+        }
+    }
+
+
+@router.get("/calendar/ics/{token}", dependencies=[])
+def get_ics_calendar(token: str):
+    """回傳 ICS 日曆內容（供日曆 app 訂閱用）
+
+    此端點不需 PIN 驗證，以 Token 加密保護個人資料。
+    日曆 app 會定期（約每天一次）自動抓取此 URL。
+    """
+    # 解密 Token
+    try:
+        birth_date_str, year = decrypt_token(token)
+    except ValueError:
+        raise HTTPException(
+            status_code=403,
+            detail="Token 無效或已過期，請重新取得訂閱連結"
+        )
+
+    # 驗證解密後的資料
+    try:
+        birth = date.fromisoformat(birth_date_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=403,
+            detail="Token 內容異常"
+        )
+
+    # 產生 ICS 內容
+    try:
+        ics_content = sukuyodo_service.generate_ics_calendar(birth, year)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"ICS 產生失敗: {str(e)}"
+        )
+
+    return Response(
+        content=ics_content,
+        media_type="text/calendar; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="sukuyodo_{year}.ics"',
+            "Cache-Control": "public, max-age=3600",
+        }
+    )
