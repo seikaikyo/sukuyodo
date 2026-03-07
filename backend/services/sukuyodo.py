@@ -1637,23 +1637,23 @@ class SukuyodoService:
         # 第 2-9 天（全期共通）
         "day": {
             2: {"name": "栄の日", "reading": "えいのひ",
-                "description": "原典記載「諸吉事並大吉」。入官拜職、對見大人、上書進獻、興營買賣、裁著新衣、沐浴皆吉。出家人剃髮、割爪甲、沐浴、承事師主、啟請法要亦吉。積極行動的好日子。",
-                "description_ja": "原典に「諸の吉事並びに大吉なり」とある。官職拝命・大人への拝謁・上書進献・売買経営・裁縫・沐浴すべて吉。出家者の剃髪・爪切り・沐浴・師事・法要請願にも好適。積極的に動いて吉。"},
+                "description": "原典記載「諸吉事並大吉」。入官拜職、對見大人、上書表進獻君王、興營買賣、裁著新衣、沐浴皆吉。出家人剃髮、割爪甲、沐浴、承事師主、啟請法要亦吉。積極行動的好日子。",
+                "description_ja": "原典に「諸の吉事並びに大吉なり」とある。官職拝命・大人への拝謁・上書表の進献・売買経営・裁縫・沐浴すべて吉。出家者の剃髪・爪切り・沐浴・師事・法要請願にも好適。積極的に動いて吉。"},
             3: {"name": "衰の日", "reading": "すいのひ",
                 "description": "原典記載「唯宜解除諸惡、療病」，另記「不宜遠行、出入遷移、買賣裁衣、剃頭剪甲」。氣勢減弱，適合除障、破邪、療病等淨化性質的行為，其餘不宜勉強。",
-                "description_ja": "原典に「唯だ諸悪を解除し、病を療するに宜し」とあり、「遠行・移徙・売買・裁衣・剃頭に宜しからず」とも。気勢は弱まるが、浄化の行には向く。それ以外は無理をしないこと。"},
+                "description_ja": "原典に「唯だ諸悪を解除し、病を療するに宜し」とあり、「遠行・出入遷移・売買・裁衣・剃頭剪甲並びに不吉」とも。気勢は弱まるが、浄化の行には向く。それ以外は無理をしないこと。"},
             4: {"name": "安の日", "reading": "あんのひ",
                 "description": "原典記載「移徙吉，遠行人入宅、造作園宅、安坐臥床帳、作壇場並吉」。穩定安寧之日，搬遷、遠行歸宅、造宅、設壇修法皆吉。踏實前行的好時機。",
-                "description_ja": "原典に「移徙吉、遠行人の入宅、園宅を造作し、壇場を作るに並びに吉」とある。安定の気が流れ、引越し・遠方からの帰宅・建築・壇場設営に好適。着実に進めるのが吉。"},
+                "description_ja": "原典に「移徙吉、遠行人の入宅、園宅を造作し、坐臥の床帳を安んじ、壇場を作るに並びに吉」とある。安定の気が流れ、引越し・遠方からの帰宅・建築・寝具の設え・壇場設営に好適。着実に進めるのが吉。"},
             5: {"name": "危の日", "reading": "きのひ",
                 "description": "原典記載「宜結交、定婚姻、歡宴聚會吉」，但另記「危壊日不宜遠行、移徙、買賣、婚姻、裁衣、剃頭、沐浴並凶」（注：婚姻在兩處記載吉凶不同）。社交聚會吉，遠行買賣則宜避開。",
                 "description_ja": "原典に「結交を宜し、婚姻を定め、歓宴聚会に吉」とある一方、「危壊日は遠行・移徙・売買・婚姻・裁衣・剃頭・沐浴並びに凶」とも（注：婚姻の吉凶が箇所により異なる）。社交は吉、遠行・売買は避けるのが良い。"},
             6: {"name": "成の日", "reading": "せいのひ",
                 "description": "原典記載「宜修道學問、合和長年藥法、作諸成就法並吉」。修法、學問、成就法皆吉。努力的成果開花結果，適合修行精進和完成重要事項。",
-                "description_ja": "原典に「修道学問に宜し、諸の成就法を作すに並びに吉」とある。修法・学問・成就法すべてに好適。努力が実を結び、修行精進と重要事項の完遂に最適。"},
+                "description_ja": "原典に「修道学問に宜し、長年の薬法を合和し、諸の成就法を作すに並びに吉」とある。修法・学問・合薬・成就法すべてに好適。努力が実を結び、修行精進と重要事項の完遂に最適。"},
             7: {"name": "壊の日", "reading": "かいのひ",
                 "description": "原典記載「宜作鎮壓、降伏怨讎及討伐阻壞奸惡之謀，餘並不堪」。降伏法和鎮壓可行，但其他事務不宜。具有破邪顯正的力量。",
-                "description_ja": "原典に「鎮圧を作し、怨讐を降伏するに宜し、余は並びに堪えず」とある。降伏法・鎮圧は可能だが、他の事には不向き。破邪顕正の力がある日。"},
+                "description_ja": "原典に「鎮圧を作し、怨讐を降伏し、阻壞奸悪の謀を討伐するに宜し、余は並びに堪えず」とある。降伏法・鎮圧・討伐は可能だが、他の事には不向き。破邪顕正の力がある日。"},
             8: {"name": "友の日", "reading": "ゆうのひ",
                 "description": "原典品三記載「宜結交朋友大吉」，卷下記載「宜結交、定婚姻，歡宴聚會並吉」。人際關係圓滑，適合社交、宴會和協作。",
                 "description_ja": "原典品三に「朋友と結交するに大吉」、巻下に「結交を宜し、婚姻を定め、歓宴聚会に並びに吉」とある。人間関係が円滑に進み、社交・宴席・共同作業に好適。"},
@@ -2183,6 +2183,7 @@ class SukuyodoService:
                     level = self._shift_level(level, +1)  # 正常金剛峯 → 升級
 
             # 等級已在極值無法位移時，特殊日加持轉為分數溢出
+            # 凌犯中不設溢出（凌犯已是極端情況，特殊日逆轉後不再疊加溢出）
             if level == prev_level and special_day_type in ("kanro", "kongou") and not ryouhan:
                 overflow_bonus = 10  # 甘露/金剛峯在大吉日的額外加持
             elif level == prev_level and special_day_type == "rasetsu" and not ryouhan:
@@ -4677,10 +4678,12 @@ class SukuyodoService:
         #    - 壊日：「宜作鎮壓、降伏」→ 已由壊日條件處理
         if sanki.get("is_dark_week", False):
             conflicts.append("破壊の週")
-            # 剃髮特殊規則：暗黒の一週間忌剃髮（修行者慣例）
+            # 剃髮特殊規則：暗黒の一週間中，栄日原典記載「出家人剃髮...吉」（p.397c-398a），
+            # 故栄日不排除剃髮；其餘日型排除
             if action_key == "teihatsu" and not excluded:
-                excluded = True
-                exclude_reason = "暗黒の一週間，不宜剃髮"
+                if day_type != "栄の日":
+                    excluded = True
+                    exclude_reason = "暗黒の一週間（非栄日），不宜剃髮"
 
         # --- 降級條件 ---
 
@@ -5683,9 +5686,13 @@ class SukuyodoService:
         Returns:
             凌犯期間資訊（若不在期間內則返回 None）
         """
+        # 注：閏月時 lunar_m 仍為該月數字（如閏四月 lunar_m=4），is_leap 被丟棄。
+        # 原典凌犯月別表僅列正月至十二月，不含閏月獨立規則，
+        # 故閏月以對應正月的朔日七曜代入，為最保守的 fallback。
         lunar_y, lunar_m, lunar_d, _ = self.solar_to_lunar(target_date)
 
         # 取得該農曆月朔日（初一）的西曆日期
+        # 注：lunar_to_solar 固定 isleap=False，閏月時取正月初一的朔日七曜
         first_day_solar = self.lunar_to_solar(lunar_y, lunar_m, 1)
         if first_day_solar is None:
             return None
@@ -6249,7 +6256,7 @@ class SukuyodoService:
             if day_type == '衰の日':
                 return '破壊の週衰日，原典記載宜解除諸惡、療病。保守度過'
             if day_type == '危の日':
-                return '破壊の週危日，社交聚會可行，重大決定宜避開'
+                return '破壊の週危日，原典記載結交、歡宴聚會吉。社交可行，重大決定宜避開'
             return '破壊の週，整體氣運偏弱，做好手邊的事就好'
 
         # 凌犯期間（無特殊日、無六害宿）
@@ -6322,7 +6329,7 @@ class SukuyodoService:
                         personal.get('level_name', '')
                     )
 
-                    # 補算 sanki_day_type（get_calendar_month 不含此欄位）
+                    # 補算 sanki_day_type（若 API 回傳已包含則跳過）
                     if 'sanki_day_type' not in personal or personal.get('sanki_day_type') is None:
                         day_mansion_index = day['day_mansion']['index']
                         sanki_info = self.get_sanki_cycle(user_index, day_mansion_index)

@@ -185,7 +185,7 @@ function getDayTip(
     if (dayType === '壊の日') return '破壊の週壊日，原典記載降伏法可行，餘事不宜'
     if (dayType === '業の日') return '破壊の週業日，原典記載所作不成就。低調收斂為上'
     if (dayType === '衰の日') return '破壊の週衰日，原典記載宜解除諸惡、療病。保守度過'
-    if (dayType === '危の日') return '破壊の週危日，社交聚會可行，重大決定宜避開'
+    if (dayType === '危の日') return '破壊の週危日，原典記載結交、歡宴聚會吉。社交可行，重大決定宜避開'
     return '破壊の週，整體氣運偏弱，做好手邊的事就好'
   }
 
