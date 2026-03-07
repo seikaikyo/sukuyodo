@@ -4705,11 +4705,16 @@ class SukuyodoService:
                 shift_reasons.append("衰の日")
                 conflicts.append("衰の日")
 
-        # 6. 危の日
+        # 6. 危の日（原典：「宜結交、定婚姻，歡宴聚會並吉」T21 p.397c）
+        #    但品三另記「危壞日，並不宜遠行出、入移徙、買賣」等凶
         if day_type == "危の日":
-            rating_shift -= 1
-            shift_reasons.append("危の日")
-            conflicts.append("危の日")
+            if action_key in ("gathering", "date", "collaboration"):
+                # 社交聚會原典明記吉
+                boosts.append("危の日利社交（歡宴聚會吉）")
+            else:
+                rating_shift -= 1
+                shift_reasons.append("危の日")
+                conflicts.append("危の日")
 
         # --- 加持條件 ---
 
@@ -4761,11 +4766,12 @@ class SukuyodoService:
                 exclude_reason = "胎の日，再生準備之日，不宜舉動百事"
             conflicts.append("胎の日")
 
-        # 12. 成の日 + 教學
-        if day_type == "成の日" and action_key == "teaching":
-            rating_shift += 1
-            shift_reasons.append("成の日利教學")
+        # 12. 成の日（原典：「宜修道學問、合和長年藥法，作諸成就法並吉」T21 p.397c）
+        if day_type == "成の日":
             boosts.append("成の日")
+            if action_key == "teaching":
+                rating_shift += 1
+                shift_reasons.append("成の日利教學（修道學問吉）")
 
         # 衝突判定：同時有實質衝突（非僅破壊の週標記）和加持 → 維持排除
         # 破壊の週只是資訊標記，逐日判斷由各日型條件處理
