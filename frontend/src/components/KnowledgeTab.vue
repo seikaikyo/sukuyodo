@@ -419,7 +419,7 @@ const TAB_INTROS: Record<string, string> = {
           </div>
           <div class="guide-text">
             <strong>三期週期</strong>
-            <span>最外弧形，甘露/羅刹/中性各9宿</span>
+            <span>最外弧形，依曜日判定甘露/羅刹/中性</span>
           </div>
         </div>
       </div>

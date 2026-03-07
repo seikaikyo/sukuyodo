@@ -4146,6 +4146,11 @@ class SukuyodoService:
 
     # 吉日查詢類別定義
     # 關係類型對照：mei(命), gyotai(業胎), eishin(栄親), yusui(友衰), ankai(安壊), kisei(危成)
+    # 吉日分類設定
+    # 注意：favor_relations 指宿曜關係類型（非三九日型）。gyotai/mei 雖然在三九法中
+    # 業日「所作不成就」、命/胎日「不宜舉動百事」(T21 p.397c)，但 _evaluate_day_quality
+    # 會排除這些日型，所以 favor_relations 只影響 relation_type 篩選，不會推薦到凶日。
+    # favor_weekdays 除 teihatsu 外均為系統設計，非 T21n1299 原典記載。
     LUCKY_DAY_CATEGORIES = {
         "career": {
             "name": "事業",
@@ -4209,9 +4214,12 @@ class SukuyodoService:
                     "name": "剃髮",
                     "favor_relations": ["eishin", "mei", "gyotai"],
                     "avoid_relations": ["ankai"],
+                    # 水曜(清淨)/金曜(莊嚴)吉、火曜忌 — 日本宿曜道實踐傳承，非 T21 原典
                     "favor_weekdays": [2, 4],
                     "avoid_weekdays": [1],
-                    "avoid_birth_mansion": True,
+                    "avoid_birth_mansion": True,  # T21 p.397c「命宿日不宜舉動百事」
+                    # 女宿(8)理髮吉、鬼宿(21)萬事大吉 — 日本宿曜道實踐傳承
+                    # 室宿(11)理髮吉 — 日本宿曜道實踐傳承（mansions.json 記載佛事/祈願吉）
                     "favor_mansions": [11, 8, 21],
                     "favor_score": 70
                 }

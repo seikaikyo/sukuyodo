@@ -70,10 +70,10 @@ const SPECIAL_DAY_PRACTICE: Record<string, string> = {
   rasetsu: '不宜舉百事，必有殃禍'
 }
 
-// 凌犯逆轉時追加引文（品第五, T21 p.392a-b）
+// 凌犯逆轉時追加引文（品第一, T21 p.391b-c）
 const RYOUHAN_REVERSAL_PRACTICE: Record<string, string> = {
-  kanro: '犯逼守命胎之宿，是厄會之時，宜修功德持真言念誦以禳之',
-  rasetsu: '犯衰危壊等宿者，則所求稱意百事通達'
+  kanro: '犯逼守命胎之宿，是厄會之時，宜修功德、持真言念誦、立道場以禳之',
+  rasetsu: '犯衰危壊等宿者，則所求稱意、百事通達'
 }
 
 // 三九法修行提示（卷下, T21 p.397c-398a）
@@ -439,7 +439,7 @@ async function copySubscribeUrl() {
             </div>
             <div v-if="isPractitioner && dailyFortune.special_day.ryouhan_reversed && RYOUHAN_REVERSAL_PRACTICE[dailyFortune.special_day.type]" class="practice-scripture ryouhan-scripture">
               <p class="scripture-text">{{ RYOUHAN_REVERSAL_PRACTICE[dailyFortune.special_day.type] }}</p>
-              <span class="scripture-source">品第五, T21 p.392a-b</span>
+              <span class="scripture-source">品第一, T21 p.391b-c</span>
             </div>
           </div>
 
