@@ -65,15 +65,15 @@ const isPractitioner = computed(() => decadePerspective.value === 'practitioner'
 
 // 特殊日修法指引（品第八, T21 p.398b-c）
 const SPECIAL_DAY_PRACTICE: Record<string, string> = {
-  kanro: '宜冊立、受灌頂法、造作寺宇及受戒、習學經法、出家修道',
+  kanro: '宜冊立、受灌頂法、造作寺宇及受戒、習學經法、出家修道，一切並吉',
   kongou: '宜作一切降伏法，誦日天子呪及作護摩，並諸猛利等事',
   rasetsu: '不宜舉百事，必有殃禍'
 }
 
 // 凌犯逆轉時追加引文（品第一, T21 p.391b-c）
 const RYOUHAN_REVERSAL_PRACTICE: Record<string, string> = {
-  kanro: '犯逼守命胎之宿，是厄會之時，宜修功德、持真言念誦、立道場以禳之',
-  rasetsu: '犯衰危壊等宿者，則所求稱意、百事通達'
+  kanro: '犯逼守命、胎之宿，此人是厄會之時也，宜修功德、持真言念誦、立道場以禳之',
+  rasetsu: '若犯衰、危、壞等宿者，則所求稱意、百事通達'
 }
 
 // 三九法修行提示（卷下, T21 p.397c-398a）

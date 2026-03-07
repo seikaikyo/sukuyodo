@@ -216,8 +216,8 @@ function formatSpecialDate(dateStr: string) {
 
 function getSpecialDayAdvice(type: string): string {
   const adviceMap: Record<string, string> = {
-    kanro: '適合護摩供、灌頂、開眼、簽約、結婚、搬遷、開業',
-    kongou: '適合修法、寫經、授戒、出家、面試、考試',
+    kanro: '適合灌頂、受戒、學經、造寺、出家修道、簽約、開業',
+    kongou: '適合護摩修法、降伏法、面試、考試等需毅力之事',
     rasetsu: '避免護摩、灌頂、簽約、遠行。適合靜坐、誦經、閉關'
   }
   return adviceMap[type] || ''

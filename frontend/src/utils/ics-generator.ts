@@ -179,12 +179,12 @@ function getDayTip(
   // 破壊の週：依三九日型分別建議（原典各日吉凶不同）
   if (isDark) {
     const dayType = personal?.sanki_day_type ?? ''
-    if (dayType === '栄の日') return '破壊の週但逢栄日，原典記載諸吉事大吉。可正常行動'
-    if (dayType === '安の日') return '破壊の週但逢安日，原典記載作壇場吉。穩定踏實的一天'
-    if (dayType === '成の日') return '破壊の週但逢成日，原典記載修道學問、成就法吉。適合修行精進'
+    if (dayType === '栄の日') return '破壊の週但逢栄日，原典記載諸吉事並大吉。可正常行動'
+    if (dayType === '安の日') return '破壊の週但逢安日，原典記載作壇場並吉。穩定踏實的一天'
+    if (dayType === '成の日') return '破壊の週但逢成日，原典記載修道學問、成就法並吉。適合修行精進'
     if (dayType === '壊の日') return '破壊の週壊日，原典記載降伏法可行，餘事不宜'
     if (dayType === '業の日') return '破壊の週業日，原典記載所作不成就。低調收斂為上'
-    if (dayType === '衰の日') return '破壊の週衰日，原典記載宜解除諸惡、療病。保守度過'
+    if (dayType === '衰の日') return '破壊の週衰日，原典記載唯宜解除諸惡、療病。保守度過'
     if (dayType === '危の日') return '破壊の週危日，原典記載結交、歡宴聚會並吉。社交可行，重大決定宜避開'
     return '破壊の週，整體氣運偏弱，做好手邊的事就好'
   }
