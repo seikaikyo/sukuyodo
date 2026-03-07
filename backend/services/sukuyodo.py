@@ -1643,8 +1643,8 @@ class SukuyodoService:
                 "description": "原典記載「唯宜解除諸惡、療病」，另記「不宜遠行、出入遷移、買賣裁衣、剃頭剪甲」。氣勢減弱，適合除障、破邪、療病等淨化性質的行為，其餘不宜勉強。",
                 "description_ja": "原典に「唯だ諸悪を解除し、病を療するに宜し」とあり、「遠行・移徙・売買・裁衣・剃頭に宜しからず」とも。気勢は弱まるが、浄化の行には向く。それ以外は無理をしないこと。"},
             4: {"name": "安の日", "reading": "あんのひ",
-                "description": "原典記載「移徙吉、造作園宅、安坐臥床帳、作壇場並吉」。穩定安寧之日，搬遷、造宅、設壇修法皆吉。踏實前行的好時機。",
-                "description_ja": "原典に「移徙吉、園宅を造作し、壇場を作るに並びに吉」とある。安定の気が流れ、引越し・建築・壇場設営に好適。着実に進めるのが吉。"},
+                "description": "原典記載「移徙吉，遠行人入宅、造作園宅、安坐臥床帳、作壇場並吉」。穩定安寧之日，搬遷、遠行歸宅、造宅、設壇修法皆吉。踏實前行的好時機。",
+                "description_ja": "原典に「移徙吉、遠行人の入宅、園宅を造作し、壇場を作るに並びに吉」とある。安定の気が流れ、引越し・遠方からの帰宅・建築・壇場設営に好適。着実に進めるのが吉。"},
             5: {"name": "危の日", "reading": "きのひ",
                 "description": "原典記載「宜結交、定婚姻、歡宴聚會吉」，但另記「危壊日不宜遠行、移徙、買賣、婚姻、裁衣、剃頭、沐浴並凶」（注：婚姻在兩處記載吉凶不同）。社交聚會吉，遠行買賣則宜避開。",
                 "description_ja": "原典に「結交を宜し、婚姻を定め、歓宴聚会に吉」とある一方、「危壊日は遠行・移徙・売買・婚姻・裁衣・剃頭・沐浴並びに凶」とも（注：婚姻の吉凶が箇所により異なる）。社交は吉、遠行・売買は避けるのが良い。"},
@@ -2175,9 +2175,12 @@ class SukuyodoService:
                 else:
                     level = self._shift_level(level, -1)  # 正常羅刹 → 降級
             elif special_day_type == "kongou":
-                # 金剛峯日「宜作一切降伏法」(T21 p.398b-c)，降伏法本身在壊日亦可行(p.398a)，
-                # 其護持性質穿透凌犯干擾。原典未明確記載此例外，屬密教實踐詮釋。
-                level = self._shift_level(level, +1)  # 金剛峯 → 升級（不受凌犯逆轉）
+                # 金剛峯日「宜作一切降伏法」(T21 p.398b-c)
+                # 原典凌犯規則(p.391b-c)概括性適用所有日，金剛峯日亦遵循吉凶逆轉
+                if ryouhan:
+                    level = self._shift_level(level, -1)  # 凌犯中金剛峯 → 降級
+                else:
+                    level = self._shift_level(level, +1)  # 正常金剛峯 → 升級
 
             # 等級已在極值無法位移時，特殊日加持轉為分數溢出
             if level == prev_level and special_day_type in ("kanro", "kongou") and not ryouhan:
@@ -2282,7 +2285,7 @@ class SukuyodoService:
             special_day = dict(self.SPECIAL_DAY_INFO[special_day_type])
             special_day["type"] = special_day_type
             if ryouhan:
-                if special_day_type == "kanro":
+                if special_day_type in ("kanro", "kongou"):
                     special_day["ryouhan_reversed"] = True
                     special_day["original_level"] = special_day["level"]
                     special_day["level"] = "凶（凌犯逆轉）"
@@ -5959,7 +5962,7 @@ class SukuyodoService:
                 level = info["level"]
                 ryouhan_reversed = False
                 if ryouhan:
-                    if special_day_type == "kanro":
+                    if special_day_type in ("kanro", "kongou"):
                         level = "凶（凌犯逆轉）"
                         ryouhan_reversed = True
                     elif special_day_type == "rasetsu":
@@ -6061,7 +6064,7 @@ class SukuyodoService:
                 level = info["level"]
                 ryouhan_reversed = False
                 if ryouhan:
-                    if special_day_type == "kanro":
+                    if special_day_type in ("kanro", "kongou"):
                         level = "凶（凌犯逆轉）"
                         ryouhan_reversed = True
                     elif special_day_type == "rasetsu":
@@ -6115,6 +6118,7 @@ class SukuyodoService:
                     "level_name": self.LEVEL_NAMES[cal_level]["zh"],
                     "sanki_period": sanki["period"],
                     "sanki_period_index": sanki["period_index"],
+                    "sanki_day_type": sanki.get("day_type", ""),
                     "is_dark_week": sanki["is_dark_week"],
                     "rokugai": rokugai,
                 }
@@ -6212,15 +6216,18 @@ class SukuyodoService:
         if special_type == 'kanro' and not reversed_:
             return '甘露日：今天是難得的大吉日，適合開始新計畫、簽約、重要面談'
         if special_type == 'kanro' and reversed_:
-            return '甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時'
+            rokugai_suffix = '。又逢六害宿，宜修福：入灌頂及護摩，並修諸功德' if has_rokugai else ''
+            return f'甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時{rokugai_suffix}'
         if special_type == 'kongou' and not reversed_:
-            return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、下決心'
+            return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、護摩修法、下決心'
         if special_type == 'kongou' and reversed_:
-            return '金剛峯日但凌犯逆轉，強勢能量易生阻力。建議先評估局勢，蓄勢待發'
+            rokugai_suffix = '。又逢六害宿，宜修福：入灌頂及護摩，並修諸功德' if has_rokugai else ''
+            return f'金剛峯日但在凌犯期間，吉凶逆轉。強勢能量易生阻力，宜靜觀待時{rokugai_suffix}'
         if special_type == 'rasetsu' and not reversed_:
             return '羅刹日：百事不宜，能延就延，今天不適合做重要決定'
         if special_type == 'rasetsu' and reversed_:
-            return '羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂'
+            rokugai_suffix = '。但逢六害宿，仍宜修福：入灌頂及護摩，並修諸功德' if has_rokugai else ''
+            return f'羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂{rokugai_suffix}'
 
         # 凌犯 + 六害宿（最需警戒）
         if has_ryouhan and has_rokugai:

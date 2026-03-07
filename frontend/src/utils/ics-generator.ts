@@ -153,19 +153,22 @@ function getDayTip(
     return '甘露日：今天是難得的大吉日，適合開始新計畫、簽約、重要面談'
   }
   if (specialType === 'kanro' && reversed) {
-    return '甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時'
+    const rokugaiSuffix = hasRokugai ? '。又逢六害宿，宜修福：入灌頂及護摩，並修諸功德' : ''
+    return `甘露日但在凌犯期間，吉凶逆轉。此時不宜因日名而草率行動，宜靜觀待時${rokugaiSuffix}`
   }
   if (specialType === 'kongou' && !reversed) {
-    return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、下決心'
+    return '金剛峯日：氣場強勢的一天，適合處理棘手的事、談判、護摩修法、下決心'
   }
   if (specialType === 'kongou' && reversed) {
-    return '金剛峯日但凌犯逆轉，強勢能量易生阻力。建議先評估局勢，蓄勢待發'
+    const rokugaiSuffix = hasRokugai ? '。又逢六害宿，宜修福：入灌頂及護摩，並修諸功德' : ''
+    return `金剛峯日但在凌犯期間，吉凶逆轉。強勢能量易生阻力，宜靜觀待時${rokugaiSuffix}`
   }
   if (specialType === 'rasetsu' && !reversed) {
     return '羅刹日：百事不宜，能延就延，今天不適合做重要決定'
   }
   if (specialType === 'rasetsu' && reversed) {
-    return '羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂'
+    const rokugaiSuffix = hasRokugai ? '。但逢六害宿，仍宜修福：入灌頂及護摩，並修諸功德' : ''
+    return `羅刹日但凌犯逆轉，凶象減弱。保持平常心即可，無需過度擔憂${rokugaiSuffix}`
   }
 
   // 凌犯 + 六害宿（最需警戒）
