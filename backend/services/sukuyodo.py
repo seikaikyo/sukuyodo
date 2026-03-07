@@ -10,7 +10,7 @@ class SukuyodoService:
     """
     宿曜道（真言宗宿曜占星術）計算服務
 
-    基於空海《宿曜經》，使用農曆生日計算本命宿（27宿之一），
+    基於不空三藏譯《宿曜經》（T21 No.1299），使用農曆生日計算本命宿（27宿之一），
     並提供雙人相性診斷（六種關係）。
     """
 
@@ -1640,7 +1640,7 @@ class SukuyodoService:
                 "description": "原典記載「諸吉事並大吉」。入官拜職、對見大人、上書表進獻君王、興營買賣、裁著新衣、沐浴及諸吉事並大吉。出家人剃髮、割爪甲、沐浴、承事師主、啟請法要並吉。積極行動的好日子。",
                 "description_ja": "原典に「諸の吉事並びに大吉なり」とある。官職拝命・大人への拝謁・上書表の進献・売買経営・裁縫・沐浴及び諸の吉事並びに大吉。出家者の剃髪・爪切り・沐浴・師事・法要請願並びに吉。積極的に動いて吉。"},
             3: {"name": "衰の日", "reading": "すいのひ",
-                "description": "原典記載「唯宜解除諸惡、療病」，另記「並不宜遠行，出入遷移、買賣裁衣、剃頭剪甲並不吉」。氣勢減弱，適合除障、破邪、療病等淨化性質的行為，其餘不宜勉強。",
+                "description": "原典卷下記載「唯宜解除諸惡、療病」（T21 p.397c），品三另記「並不宜遠行，出入遷移、買賣裁衣、剃頭剪甲並不吉」（T21 p.391b）。氣勢減弱，適合除障、破邪、療病等淨化性質的行為，其餘不宜勉強。",
                 "description_ja": "原典に「唯だ諸悪を解除し、病を療するに宜し」とあり、「遠行・出入遷移・売買・裁衣・剃頭剪甲並びに不吉」とも。気勢は弱まるが、浄化の行には向く。それ以外は無理をしないこと。"},
             4: {"name": "安の日", "reading": "あんのひ",
                 "description": "原典記載「移徙吉，遠行人入宅、造作園宅、安坐臥床帳、作壇場並吉」。穩定安寧之日，搬遷、遠行歸宅、造宅、設壇修法皆吉。踏實前行的好時機。",
@@ -4695,11 +4695,15 @@ class SukuyodoService:
 
         # --- 降級條件 ---
 
-        # 5. 衰の日
+        # 5. 衰の日（原典：「唯宜解除諸惡、療病」T21 p.397c）
         if day_type == "衰の日":
-            rating_shift -= 1
-            shift_reasons.append("衰の日")
-            conflicts.append("衰の日")
+            if action_key in ("surgery", "medical"):
+                # 衰日對療病是正面的，原典「唯宜療病」
+                boosts.append("衰の日利療病")
+            else:
+                rating_shift -= 1
+                shift_reasons.append("衰の日")
+                conflicts.append("衰の日")
 
         # 6. 危の日
         if day_type == "危の日":
@@ -4719,6 +4723,21 @@ class SukuyodoService:
         # 8. 金剛峯日
         if special_day and special_day.get("type") == "kongou":
             boosts.append("金剛峯日")
+
+        # 8.5 栄の日（原典：「諸吉事並大吉」T21 p.397c）
+        if day_type == "栄の日":
+            boosts.append("栄の日")
+
+        # 8.6 安の日（原典：「移徙吉...作壇場並吉」T21 p.397c）
+        if day_type == "安の日":
+            boosts.append("安の日")
+            if action_key in ("move_in", "move_out"):
+                rating_shift += 1
+                shift_reasons.append("安の日利搬遷（移徙吉）")
+
+        # 8.7 友の日/親の日（原典：「宜結交朋友大吉」T21 p.391b）
+        if day_type in ("友の日", "親の日"):
+            boosts.append(day_type)
 
         # 9. 業の日（卷下 p.397c：「所作善惡亦不成就，甚衰」→ 排除）
         #    注：品三 p.391b 另記「所作皆吉祥」，兩處矛盾，系統從卷下
@@ -5732,7 +5751,7 @@ class SukuyodoService:
                 "description": month_desc.get("zh", f"農曆{lunar_m}月{start_day}日～{end_day}日為凌犯期間"),
                 "description_ja": month_desc.get("ja", ""),
                 "description_classic": month_desc.get("classic", ""),
-                "source": "宿曜經卷五・七曜陵逼",
+                "source": "宿曜經品三・品五，及宿曜道傳承",
                 "formula": {
                     "step1": f"西曆 {target_date} → 農曆 {lunar_y}/{lunar_m}/{lunar_d}",
                     "step2": f"農曆{lunar_m}月初一 = {first_day_solar}（{wn}）",
@@ -5886,7 +5905,7 @@ class SukuyodoService:
                 "name": "凌犯六害",
                 "description": "凌犯期間又逢六害宿，雙重凶因疊加。今日需格外謹慎，避免重要行動，靜守為宜。",
                 "description_ja": "凌犯期間中に六害宿が重なり、二重の凶因が作用する。格別の注意を要し、重要な行動を控え静かに過ごすべし。",
-                "description_classic": "（編者歸納）凌犯六害相重。原典：「宜修功德造善以禳之」（T21 p.392a）。"
+                "description_classic": "（編者歸納）凌犯六害相重。原典凌犯化解法：「宜修功德造善以禳之」（T21 p.392a，化解法參照凌犯規則，六害宿段無專屬化解記載）。"
             })
 
         # 5. compounded_negative：安壊 + 破壊の週の凶日型（業/衰/危/壊）
